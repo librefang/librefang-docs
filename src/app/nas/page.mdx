@@ -1,0 +1,48 @@
+export const metadata = {
+  title: 'NAS (群晖 DS920+)',
+}
+
+# NAS (群晖 DS920+)
+
+## 基本信息
+
+| 项目 | 值 |
+|------|------|
+| IP | 192.168.88.88 |
+| 系统 | DSM 7.3.2, Linux 4.4.302+ |
+| 域名 | nas.xiaomo.info (Cloudflare Tunnel) |
+| SSH | xiaomo@, 免密, sudo NOPASSWD: ALL |
+
+## Docker & 服务管理
+
+NAS 上的 Docker 服务通过 **DSM Container Manager** 和 SSH **Docker CLI** 双重管理
+
+- **Plex/Jellyfin**: 位于 `/volume1/docker/`负责全家媒体流
+- **Synology Drive**: 核心同步服务OpenClaw 会话备份的目标之一
+- **管理建议**在大规模重启前务必先通过 `ssh` 检查卷挂载状态
+
+## 运维 SOP (from Team Yldm)
+
+### 1. 全量状态备份
+- **触发**每日 03:00 (Cron: `ops-backup`)
+- **路径**`~/.openclaw` → `/volume1/yldm-tools/backups/openclaw/`
+- **脚本**`workspace/scripts/ops/backup_state.sh`
+
+### 2. 磁盘监控
+- **阈值**Volume 占用超过 90% 时触发 P0 告警
+- **清理**调用 `ops-workspace-cleanup` 自动清理 30 天前的 Session 缓存
+| volume6 | 501G | projects |
+| volume7 | 960G | yldm-public |
+| volume8 | 480G | 空 |
+
+**总计:** ~23T
+
+## 服务
+
+- **Plex** v1.42.1 — 1374 项媒体 (电影478/动漫电影180/动漫127/电视剧116/动作473)
+- **Docker** — ContainerManager, cloudflared
+- **其他** — SynologyDrive, DownloadStation, MariaDB, Git, KodExplorer, Calendar
+
+## 已知问题
+
+ `/etc/resolv.conf` 会被 DSM 覆盖为错误的 nameserver (192.168.2.1)导致 DNS 超时需定期检查修复
