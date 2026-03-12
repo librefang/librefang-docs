@@ -69,6 +69,6 @@ export default defineConfig({
       { icon: 'github', link: 'https://github.com/librefang/librefang' }
     ],
     search: { provider: 'local' },
-    outline: { level: [2, 3] },
+    outline: false,
   }
 })
