@@ -42,6 +42,7 @@ export default defineConfig({
         text: '集成',
         items: [
           { text: '通道适配器', link: '/channels' },
+          { text: 'API 参考', link: '/api' },
           { text: 'CLI 参考', link: '/cli' },
           { text: 'MCP/A2A', link: '/mcp-a2a' },
           { text: '桌面应用', link: '/desktop' },

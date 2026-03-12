@@ -125,9 +125,11 @@ function CodePanel({
 	label?: string;
 	code?: string;
 }) {
-	const child = Children.only(children);
+	// Handle edge cases: if children is an array, take first element; if empty, use empty div
+	const childArray = Children.toArray(children);
+	const child = childArray.length > 0 ? childArray[0] : null;
 
-	if (isValidElement(child)) {
+	if (child && isValidElement(child)) {
 		const childProps = child.props as {
 			tag?: string;
 			label?: string;
@@ -140,7 +142,7 @@ function CodePanel({
 
 	if (!code) {
 		// 尝试从子元素中提取代码内容
-		if (isValidElement(child) && child.type === 'pre') {
+		if (child && isValidElement(child) && child.type === 'pre') {
 			const childProps = child.props as { children?: React.ReactNode };
 			const codeChild = childProps.children;
 			if (isValidElement(codeChild) && codeChild.type === 'code') {
