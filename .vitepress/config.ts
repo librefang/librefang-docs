@@ -7,14 +7,34 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
-      { text: '文档', link: '/librefang' },
       { text: 'GitHub', link: 'https://github.com/librefang/librefang' }
     ],
     sidebar: [
       {
-        text: '文档',
+        text: '入门',
         items: [
           { text: '快速开始', link: '/librefang' },
+        ]
+      },
+      {
+        text: '配置',
+        items: [
+          { text: '配置文件', link: '/configuration' },
+          { text: 'LLM 提供商', link: '/providers' },
+        ]
+      },
+      {
+        text: '架构',
+        items: [
+          { text: '系统架构', link: '/architecture' },
+          { text: '安全', link: '/security' },
+        ]
+      },
+      {
+        text: '集成',
+        items: [
+          { text: '通道适配器', link: '/channels' },
+          { text: 'CLI 参考', link: '/cli' },
         ]
       }
     ],

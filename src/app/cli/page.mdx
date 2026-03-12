@@ -1,0 +1,315 @@
+# CLI 参考
+
+完整的 `librefang` 命令行参考。
+
+---
+
+## 概述
+
+`librefang` 二进制是管理 LibreFang Agent OS 的主要接口。支持两种操作模式：
+
+- **守护进程模式** - 当守护进程运行时 (`librefang start`)，CLI 通过 HTTP 与其通信
+- **进程内模式** - 未检测到守护进程时，支持此模式的命令将启动临时内核
+
+---
+
+## 安装
+
+### 从源码 (cargo)
+
+```bash
+cargo install --path crates/librefang-cli
+```
+
+### 从工作空间构建
+
+```bash
+cargo build --release -p librefang-cli
+# 二进制: target/release/librefang (或 Windows 上的 librefang.exe)
+```
+
+### Docker
+
+```bash
+docker run -it librefang/librefang:latest
+```
+
+---
+
+## 全局选项
+
+| 选项 | 说明 |
+|------|------|
+| `--config <PATH>` | 自定义配置文件路径 |
+| `--help` | 打印帮助信息 |
+| `--version` | 打印版本 |
+
+**环境变量:**
+
+| 变量 | 说明 |
+|------|------|
+| `RUST_LOG` | 日志级别 (info/debug/trace) |
+| `LIBREFANG_AGENTS_DIR` | 覆盖 agent 模板目录 |
+| `EDITOR` / `VISUAL` | `librefang config edit` 使用的编辑器 |
+
+---
+
+## 命令参考
+
+### librefang (无子命令)
+
+启动交互式 TUI 仪表板。
+
+```
+librefang
+```
+
+TUI 提供全屏终端界面，包含 agent、聊天、工作流、通道、技能、设置等面板。
+
+---
+
+### librefang init
+
+初始化 LibreFang 工作空间。创建 `~/.librefang/` 包含子目录和默认 `config.toml`。
+
+```
+librefang init [--quick]
+```
+
+**选项:**
+
+| 选项 | 说明 |
+|------|------|
+| `--quick` | 跳过交互式提示。自动检测最佳可用 LLM 提供商。适合 CI/脚本。 |
+
+---
+
+### librefang start
+
+启动 LibreFang 守护进程（内核 + API 服务器）。
+
+```
+librefang start [--config <PATH>]
+```
+
+**行为:**
+- 检查守护进程是否已运行
+- 启动 LibreFang 内核
+- 启动 HTTP API 服务器（默认 `127.0.0.1:4200`）
+- 写入 `daemon.json` 以便其他 CLI 命令发现守护进程
+
+---
+
+### librefang status
+
+检查守护进程状态。
+
+```
+librefang status
+```
+
+---
+
+### librefang doctor
+
+运行诊断检查。
+
+```
+librefang doctor
+```
+
+检查：配置文件、API 密钥、网络连接、依赖项。
+
+---
+
+### Agent 管理
+
+```bash
+# 生成 Agent
+librefang agent spawn <manifest.toml>
+
+# 列出所有 Agent
+librefang agent list
+
+# 与 Agent 聊天
+librefang agent chat <agent-id>
+
+# 终止 Agent
+librefang agent kill <agent-id>
+```
+
+---
+
+### Hand 管理
+
+```bash
+# 列出所有 Hands
+librefang hand list
+
+# 激活 Hand
+librefang hand activate <hand-name>
+
+# 查看状态
+librefang hand status <hand-name>
+
+# 暂停 Hand
+librefang hand pause <hand-name>
+```
+
+---
+
+### 工作流
+
+```bash
+# 列出工作流
+librefang workflow list
+
+# 创建工作流
+librefang workflow create <file.json>
+
+# 运行工作流
+librefang workflow run <id> <input>
+```
+
+---
+
+### 触发器
+
+```bash
+# 列出触发器
+librefang trigger list
+
+# 创建触发器
+librefang trigger create <args>
+
+# 删除触发器
+librefang trigger delete <id>
+```
+
+---
+
+### 技能
+
+```bash
+# 安装技能
+librefang skill install <source>
+
+# 列出已安装技能
+librefang skill list
+
+# 搜索 FangHub
+librefang skill search <query>
+
+# 创建技能
+librefang skill create
+
+# 移除技能
+librefang skill remove <name>
+```
+
+---
+
+### 通道
+
+```bash
+# 列出通道状态
+librefang channel list
+
+# 设置通道
+librefang channel setup <channel>
+
+# 测试通道
+librefang channel test <channel>
+
+# 启用通道
+librefang channel enable <channel>
+
+# 禁用通道
+librefang channel disable <channel>
+```
+
+---
+
+### 配置
+
+```bash
+# 显示当前配置
+librefang config show
+
+# 编辑配置
+librefang config edit
+```
+
+---
+
+### 快速聊天
+
+```bash
+# 快速聊天（使用第一个可用 agent）
+librefang chat
+
+# 指定 agent 名称
+librefang chat <agent-name>
+```
+
+---
+
+### 迁移
+
+```bash
+# 从 OpenClaw 迁移
+librefang migrate --from openclaw
+
+# 从特定路径迁移
+librefang migrate --from openclaw --path ~/.openclaw
+
+# 预览模式
+librefang migrate --from openclaw --dry-run
+```
+
+---
+
+### MCP
+
+```bash
+# 启动 MCP 服务器（stdio 模式）
+librefang mcp
+```
+
+---
+
+## 守护进程交互
+
+### 直接 API 调用
+
+```bash
+# 健康检查
+curl http://127.0.0.1:4200/api/health
+
+# 列出 agent
+curl http://127.0.0.1:4200/api/agents
+
+# 发送消息
+curl -X POST http://127.0.0.1:4200/api/agents/<id>/message \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello!"}'
+
+# OpenAI 兼容 API
+curl -X POST http://127.0.0.1:4200/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model": "researcher", "messages": [{"role": "user", "content": "Hello"}]}'
+```
+
+---
+
+## 环境变量参考
+
+| 变量 | 说明 |
+|------|------|
+| `ANTHROPIC_API_KEY` | Anthropic Claude API 密钥 |
+| `OPENAI_API_KEY` | OpenAI API 密钥 |
+| `GROQ_API_KEY` | Groq API 密钥 |
+| `GEMINI_API_KEY` | Google Gemini API 密钥 |
+| `DEEPSEEK_API_KEY` | DeepSeek API 密钥 |
+| `RUST_LOG` | 日志级别 |
+| `LIBREFANG_AGENTS_DIR` | Agent 模板目录 |
