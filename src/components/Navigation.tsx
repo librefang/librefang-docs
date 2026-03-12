@@ -247,6 +247,8 @@ export const enNavigation: Array<NavGroup> = [
 		links: [
 			{ title: 'Getting Started', href: withPrefix('/en/getting-started') },
 			{ title: 'Roadmap', href: withPrefix('/en/roadmap') },
+			{ title: 'Examples', href: withPrefix('/en/examples') },
+			{ title: 'Glossary', href: withPrefix('/en/glossary') },
 		],
 	},
 	{
@@ -267,6 +269,8 @@ export const enNavigation: Array<NavGroup> = [
 		title: 'Agent',
 		links: [
 			{ title: 'Agent Templates', href: withPrefix('/en/agents') },
+			{ title: 'Autonomous Hands', href: withPrefix('/en/hands') },
+			{ title: 'Memory System', href: withPrefix('/en/memory') },
 			{ title: 'Skills', href: withPrefix('/en/skills') },
 			{ title: 'Workflows', href: withPrefix('/en/workflows') },
 		],
@@ -275,10 +279,12 @@ export const enNavigation: Array<NavGroup> = [
 		title: 'Integrations',
 		links: [
 			{ title: 'API Reference', href: withPrefix('/en/api') },
+			{ title: 'SDK Reference', href: withPrefix('/en/sdk') },
 			{ title: 'Channels', href: withPrefix('/en/channels') },
 			{ title: 'CLI', href: withPrefix('/en/cli') },
 			{ title: 'MCP/A2A', href: withPrefix('/en/mcp-a2a') },
 			{ title: 'Desktop', href: withPrefix('/en/desktop') },
+			{ title: 'Migration', href: withPrefix('/en/migration') },
 		],
 	},
 	{
@@ -286,6 +292,13 @@ export const enNavigation: Array<NavGroup> = [
 		links: [
 			{ title: 'Production', href: withPrefix('/en/production') },
 			{ title: 'Troubleshooting', href: withPrefix('/en/troubleshooting') },
+			{ title: 'FAQ', href: withPrefix('/en/faq') },
+		],
+	},
+	{
+		title: 'Development',
+		links: [
+			{ title: 'Development Guide', href: withPrefix('/en/development') },
 		],
 	},
 ];

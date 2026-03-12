@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { Button } from '@/components/Button';
-import { navigation } from '@/components/Navigation';
+import { navigation, enNavigation } from '@/components/Navigation';
 
 function PageLink({
 	label,
@@ -39,7 +39,10 @@ function PageLink({
 
 function PageNavigation() {
 	const pathname = usePathname();
-	const allPages = navigation.flatMap((group) => group.links);
+	const isEn = pathname?.startsWith('/en');
+	const currentNav = isEn ? enNavigation : navigation;
+	const allPages = currentNav.flatMap((group) => group.links);
+	// Find current page index by matching pathname with hrefs (already has prefix in dev)
 	const currentPageIndex = allPages.findIndex((page) => page.href === pathname);
 
 	if (currentPageIndex === -1) {
