@@ -190,6 +190,8 @@ export const navigation: Array<NavGroup> = [
 		links: [
 			{ title: '快速开始', href: withPrefix('/librefang') },
 			{ title: '发布路线图', href: withPrefix('/roadmap') },
+			{ title: '使用示例', href: withPrefix('/examples') },
+			{ title: '术语表', href: withPrefix('/glossary') },
 		],
 	},
 	{

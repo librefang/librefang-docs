@@ -15,6 +15,8 @@ export default defineConfig({
         items: [
           { text: '快速开始', link: '/librefang' },
           { text: '发布路线图', link: '/roadmap' },
+          { text: '使用示例', link: '/examples' },
+          { text: '术语表', link: '/glossary' },
         ]
       },
       {
