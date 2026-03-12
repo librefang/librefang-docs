@@ -1,6 +1,5 @@
 import glob from 'fast-glob';
 import type { Metadata } from 'next';
-
 import { Providers } from '@/app/providers';
 import { Layout } from '@/components/Layout';
 import type { Section } from '@/components/SectionProvider';
@@ -11,6 +10,9 @@ export const metadata: Metadata = {
 	title: {
 		template: '%s - LibreFang Docs',
 		default: 'LibreFang Docs',
+	},
+	other: {
+		'script-src': 'https://librefang-counter.suzukaze-haduki.workers.dev',
 	},
 };
 
@@ -33,6 +35,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 	return (
 		<html lang='en' className='h-full' suppressHydrationWarning>
+			<head>
+				<script src='https://librefang-counter.suzukaze-haduki.workers.dev/script.js' async></script>
+			</head>
 			<body className='flex min-h-full bg-white antialiased dark:bg-zinc-900'>
 				<Providers>
 					<div className='w-full'>
