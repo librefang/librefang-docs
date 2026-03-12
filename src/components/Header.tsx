@@ -28,7 +28,8 @@ function LangSwitch() {
 	const pathname = usePathname();
 	const isEn = pathname?.startsWith('/en');
 
-	const targetPath = isEn ? pathname?.replace('/en', '') || '/' : `/en${pathname}`;
+	// Simple toggle: go to home of other language
+	const targetPath = isEn ? '/' : '/en';
 
 	return (
 		<Link
