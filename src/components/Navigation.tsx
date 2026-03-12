@@ -246,9 +246,7 @@ export const enNavigation: Array<NavGroup> = [
 		title: 'Getting Started',
 		links: [
 			{ title: 'Getting Started', href: withPrefix('/en/getting-started') },
-			{ title: 'Roadmap', href: withPrefix('/roadmap') },
-			{ title: 'Examples', href: withPrefix('/examples') },
-			{ title: 'Glossary', href: withPrefix('/glossary') },
+			{ title: 'Roadmap', href: withPrefix('/en/roadmap') },
 		],
 	},
 	{
@@ -269,20 +267,24 @@ export const enNavigation: Array<NavGroup> = [
 		title: 'Agent',
 		links: [
 			{ title: 'Agent Templates', href: withPrefix('/en/agents') },
+			{ title: 'Skills', href: withPrefix('/en/skills') },
 			{ title: 'Workflows', href: withPrefix('/en/workflows') },
 		],
 	},
 	{
 		title: 'Integrations',
 		links: [
+			{ title: 'API Reference', href: withPrefix('/en/api') },
 			{ title: 'Channels', href: withPrefix('/en/channels') },
 			{ title: 'CLI', href: withPrefix('/en/cli') },
 			{ title: 'MCP/A2A', href: withPrefix('/en/mcp-a2a') },
+			{ title: 'Desktop', href: withPrefix('/en/desktop') },
 		],
 	},
 	{
 		title: 'Operations',
 		links: [
+			{ title: 'Production', href: withPrefix('/en/production') },
 			{ title: 'Troubleshooting', href: withPrefix('/en/troubleshooting') },
 		],
 	},
