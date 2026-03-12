@@ -46,6 +46,7 @@ export default defineConfig({
         items: [
           { text: '通道适配器', link: '/channels' },
           { text: 'API 参考', link: '/api' },
+          { text: 'SDK 参考', link: '/sdk' },
           { text: 'CLI 参考', link: '/cli' },
           { text: 'MCP/A2A', link: '/mcp-a2a' },
           { text: '迁移指南', link: '/migration' },

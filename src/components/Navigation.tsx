@@ -221,6 +221,7 @@ export const navigation: Array<NavGroup> = [
 		links: [
 			{ title: '通道适配器', href: withPrefix('/channels') },
 			{ title: 'API 参考', href: withPrefix('/api') },
+			{ title: 'SDK 参考', href: withPrefix('/sdk') },
 			{ title: 'CLI 参考', href: withPrefix('/cli') },
 			{ title: 'MCP/A2A', href: withPrefix('/mcp-a2a') },
 			{ title: '迁移指南', href: withPrefix('/migration') },
