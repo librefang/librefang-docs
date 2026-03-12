@@ -9,7 +9,16 @@ import {
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import clsx from 'clsx';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Fragment, forwardRef, Suspense, useCallback, useEffect, useId, useRef, useState } from 'react';
+import {
+	Fragment,
+	forwardRef,
+	Suspense,
+	useCallback,
+	useEffect,
+	useId,
+	useRef,
+	useState,
+} from 'react';
 import Highlighter from 'react-highlight-words';
 
 import { navigation } from '@/components/Navigation';
@@ -18,12 +27,19 @@ import { useMobileNavigationStore } from './MobileNavigation';
 
 type EmptyObject = Record<string, never>;
 
-type Autocomplete = AutocompleteApi<Result, React.SyntheticEvent, React.MouseEvent, React.KeyboardEvent>;
+type Autocomplete = AutocompleteApi<
+	Result,
+	React.SyntheticEvent,
+	React.MouseEvent,
+	React.KeyboardEvent
+>;
 
 function useAutocomplete({ onNavigate }: { onNavigate: () => void }) {
 	const id = useId();
 	const router = useRouter();
-	const [autocompleteState, setAutocompleteState] = useState<AutocompleteState<Result> | EmptyObject>({});
+	const [autocompleteState, setAutocompleteState] = useState<
+		AutocompleteState<Result> | EmptyObject
+	>({});
 
 	function navigate({ itemUrl }: { itemUrl?: string }) {
 		if (itemUrl) {
@@ -34,7 +50,12 @@ function useAutocomplete({ onNavigate }: { onNavigate: () => void }) {
 	}
 
 	const [autocomplete] = useState<Autocomplete>(() =>
-		createAutocomplete<Result, React.SyntheticEvent, React.MouseEvent, React.KeyboardEvent>({
+		createAutocomplete<
+			Result,
+			React.SyntheticEvent,
+			React.MouseEvent,
+			React.KeyboardEvent
+		>({
 			id,
 			placeholder: 'Find something...',
 			defaultActiveItemId: 0,
@@ -63,7 +84,7 @@ function useAutocomplete({ onNavigate }: { onNavigate: () => void }) {
 					];
 				});
 			},
-		})
+		}),
 	);
 
 	return { autocomplete, autocompleteState };
@@ -99,9 +120,21 @@ function LoadingIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 	return (
 		<svg viewBox='0 0 20 20' fill='none' aria-hidden='true' {...props}>
 			<circle cx='10' cy='10' r='5.5' strokeLinejoin='round' />
-			<path stroke={`url(#${id})`} strokeLinecap='round' strokeLinejoin='round' d='M15.5 10a5.5 5.5 0 1 0-5.5 5.5' />
+			<path
+				stroke={`url(#${id})`}
+				strokeLinecap='round'
+				strokeLinejoin='round'
+				d='M15.5 10a5.5 5.5 0 1 0-5.5 5.5'
+			/>
 			<defs>
-				<linearGradient id={id} x1='13' x2='9.5' y1='9' y2='15' gradientUnits='userSpaceOnUse'>
+				<linearGradient
+					id={id}
+					x1='13'
+					x2='9.5'
+					y1='9'
+					y2='15'
+					gradientUnits='userSpaceOnUse'
+				>
 					<stop stopColor='currentColor' />
 					<stop offset='1' stopColor='currentColor' stopOpacity='0' />
 				</linearGradient>
@@ -137,15 +170,17 @@ function SearchResult({
 	const id = useId();
 
 	const sectionTitle = navigation.find((section) =>
-		section.links.find((link) => link.href === result.url.split('#')[0])
+		section.links.find((link) => link.href === result.url.split('#')[0]),
 	)?.title;
-	const hierarchy = [sectionTitle, result.pageTitle].filter((x): x is string => typeof x === 'string');
+	const hierarchy = [sectionTitle, result.pageTitle].filter(
+		(x): x is string => typeof x === 'string',
+	);
 
 	return (
 		<li
 			className={clsx(
 				'group block cursor-default px-4 py-3 aria-selected:bg-zinc-50 dark:aria-selected:bg-zinc-800/50',
-				resultIndex > 0 && 'border-t border-zinc-100 dark:border-zinc-800'
+				resultIndex > 0 && 'border-t border-zinc-100 dark:border-zinc-800',
 			)}
 			aria-labelledby={`${id}-hierarchy ${id}-title`}
 			{...autocomplete.getItemProps({
@@ -169,7 +204,13 @@ function SearchResult({
 					{hierarchy.map((item, itemIndex, items) => (
 						<Fragment key={item}>
 							<HighlightQuery text={item} query={query} />
-							<span className={itemIndex === items.length - 1 ? 'sr-only' : 'mx-2 text-zinc-300 dark:text-zinc-700'}>
+							<span
+								className={
+									itemIndex === items.length - 1
+										? 'sr-only'
+										: 'mx-2 text-zinc-300 dark:text-zinc-700'
+								}
+							>
 								/
 							</span>
 						</Fragment>
@@ -195,8 +236,10 @@ function SearchResults({
 				<NoResultsIcon className='mx-auto h-5 w-5 stroke-zinc-900 dark:stroke-zinc-600' />
 				<p className='mt-2 text-xs text-zinc-700 dark:text-zinc-400'>
 					Nothing found for{' '}
-					<strong className='font-semibold break-words text-zinc-900 dark:text-white'>&lsquo;{query}&rsquo;</strong>.
-					Please try again.
+					<strong className='font-semibold break-words text-zinc-900 dark:text-white'>
+						&lsquo;{query}&rsquo;
+					</strong>
+					. Please try again.
 				</p>
 			</div>
 		);
@@ -236,11 +279,15 @@ const SearchInput = forwardRef<
 				data-autofocus
 				className={clsx(
 					'flex-auto appearance-none bg-transparent pl-10 text-zinc-900 outline-hidden placeholder:text-zinc-500 focus:w-full focus:flex-none sm:text-sm dark:text-white [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-webkit-search-results-button]:hidden [&::-webkit-search-results-decoration]:hidden',
-					autocompleteState.status === 'stalled' ? 'pr-11' : 'pr-4'
+					autocompleteState.status === 'stalled' ? 'pr-11' : 'pr-4',
 				)}
 				{...inputProps}
 				onKeyDown={(event) => {
-					if (event.key === 'Escape' && !autocompleteState.isOpen && autocompleteState.query === '') {
+					if (
+						event.key === 'Escape' &&
+						!autocompleteState.isOpen &&
+						autocompleteState.query === ''
+					) {
 						// In Safari, closing the dialog with the escape key can sometimes cause the scroll position to jump to the
 						// bottom of the page. This is a workaround for that until we can figure out a proper fix in Headless UI.
 						if (document.activeElement instanceof HTMLElement) {
@@ -284,10 +331,15 @@ function SearchDialog({
 	});
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
+	const navigationKey = `${pathname ?? ''}?${searchParams.toString()}`;
+	const previousNavigationKeyRef = useRef(navigationKey);
 
 	useEffect(() => {
-		setOpen(false);
-	}, [pathname, searchParams, setOpen]);
+		if (previousNavigationKeyRef.current !== navigationKey) {
+			previousNavigationKeyRef.current = navigationKey;
+			setOpen(false);
+		}
+	}, [navigationKey, setOpen]);
 
 	useEffect(() => {
 		if (open) {
@@ -375,7 +427,8 @@ function useSearchProps() {
 		dialogProps: {
 			open,
 			setOpen: useCallback((open: boolean) => {
-				const { width = 0, height = 0 } = buttonRef.current?.getBoundingClientRect() ?? {};
+				const { width = 0, height = 0 } =
+					buttonRef.current?.getBoundingClientRect() ?? {};
 				if (!open || (width !== 0 && height !== 0)) {
 					setOpen(open);
 				}
@@ -389,7 +442,9 @@ export function Search() {
 	const { buttonProps, dialogProps } = useSearchProps();
 
 	useEffect(() => {
-		setModifierKey(/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform) ? '' : 'Ctrl ');
+		setModifierKey(
+			/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform) ? '' : 'Ctrl ',
+		);
 	}, []);
 
 	return (
@@ -429,7 +484,11 @@ export function MobileSearch() {
 				<SearchIcon className='h-5 w-5 stroke-zinc-900 dark:stroke-white' />
 			</button>
 			<Suspense fallback={null}>
-				<SearchDialog className='lg:hidden' onNavigate={close} {...dialogProps} />
+				<SearchDialog
+					className='lg:hidden'
+					onNavigate={close}
+					{...dialogProps}
+				/>
 			</Suspense>
 		</div>
 	);

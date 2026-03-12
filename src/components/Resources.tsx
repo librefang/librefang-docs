@@ -1,6 +1,11 @@
 'use client';
 
-import { type MotionValue, motion, useMotionTemplate, useMotionValue } from 'motion/react';
+import {
+	type MotionValue,
+	motion,
+	useMotionTemplate,
+	useMotionValue,
+} from 'motion/react';
 import Link from 'next/link';
 import { useId } from 'react';
 
@@ -16,14 +21,18 @@ interface Resource {
 	name: string;
 	description: string;
 	icon: React.ComponentType<{ className?: string }>;
-	pattern: Omit<React.ComponentPropsWithoutRef<typeof GridPattern>, 'width' | 'height' | 'x'>;
+	pattern: Omit<
+		React.ComponentPropsWithoutRef<typeof GridPattern>,
+		'width' | 'height' | 'x'
+	>;
 }
 
 const resources: Array<Resource> = [
 	{
 		href: '/contacts',
 		name: 'Contacts',
-		description: 'Learn about the contact model and how to create, retrieve, update, delete, and list contacts.',
+		description:
+			'Learn about the contact model and how to create, retrieve, update, delete, and list contacts.',
 		icon: UserIcon,
 		pattern: {
 			y: 16,
@@ -50,7 +59,8 @@ const resources: Array<Resource> = [
 	{
 		href: '/messages',
 		name: 'Messages',
-		description: 'Learn about the message model and how to create, retrieve, update, delete, and list messages.',
+		description:
+			'Learn about the message model and how to create, retrieve, update, delete, and list messages.',
 		icon: EnvelopeIcon,
 		pattern: {
 			y: 32,
@@ -63,7 +73,8 @@ const resources: Array<Resource> = [
 	{
 		href: '/groups',
 		name: 'Groups',
-		description: 'Learn about the group model and how to create, retrieve, update, delete, and list groups.',
+		description:
+			'Learn about the group model and how to create, retrieve, update, delete, and list groups.',
 		icon: UsersIcon,
 		pattern: {
 			y: 22,
@@ -126,7 +137,11 @@ function Resource({ resource }: { resource: Resource }) {
 	const mouseX = useMotionValue(0);
 	const mouseY = useMotionValue(0);
 
-	function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLElement>) {
+	function onMouseMove({
+		currentTarget,
+		clientX,
+		clientY,
+	}: React.MouseEvent<HTMLElement>) {
 		const { left, top } = currentTarget.getBoundingClientRect();
 		mouseX.set(clientX - left);
 		mouseY.set(clientY - top);
@@ -148,7 +163,9 @@ function Resource({ resource }: { resource: Resource }) {
 						{resource.name}
 					</Link>
 				</h3>
-				<p className='mt-1 text-sm text-zinc-600 dark:text-zinc-400'>{resource.description}</p>
+				<p className='mt-1 text-sm text-zinc-600 dark:text-zinc-400'>
+					{resource.description}
+				</p>
 			</div>
 		</fieldset>
 	);

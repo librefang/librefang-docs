@@ -1,6 +1,11 @@
 'use client';
 
-import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessui/react';
+import {
+	Dialog,
+	DialogBackdrop,
+	DialogPanel,
+	TransitionChild,
+} from '@headlessui/react';
 import { motion } from 'motion/react';
 import { createContext, Suspense, useContext } from 'react';
 import { create } from 'zustand';
@@ -10,7 +15,13 @@ import { Navigation } from '@/components/Navigation';
 
 function MenuIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 	return (
-		<svg viewBox='0 0 10 9' fill='none' strokeLinecap='round' aria-hidden='true' {...props}>
+		<svg
+			viewBox='0 0 10 9'
+			fill='none'
+			strokeLinecap='round'
+			aria-hidden='true'
+			{...props}
+		>
 			<path d='M.5 1h9M.5 8h9M.5 4.5h9' />
 		</svg>
 	);
@@ -18,7 +29,13 @@ function MenuIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 
 function XIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 	return (
-		<svg viewBox='0 0 10 9' fill='none' strokeLinecap='round' aria-hidden='true' {...props}>
+		<svg
+			viewBox='0 0 10 9'
+			fill='none'
+			strokeLinecap='round'
+			aria-hidden='true'
+			{...props}
+		>
 			<path d='m1.5 1 7 7M8.5 1l-7 7' />
 		</svg>
 	);
@@ -26,9 +43,20 @@ function XIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 
 const IsInsideMobileNavigationContext = createContext(false);
 
-function MobileNavigationDialog({ isOpen, close }: { isOpen: boolean; close: () => void }) {
+function MobileNavigationDialog({
+	isOpen,
+	close,
+}: {
+	isOpen: boolean;
+	close: () => void;
+}) {
 	return (
-		<Dialog transition open={isOpen} onClose={close} className='fixed inset-0 z-50 lg:hidden'>
+		<Dialog
+			transition
+			open={isOpen}
+			onClose={close}
+			className='fixed inset-0 z-50 lg:hidden'
+		>
 			<DialogBackdrop
 				transition
 				className='fixed inset-0 top-14 bg-zinc-400/20 backdrop-blur-xs data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in dark:bg-black/40'

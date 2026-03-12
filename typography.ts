@@ -1,6 +1,10 @@
 const typographyConfig = {
 	theme: {
-		typography: ({ theme }: { theme: (path: string) => string | string[] | Record<string, unknown> }) => ({
+		typography: ({
+			theme,
+		}: {
+			theme: (path: string) => string | string[] | Record<string, unknown>;
+		}) => ({
 			DEFAULT: {
 				css: {
 					'--tw-prose-body': theme('colors.zinc.700'),
@@ -25,7 +29,9 @@ const typographyConfig = {
 					'--tw-prose-invert-headings': theme('colors.white'),
 					'--tw-prose-invert-links': theme('colors.emerald.400'),
 					'--tw-prose-invert-links-hover': theme('colors.emerald.500'),
-					'--tw-prose-invert-links-underline': theme('colors.emerald.500 / 0.3'),
+					'--tw-prose-invert-links-underline': theme(
+						'colors.emerald.500 / 0.3',
+					),
 					'--tw-prose-invert-bold': theme('colors.white'),
 					'--tw-prose-invert-counters': theme('colors.zinc.400'),
 					'--tw-prose-invert-bullets': theme('colors.zinc.600'),
@@ -139,13 +145,14 @@ const typographyConfig = {
 						marginLeft: `calc(-1 * ${theme('spacing.4')})`,
 						marginRight: `calc(-1 * ${theme('spacing.4')})`,
 						'@media (min-width: 640px)': {
-						        marginLeft: `calc(-1 * ${theme('spacing.6')})`,
-						        marginRight: `calc(-1 * ${theme('spacing.6')})`,
+							marginLeft: `calc(-1 * ${theme('spacing.6')})`,
+							marginRight: `calc(-1 * ${theme('spacing.6')})`,
 						},
 						'@media (min-width: 1024px)': {
-						        marginLeft: `calc(-1 * ${theme('spacing.8')})`,
-						        marginRight: `calc(-1 * ${theme('spacing.8')})`,
-						},					},
+							marginLeft: `calc(-1 * ${theme('spacing.8')})`,
+							marginRight: `calc(-1 * ${theme('spacing.8')})`,
+						},
+					},
 
 					// Quotes
 					blockquote: {
@@ -328,7 +335,8 @@ const typographyConfig = {
 					'--tw-prose-headings': 'var(--tw-prose-invert-headings)',
 					'--tw-prose-links': 'var(--tw-prose-invert-links)',
 					'--tw-prose-links-hover': 'var(--tw-prose-invert-links-hover)',
-					'--tw-prose-links-underline': 'var(--tw-prose-invert-links-underline)',
+					'--tw-prose-links-underline':
+						'var(--tw-prose-invert-links-underline)',
 					'--tw-prose-bold': 'var(--tw-prose-invert-bold)',
 					'--tw-prose-counters': 'var(--tw-prose-invert-counters)',
 					'--tw-prose-bullets': 'var(--tw-prose-invert-bullets)',

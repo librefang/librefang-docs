@@ -12,8 +12,17 @@ export function UsersIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 				strokeLinejoin='round'
 				d='M7.5 15.454C7.5 12.442 9.988 10 13 10s5.5 2.442 5.5 5.454a.545.545 0 0 1-.546.546H8.045a.545.545 0 0 1-.545-.546Z'
 			/>
-			<path fill='none' strokeLinecap='round' strokeLinejoin='round' d='M6.5 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z' />
-			<path strokeLinecap='round' strokeLinejoin='round' d='M13 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z' />
+			<path
+				fill='none'
+				strokeLinecap='round'
+				strokeLinejoin='round'
+				d='M6.5 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z'
+			/>
+			<path
+				strokeLinecap='round'
+				strokeLinejoin='round'
+				d='M13 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z'
+			/>
 		</svg>
 	);
 }

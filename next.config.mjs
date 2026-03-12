@@ -1,18 +1,18 @@
-import nextMDX from "@next/mdx";
+import nextMDX from '@next/mdx';
 
-import { recmaPlugins } from "./src/mdx/recma.mjs";
-import { rehypePlugins } from "./src/mdx/rehype.mjs";
-import { remarkPlugins } from "./src/mdx/remark.mjs";
-import withSearch from "./src/mdx/search.mjs";
+import { recmaPlugins } from './src/mdx/recma.mjs';
+import { rehypePlugins } from './src/mdx/rehype.mjs';
+import { remarkPlugins } from './src/mdx/remark.mjs';
+import withSearch from './src/mdx/search.mjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-	basePath: "",
-	assetPrefix: "",
-	output: "export",
-	pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
+	basePath: '',
+	assetPrefix: '',
+	output: 'export',
+	pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'mdx'],
 	outputFileTracingIncludes: {
-		"/**/*": ["./src/app/**/*.mdx"],
+		'/**/*': ['./src/app/**/*.mdx'],
 	},
 	images: {
 		unoptimized: true,

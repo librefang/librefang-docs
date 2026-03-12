@@ -25,16 +25,22 @@ function DocsErrorFallback({ error, resetError }: ErrorFallbackProps) {
 		<div className='flex min-h-[60vh] flex-col items-center justify-center p-8'>
 			<div className='text-center'>
 				<div className='mb-6 text-8xl'></div>
-				<h1 className='mb-3 text-3xl font-bold text-zinc-900 dark:text-white'>页面加载失败</h1>
+				<h1 className='mb-3 text-3xl font-bold text-zinc-900 dark:text-white'>
+					页面加载失败
+				</h1>
 				<p className='mb-8 max-w-md text-lg text-zinc-600 dark:text-zinc-400'>
 					文档页面遇到了问题这可能是 MDX 解析错误或组件渲染异常
 				</p>
 
 				{process.env.NODE_ENV === 'development' && error && (
 					<div className='mb-8 max-w-2xl rounded-lg bg-red-50 p-4 dark:bg-red-950/20'>
-						<h3 className='mb-2 font-semibold text-red-800 dark:text-red-200'>开发模式错误信息</h3>
+						<h3 className='mb-2 font-semibold text-red-800 dark:text-red-200'>
+							开发模式错误信息
+						</h3>
 						<details className='text-left'>
-							<summary className='cursor-pointer text-sm text-red-600 dark:text-red-400'>点击查看详细错误</summary>
+							<summary className='cursor-pointer text-sm text-red-600 dark:text-red-400'>
+								点击查看详细错误
+							</summary>
 							<pre className='mt-2 overflow-auto text-xs text-red-600 dark:text-red-400'>
 								{error.name}: {error.message}
 								{error.stack}
@@ -76,7 +82,10 @@ function DocsErrorFallback({ error, resetError }: ErrorFallbackProps) {
 }
 
 // MDX 错误边界组件
-export class MDXErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class MDXErrorBoundary extends React.Component<
+	ErrorBoundaryProps,
+	ErrorBoundaryState
+> {
 	constructor(props: ErrorBoundaryProps) {
 		super(props);
 		this.state = { hasError: false };
@@ -105,7 +114,8 @@ export class MDXErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorB
 			stack: error.stack,
 			componentStack: errorInfo.componentStack,
 			timestamp: new Date().toISOString(),
-			userAgent: typeof window !== 'undefined' ? navigator.userAgent : undefined,
+			userAgent:
+				typeof window !== 'undefined' ? navigator.userAgent : undefined,
 			url: typeof window !== 'undefined' ? window.location.href : undefined,
 
 			// MDX 特定信息
@@ -123,7 +133,10 @@ export class MDXErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorB
 		}
 
 		// 生产环境发送错误报告
-		if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+		if (
+			typeof window !== 'undefined' &&
+			process.env.NODE_ENV === 'production'
+		) {
 			fetch('/api/errors', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -159,7 +172,12 @@ export class MDXErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorB
 		if (this.state.hasError) {
 			const FallbackComponent = this.props.fallback || DocsErrorFallback;
 
-			return <FallbackComponent error={this.state.error} resetError={this.resetError} />;
+			return (
+				<FallbackComponent
+					error={this.state.error}
+					resetError={this.resetError}
+				/>
+			);
 		}
 
 		return this.props.children;
@@ -186,11 +204,17 @@ export function MDXComponentWrapper({
 					</p>
 					{process.env.NODE_ENV === 'development' && error && (
 						<details className='mb-3'>
-							<summary className='cursor-pointer text-sm text-red-600 dark:text-red-400'>查看错误详情</summary>
+							<summary className='cursor-pointer text-sm text-red-600 dark:text-red-400'>
+								查看错误详情
+							</summary>
 							<pre className='mt-1 text-xs text-red-500'>{error.message}</pre>
 						</details>
 					)}
-					<button type='button' onClick={resetError} className='text-sm text-red-600 underline dark:text-red-400'>
+					<button
+						type='button'
+						onClick={resetError}
+						className='text-sm text-red-600 underline dark:text-red-400'
+					>
 						重试
 					</button>
 				</div>
@@ -222,29 +246,37 @@ export function useSearchErrorHandler() {
 
 // 导航错误处理
 export function useNavigationErrorHandler() {
-	const handleNavigationError = React.useCallback((href: string, error: Error) => {
-		console.error(`Navigation error for ${href}:`, error);
+	const handleNavigationError = React.useCallback(
+		(href: string, error: Error) => {
+			console.error(`Navigation error for ${href}:`, error);
 
-		// 尝试使用原生导航作为后备
-		try {
-			window.location.href = href;
-		} catch (fallbackError) {
-			console.error('Fallback navigation also failed:', fallbackError);
-			alert('页面跳转失败请检查链接是否正确');
-		}
-	}, []);
+			// 尝试使用原生导航作为后备
+			try {
+				window.location.href = href;
+			} catch (fallbackError) {
+				console.error('Fallback navigation also failed:', fallbackError);
+				alert('页面跳转失败请检查链接是否正确');
+			}
+		},
+		[],
+	);
 
 	return { handleNavigationError };
 }
 
 // 内容加载错误处理
 export function useContentErrorHandler() {
-	const [loadingErrors, setLoadingErrors] = React.useState<Set<string>>(new Set());
+	const [loadingErrors, setLoadingErrors] = React.useState<Set<string>>(
+		new Set(),
+	);
 
-	const handleContentError = React.useCallback((contentId: string, error: Error) => {
-		console.error(`Content loading error for ${contentId}:`, error);
-		setLoadingErrors((prev) => new Set(prev).add(contentId));
-	}, []);
+	const handleContentError = React.useCallback(
+		(contentId: string, error: Error) => {
+			console.error(`Content loading error for ${contentId}:`, error);
+			setLoadingErrors((prev) => new Set(prev).add(contentId));
+		},
+		[],
+	);
 
 	const retryContent = React.useCallback((contentId: string) => {
 		setLoadingErrors((prev) => {
@@ -258,7 +290,7 @@ export function useContentErrorHandler() {
 		(contentId: string) => {
 			return loadingErrors.has(contentId);
 		},
-		[loadingErrors]
+		[loadingErrors],
 	);
 
 	return { handleContentError, retryContent, hasError };

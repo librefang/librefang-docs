@@ -16,7 +16,11 @@ export const metadata: Metadata = {
 	},
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
 	const pages = await glob('**/*.mdx', { cwd: 'src/app' });
 	const allSectionsEntries = (await Promise.all(
 		pages.map(async (filename) => {
@@ -26,17 +30,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 					`/${filename.replace(/(^|\/)page\.mdx$/, '')}`,
 					module.sections || [],
 				];
-			} catch (e) {
+			} catch {
 				return [`/${filename.replace(/(^|\/)page\.mdx$/, '')}`, []];
 			}
-		})
+		}),
 	)) as Array<[string, Array<Section>]>;
 	const allSections = Object.fromEntries(allSectionsEntries);
 
 	return (
 		<html lang='en' className='h-full' suppressHydrationWarning>
 			<head>
-				<script src='https://librefang-counter.suzukaze-haduki.workers.dev/script.js' async></script>
+				<script
+					src='https://librefang-counter.suzukaze-haduki.workers.dev/script.js'
+					async
+				></script>
 			</head>
 			<body className='flex min-h-full bg-white antialiased dark:bg-zinc-900'>
 				<Providers>
