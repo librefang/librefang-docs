@@ -1,225 +1,223 @@
-# 术语表
+# Glossary
 
-LibreFang 相关术语和概念定义。
-
-export const sections = [];
+Definitions of LibreFang-related terms and concepts.
 
 ---
 
 ## A
 
 ### Agent
-自主运行的软件实体，可以执行任务、做出决策并与用户或其他系统交互。
+A software entity that runs autonomously, capable of executing tasks, making decisions, and interacting with users or other systems.
 
 ### API (Application Programming Interface)
-应用程序编程接口，允许外部程序与 LibreFang 通信。
+Application programming interface that allows external programs to communicate with LibreFang.
 
 ### A2A (Agent to Agent)
-Agent 之间通信的协议标准。
+Protocol standard for Agent-to-Agent communication.
 
 ---
 
 ## B
 
 ### Bearer Token
-用于 API 认证的令牌格式。
+Token format used for API authentication.
 
 ### Benchmark
-性能测试，用于评估系统速度、吞吐量和响应时间。
+Performance testing used to evaluate system speed, throughput, and response time.
 
 ---
 
 ## C
 
 ### Capability
-Agent 被授权执行的操作范围，如使用特定工具或访问特定资源。
+The scope of operations an Agent is authorized to perform, such as using specific tools or accessing specific resources.
 
 ### Channel
-消息平台适配器，允许 Agent 通过不同平台与用户通信。
+Message platform adapter that allows Agents to communicate with users through different platforms.
 
 ### CLI (Command Line Interface)
-命令行界面，通过终端与 LibreFang 交互。
+Command-line interface for interacting with LibreFang through the terminal.
 
 ### Compaction
-会话压缩，减少历史消息以控制 token 使用。
+Session compression that reduces historical messages to control token usage.
 
 ---
 
 ## D
 
 ### Daemon
-后台运行的 LibreFang 守护进程。
+LibreFang daemon running in the background.
 
 ### DAG (Directed Acyclic Graph)
-有向无环图，工作流的执行模型。
+Directed acyclic graph, the execution model for workflows.
 
 ---
 
 ## E
 
 ### Ed25519
-非对称加密算法，用于签名和验证。
+Asymmetric encryption algorithm used for signing and verification.
 
 ### Environment Variable
-环境变量，存储配置信息的键值对。
+Key-value pair used to store configuration information.
 
 ---
 
 ## F
 
 ### FangHub
-LibreFang 技能市场。
+LibreFang skill marketplace.
 
 ### Fallback Provider
-后备 LLM 提供商，当主提供商失败时使用。
+Backup LLM provider used when the primary provider fails.
 
 ---
 
 ## G
 
 ### GCRA (Generic Cell Rate Algorithm)
-通用单元速率算法，用于速率限制。
+Generic cell rate algorithm used for rate limiting.
 
 ### Groq
-LLM 提供商之一，以快速推理著称。
+One of the LLM providers, known for fast inference.
 
 ---
 
 ## H
 
 ### Hand
-LibreFang 的自主能力包，可以独立运行和执行任务。
+LibreFang's autonomous capability package that can run independently and execute tasks.
 
 ### HTTP Headers
-HTTP 请求/响应的元数据。
+Metadata of HTTP requests/responses.
 
 ---
 
 ## K
 
 ### Kernel
-LibreFang 核心组件，负责协调所有子系统。
+LibreFang's core component responsible for coordinating all subsystems.
 
 ### Knowledge Graph
-知识图谱，存储实体和关系的结构化数据。
+Structured data that stores entities and relationships.
 
 ---
 
 ## L
 
 ### LLM (Large Language Model)
-大型语言模型，如 Claude、GPT 等。
+Large language model such as Claude, GPT, etc.
 
 ### LLM Driver
-LibreFang 与不同 LLM 提供商交互的适配层。
+Adapter layer that LibreFang uses to interact with different LLM providers.
 
 ---
 
 ## M
 
 ### MCP (Model Context Protocol)
-模型上下文协议，连接 LLM 与外部工具的标准化方式。
+Model Context Protocol, a standardized way to connect LLMs with external tools.
 
 ### Memory
-LibreFang 的持久化存储系统，包括会话、向量搜索和知识图谱。
+LibreFang's persistent storage system including sessions, vector search, and knowledge graphs.
 
 ### Merkle Hash Chain
-默克尔哈希链，用于审计追踪的数据结构。
+Merkle hash chain, a data structure used for audit trails.
 
 ### Model Catalog
-模型目录，包含所有可用模型和提供商信息。
+Model catalog containing all available models and provider information.
 
 ---
 
 ## O
 
 ### OFP (OpenFang Protocol)
-LibreFang 点对点通信协议。
+LibreFang's peer-to-peer communication protocol.
 
 ### OpenAI Compatible API
-与 OpenAI API 格式兼容的接口。
+Interface compatible with OpenAI API format.
 
 ---
 
 ## P
 
 ### Prompt Injection
-提示注入，安全威胁类型，通过恶意输入操纵 AI 行为。
+A security threat type that manipulates AI behavior through malicious input.
 
 ### Provider
-LLM 提供商，如 Anthropic、OpenAI、Groq 等。
+LLM provider such as Anthropic, OpenAI, Groq, etc.
 
 ---
 
 ## R
 
 ### RBAC (Role-Based Access Control)
-基于角色的访问控制。
+Role-based access control.
 
 ### REST API
-表述性状态传递 API，Web 服务标准架构风格。
+Representational State Transfer API, standard architectural style for web services.
 
 ---
 
 ## S
 
 ### SSE (Server-Sent Events)
-服务器发送事件，用于服务器到客户端的单向流式传输。
+Server-sent events, used for one-way streaming from server to client.
 
 ### Skill
-可插拔的工具包，扩展 Agent 能力。
+Pluggable toolkit that extends Agent capabilities.
 
 ### SSRF (Server-Side Request Forgery)
-服务器端请求伪造，安全威胁类型。
+Server-side request forgery, a type of security threat.
 
 ### Stable Mode
-Agent 运行模式，固定模型和技能注册表。
+Agent running mode with fixed model and skill registry.
 
 ### System Prompt
-系统提示，定义 Agent 的行为和人格。
+System prompt that defines Agent behavior and persona.
 
 ---
 
 ## T
 
 ### Taint Tracking
-污点追踪，安全机制，跟踪敏感信息流动。
+Security mechanism that tracks the flow of sensitive information.
 
 ### TOML
-Tom's Obvious, Minimal Language，配置文件格式。
+Tom's Obvious, Minimal Language, configuration file format.
 
 ### Tool
-Agent 可以调用的功能，如文件读取、网络请求等。
+Function that an Agent can invoke, such as file reading, network requests, etc.
 
 ### Trigger
-触发工作流执行的事件源。
+Event source that triggers workflow execution.
 
 ---
 
 ## V
 
 ### Vector Embedding
-向量嵌入，将文本转换为数值向量用于语义搜索。
+Vector embedding that converts text to numerical vectors for semantic search.
 
 ### Vault
-凭证保险库，安全存储敏感信息。
+Credential vault for securely storing sensitive information.
 
 ---
 
 ## W
 
 ### WASM (WebAssembly)
-WebAssembly，安全的沙箱运行环境。
+WebAssembly, a secure sandbox runtime environment.
 
 ### WebSocket
-全双工通信协议，支持实时双向交互。
+Full-duplex communication protocol supporting real-time bidirectional interaction.
 
 ### Workflow
-工作流，由触发器和步骤组成的自动化流程。
+Automation process composed of triggers and steps.
 
 ---
 
 ## Z
 
 ### Zeroizing
-内存零化，安全擦除敏感数据。
+Memory zeroing, securely erasing sensitive data.

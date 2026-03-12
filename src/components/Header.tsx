@@ -26,17 +26,18 @@ function TopLevelNavItem({ href, children }: { href: string; children: React.Rea
 
 function LangSwitch() {
 	const pathname = usePathname();
-	const isEn = pathname?.startsWith('/en');
+	const isZh = pathname?.startsWith('/zh');
 
 	// Simple toggle: go to home of other language
-	const targetPath = isEn ? '/' : '/en';
+	// Default is English (/), Chinese is /zh
+	const targetPath = isZh ? '/' : '/zh';
 
 	return (
 		<Link
 			href={targetPath}
 			className="flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1.5 text-xs font-medium text-zinc-600 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
 		>
-			{isEn ? '中' : 'EN'}
+			{isZh ? 'EN' : '中文'}
 		</Link>
 	);
 }
@@ -47,6 +48,8 @@ export const Header = forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<
 ) {
 	const { isOpen: mobileNavIsOpen } = useMobileNavigationStore();
 	const isInsideMobileNavigation = useIsInsideMobileNavigation();
+	const pathname = usePathname();
+	const isZh = pathname?.startsWith('/zh');
 
 	const { scrollY } = useScroll();
 	const bgOpacityLight = useTransform(scrollY, [0, 72], ['50%', '90%']);
@@ -87,7 +90,7 @@ export const Header = forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<
 			<div className='flex items-center gap-5'>
 				<nav className='hidden md:block'>
 					<ul className='flex items-center gap-8'>
-						<TopLevelNavItem href={withPrefix('/')}>文档</TopLevelNavItem>
+						<TopLevelNavItem href={withPrefix('/')}>{isZh ? '文档' : 'Docs'}</TopLevelNavItem>
 						<TopLevelNavItem href='https://github.com/librefang/librefang'>GitHub</TopLevelNavItem>
 					</ul>
 				</nav>

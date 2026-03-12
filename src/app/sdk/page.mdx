@@ -1,50 +1,50 @@
-# SDK 与客户端
+# SDK and Clients
 
-LibreFang 提供多种语言的 SDK 和客户端库。
+LibreFang provides SDKs and client libraries in multiple languages.
 
 ---
 
-## 概述
+## Overview
 
-LibreFang 提供官方 SDK 支持多种编程语言，方便集成到您的应用中。
+LibreFang provides official SDK support for multiple programming languages for easy integration into your applications.
 
-| SDK | 状态 | 说明 |
-|-----|------|------|
-| JavaScript/TypeScript | ✅ 官方 | @librefang/sdk |
-| Python | ✅ 官方 | librefang-client |
-| Rust | ✅ 官方 | librefang crate |
-| Go | 🚧 开发中 | 社区贡献 |
+| SDK | Status | Description |
+|-----|--------|-------------|
+| JavaScript/TypeScript | ✅ Official | @librefang/sdk |
+| Python | ✅ Official | librefang-client |
+| Rust | ✅ Official | librefang crate |
+| Go | 🚧 In Development | Community contribution |
 
 ---
 
 ## JavaScript/TypeScript SDK
 
-### 安装
+### Installation
 
 ```bash
 npm install @librefang/sdk
 ```
 
-### 使用
+### Usage
 
 ```typescript
 import { LibreFang } from '@librefang/sdk';
 
-// 创建客户端
+// Create client
 const client = new LibreFang({
   apiKey: 'your-api-key',
   baseUrl: 'http://127.0.0.1:4200'
 });
 
-// 列出 Agent
+// List Agents
 const agents = await client.agents.list();
 
-// 发送消息
+// Send message
 const response = await client.agents.sendMessage('agent-id', {
   message: 'Hello!'
 });
 
-// 流式响应
+// Streaming response
 for await (const chunk of client.agents.streamMessage('agent-id', {
   message: 'Tell me a story'
 })) {
@@ -52,17 +52,17 @@ for await (const chunk of client.agents.streamMessage('agent-id', {
 }
 ```
 
-### API 参考
+### API Reference
 
 ```typescript
-// 客户端配置
+// Client configuration
 interface LibreFangConfig {
   apiKey: string;
   baseUrl?: string;
   timeout?: number;
 }
 
-// Agent 操作
+// Agent operations
 client.agents.list()
 client.agents.get(id)
 client.agents.create(manifest)
@@ -70,12 +70,12 @@ client.agents.sendMessage(id, { message })
 client.agents.streamMessage(id, { message })
 client.agents.delete(id)
 
-// 内存操作
+// Memory operations
 client.memory.store(key, value)
 client.memory.get(key)
 client.memory.search(query)
 
-// 工作流
+// Workflows
 client.workflows.list()
 client.workflows.run(id, input)
 ```
@@ -84,85 +84,85 @@ client.workflows.run(id, input)
 
 ## Python SDK
 
-### 安装
+### Installation
 
 ```bash
 pip install librefang-client
 ```
 
-### 使用
+### Usage
 
 ```python
 from librefang import LibreFang
 
-# 创建客户端
+# Create client
 client = LibreFang(
     api_key="your-api-key",
     base_url="http://127.0.0.1:4200"
 )
 
-# 列出 Agent
+# List Agents
 agents = client.agents.list()
 
-# 发送消息
+# Send message
 response = client.agents.send_message("agent-id", message="Hello!")
 
-# 流式响应
+# Streaming response
 for chunk in client.agents.stream_message("agent-id", message="Tell me a story"):
     print(chunk, end="")
 ```
 
-### API 参考
+### API Reference
 
 ```python
-# 客户端配置
+# Client configuration
 client = LibreFang(
     api_key: str,
     base_url: str = "http://127.0.0.1:4200",
     timeout: int = 60
 )
 
-# Agent 操作
+# Agent operations
 client.agents.list() -> List[Agent]
 client.agents.get(id: str) -> Agent
 client.agents.create(manifest: str) -> Agent
 client.agents.send_message(id: str, message: str) -> Response
 client.agents.stream_message(id: str, message: str) -> Generator
 
-# 内存操作
+# Memory operations
 client.memory.store(key: str, value: Any) -> None
 client.memory.get(key: str) -> Any
 client.memory.search(query: str) -> List[MemoryItem]
 
-# 工作流
+# Workflows
 client.workflows.list() -> List[Workflow]
 client.workflows.run(id: str, input: Dict) -> WorkflowResult
 ```
 
 ---
 
-## Rust 客户端
+## Rust Client
 
-### 添加依赖
+### Add Dependency
 
 ```toml
 [dependencies]
 librefang = { version = "0.1", features = ["client"] }
 ```
 
-### 使用
+### Usage
 
 ```rust
 use librefang::Client;
 
-// 创建客户端
+// Create client
 let client = Client::new("http://127.0.0.1:4200")
     .api_key("your-api-key");
 
-// 列出 Agent
+// List Agents
 let agents = client.agents().list().await?;
 
-// 发送消息
+// Send message
 let response = client.agents()
     .send_message("agent-id", "Hello!")
     .await?;
@@ -170,11 +170,11 @@ let response = client.agents()
 
 ---
 
-## OpenAI 兼容 API
+## OpenAI Compatible API
 
-LibreFang 提供 OpenAI 兼容 API，可以直接使用 OpenAI 客户端库。
+LibreFang provides an OpenAI-compatible API that can be used directly with OpenAI client libraries.
 
-### 端点
+### Endpoint
 
 ```
 Base URL: http://127.0.0.1:4200/v1
@@ -195,7 +195,7 @@ curl -X POST http://127.0.0.1:4200/v1/chat/completions \
   }'
 ```
 
-### 使用 OpenAI 库
+### Using OpenAI Library
 
 ```python
 from openai import OpenAI
@@ -227,16 +227,16 @@ const response = await client.chat.completions.create({
 });
 ```
 
-### 可用模型
+### Available Models
 
-通过 OpenAI 兼容 API 可用的模型：
+Models available via OpenAI compatible API:
 
-- `researcher` - 研究 Agent
-- `coder` - 编码 Agent
-- `writer` - 写作 Agent
-- 任何配置的 Agent
+- `researcher` - Research Agent
+- `coder` - Coding Agent
+- `writer` - Writing Agent
+- Any configured Agent
 
-### 流式响应
+### Streaming Response
 
 ```bash
 curl -X POST http://127.0.0.1:4200/v1/chat/completions \
@@ -253,7 +253,7 @@ curl -X POST http://127.0.0.1:4200/v1/chat/completions \
 
 ## WebSocket API
 
-### 连接
+### Connection
 
 ```javascript
 const ws = new WebSocket('ws://127.0.0.1:4200/api/agents/{agent-id}/ws');
@@ -264,7 +264,7 @@ ws.onmessage = (event) => {
 ws.send(JSON.stringify({ message: 'Hello!' }));
 ```
 
-### 消息格式
+### Message Format
 
 ```json
 {
@@ -287,9 +287,9 @@ ws.send(JSON.stringify({ message: 'Hello!' }));
 
 ---
 
-## SSE 流式传输
+## SSE Streaming
 
-### 连接
+### Connection
 
 ```bash
 curl -N http://127.0.0.1:4200/api/agents/{agent-id}/stream \
@@ -298,7 +298,7 @@ curl -N http://127.0.0.1:4200/api/agents/{agent-id}/stream \
   -d '{"message": "Hello!"}'
 ```
 
-### 事件格式
+### Event Format
 
 ```
 data: {"type": "chunk", "content": "Hello"}
@@ -310,9 +310,9 @@ data: {"type": "done", "content": ""}
 
 ---
 
-## 示例应用
+## Example Applications
 
-### React 示例
+### React Example
 
 ```tsx
 import { useState } from 'react';
@@ -330,7 +330,7 @@ function ChatApp() {
     });
 
     for await (const chunk of response) {
-      // 处理流式响应
+      // Handle streaming response
     }
   };
 
@@ -344,7 +344,7 @@ function ChatApp() {
 }
 ```
 
-### Next.js 示例
+### Next.js Example
 
 ```typescript
 // app/api/chat/route.ts
@@ -364,7 +364,7 @@ export async function POST(req: Request) {
 }
 ```
 
-### Flask 示例
+### Flask Example
 
 ```python
 from flask import Flask, request, jsonify
@@ -385,7 +385,7 @@ def chat():
 
 ---
 
-## 错误处理
+## Error Handling
 
 ```typescript
 import { LibreFang, LibreFangError } from '@librefang/sdk';
@@ -397,30 +397,30 @@ try {
 } catch (error) {
   if (error instanceof LibreFangError) {
     console.log(error.code);    // 'agent_not_found'
-    console.log(error.message);  // 错误消息
+    console.log(error.message);  // Error message
   }
 }
 ```
 
-### 错误类型
+### Error Types
 
-| 错误码 | 说明 |
-|---------|------|
-| `invalid_request` | 请求格式错误 |
-| `unauthorized` | 认证失败 |
-| `rate_limit` | 速率限制 |
-| `agent_not_found` | Agent 不存在 |
-| `internal_error` | 内部错误 |
-| `service_unavailable` | 服务不可用 |
+| Error Code | Description |
+|------------|-------------|
+| `invalid_request` | Invalid request format |
+| `unauthorized` | Authentication failed |
+| `rate_limit` | Rate limit exceeded |
+| `agent_not_found` | Agent does not exist |
+| `internal_error` | Internal error |
+| `service_unavailable` | Service unavailable |
 
 ---
 
-## 类型定义
+## Type Definitions
 
 ### TypeScript
 
 ```typescript
-// Agent 类型
+// Agent type
 interface Agent {
   id: string;
   name: string;
@@ -430,14 +430,14 @@ interface Agent {
   model_name: string;
 }
 
-// 消息类型
+// Message type
 interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp?: string;
 }
 
-// 响应类型
+// Response type
 interface Response {
   id: string;
   content: string;
@@ -445,3 +445,5 @@ interface Response {
   tokens_used: number;
 }
 ```
+
+export const sections = [];

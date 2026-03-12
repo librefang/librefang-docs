@@ -39,10 +39,10 @@ function PageLink({
 
 function PageNavigation() {
 	const pathname = usePathname();
-	const isEn = pathname?.startsWith('/en');
-	const currentNav = isEn ? enNavigation : navigation;
+	const isZh = pathname?.startsWith('/zh');
+	const currentNav = isZh ? navigation : enNavigation;
 	const allPages = currentNav.flatMap((group) => group.links);
-	// Find current page index by matching pathname with hrefs (already has prefix in dev)
+	// Find current page index by matching pathname with hrefs
 	const currentPageIndex = allPages.findIndex((page) => page.href === pathname);
 
 	if (currentPageIndex === -1) {

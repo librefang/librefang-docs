@@ -1,26 +1,26 @@
-# 内存系统
+# Memory System
 
-LibreFang 的内存系统提供持久化存储、语义搜索和知识图谱功能。
+LibreFang's memory system provides persistent storage, semantic search, and knowledge graph functionality.
 
 ---
 
-## 概述
+## Overview
 
-LibreFang 内存系统包含：
+The LibreFang memory system includes:
 
-- **SQLite 持久化** - 结构化 KV 存储
-- **向量嵌入** - 语义搜索能力
-- **知识图谱** - 实体和关系
-- **会话管理** - 跨通道记忆
-- **使用追踪** - 成本和使用统计
+- **SQLite Persistence** - Structured KV storage
+- **Vector Embeddings** - Semantic search capability
+- **Knowledge Graph** - Entities and relationships
+- **Session Management** - Cross-channel memory
+- **Usage Tracking** - Cost and usage statistics
 
 <Note>
-**提示**: 内存数据默认存储在 `~/.librefang/data/librefang.db`，可配置存储路径。
+**Tip**: Memory data is stored in `~/.librefang/data/librefang.db` by default, with configurable storage path.
 </Note>
 
 ---
 
-## 架构
+## Architecture
 
 ```
 ┌─────────────────────────────────────────┐
@@ -42,9 +42,9 @@ LibreFang 内存系统包含：
 
 ---
 
-## 配置
+## Configuration
 
-### 基本配置
+### Basic Configuration
 
 ```toml
 [memory]
@@ -52,7 +52,7 @@ decay_rate = 0.05
 sqlite_path = "~/.librefang/data/librefang.db"
 ```
 
-### 高级配置
+### Advanced Configuration
 
 ```toml
 [memory]
@@ -63,118 +63,118 @@ max_memory_items = 10000
 auto_compact = true
 ```
 
-| 字段 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `decay_rate` | Float | 0.05 | 记忆置信度衰减率 |
-| `sqlite_path` | String | ~/.librefang/data/librefang.db | 数据库路径 |
-| `vector_dimension` | Integer | 1536 | 向量维度 |
-| `max_memory_items` | Integer | 10000 | 最大记忆条目 |
-| `auto_compact` | Boolean | true | 自动压缩 |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `decay_rate` | Float | 0.05 | Memory confidence decay rate |
+| `sqlite_path` | String | ~/.librefang/data/librefang.db | Database path |
+| `vector_dimension` | Integer | 1536 | Vector dimension |
+| `max_memory_items` | Integer | 10000 | Maximum memory entries |
+| `auto_compact` | Boolean | true | Auto compaction |
 
 ---
 
-## 会话管理
+## Session Management
 
-### 创建会话
+### Create Session
 
 ```bash
-# 创建新会话
+# Create new session
 librefang session create --name "research-project"
 ```
 
-### 列出会话
+### List Sessions
 
 ```bash
-# 列出所有会话
+# List all sessions
 librefang session list
 ```
 
-### 会话操作
+### Session Operations
 
 ```bash
-# 查看会话详情
+# View session details
 librefang session info <session-id>
 
-# 删除会话
+# Delete session
 librefang session delete <session-id>
 
-# 压缩会话
+# Compact session
 librefang session compact <session-id>
 
-# 导出会话
+# Export session
 librefang session export <session-id> --format json
 ```
 
 ---
 
-## 记忆操作
+## Memory Operations
 
-### 存储记忆
+### Store Memory
 
 ```bash
-# 存储简单记忆
+# Store simple memory
 librefang memory store --key "user:preference:theme" --value "dark"
 
-# 存储结构化数据
+# Store structured data
 librefang memory store --key "project:details" --data '{"name": "LibreFang", "version": "1.0"}'
 
-# 存储带标签
+# Store with tags
 librefang memory store --key "note:1" --value "Important note" --tags "work,urgent"
 ```
 
-### 搜索记忆
+### Search Memory
 
 ```bash
-# 关键词搜索
+# Keyword search
 librefang memory search "project"
 
-# 向量搜索 (语义搜索)
+# Vector search (semantic search)
 librefang memory search --vector "find information about AI agents"
 
-# 带过滤的搜索
+# Search with filters
 librefang memory search "meeting" --tags "work" --limit 10
 ```
 
-### 记忆操作
+### Memory Operations
 
 ```bash
-# 读取记忆
+# Read memory
 librefang memory get <key>
 
-# 更新记忆
+# Update memory
 librefang memory update <key> --value "new value"
 
-# 删除记忆
+# Delete memory
 librefang memory delete <key>
 
-# 列出所有记忆
+# List all memories
 librefang memory list --prefix "project:"
 ```
 
 ---
 
-## 向量搜索
+## Vector Search
 
-### 语义搜索
+### Semantic Search
 
-LibreFang 支持向量嵌入的语义搜索：
+LibreFang supports semantic search with vector embeddings:
 
 ```bash
-# 语义搜索示例
+# Semantic search example
 librefang memory search --vector "machine learning techniques for text classification"
 ```
 
-### 相似度阈值
+### Similarity Threshold
 
 ```toml
 [memory]
 similarity_threshold = 0.75
 ```
 
-### API 端点
+### API Endpoint
 
 ```bash
-# 语义搜索 API
+# Semantic search API
 curl -X POST http://127.0.0.1:4200/api/memory/search \
   -H "Content-Type: application/json" \
   -d '{
@@ -186,54 +186,54 @@ curl -X POST http://127.0.0.1:4200/api/memory/search \
 
 ---
 
-## 知识图谱
+## Knowledge Graph
 
-### 实体管理
+### Entity Management
 
 ```bash
-# 添加实体
+# Add entity
 librefang kg add-entity --type "person" --name "John Doe" --properties '{"role": "developer"}'
 
-# 列出实体
+# List entities
 librefang kg list-entities --type "person"
 
-# 搜索实体
+# Search entities
 librefang kg search-entities "John"
 ```
 
-### 关系管理
+### Relationship Management
 
 ```bash
-# 添加关系
+# Add relationship
 librefang kg add-relation \
   --from "person:john" \
   --relation "works_at" \
   --to "company:acme"
 
-# 列出关系
+# List relationships
 librefang kg list-relations --entity "person:john"
 
-# 查询关系
+# Query relationships
 librefang kg query --from "person:john" --relation "works_at"
 ```
 
-### 图谱查询
+### Graph Queries
 
 ```bash
-# 查询路径
+# Query path
 librefang kg path --from "person:alice" --to "company:acme"
 
-# 查询子图
+# Query subgraph
 librefang kg subgraph --entity "person:bob" --depth 2
 ```
 
 ---
 
-## 会话压缩
+## Session Compaction
 
-### 自动压缩
+### Auto Compaction
 
-当会话消息数量达到阈值时自动压缩：
+Automatic compaction when session message count reaches threshold:
 
 ```toml
 [compaction]
@@ -242,124 +242,126 @@ keep_recent = 20
 max_summary_tokens = 1024
 ```
 
-### 手动压缩
+### Manual Compaction
 
 ```bash
-# 压缩会话
+# Compact session
 librefang session compact <session-id>
 
-# 压缩所有会话
+# Compact all sessions
 librefang session compact-all
 
-# 查看压缩状态
+# View compaction status
 librefang session compaction-status
 ```
 
-### 压缩算法
+### Compaction Algorithm
 
-1. **保留最近 N 条消息**
-2. **提取关键信息**
-3. **生成摘要**
-4. **保留工具调用历史**
+1. **Keep Recent N Messages**
+2. **Extract Key Information**
+3. **Generate Summary**
+4. **Keep Tool Call History**
 
 ---
 
-## 使用追踪
+## Usage Tracking
 
-### 追踪操作
+### View Usage
 
 ```bash
-# 查看使用统计
+# View usage statistics
 librefang usage
 
-# 查看 Agent 使用
+# View Agent usage
 librefang usage --agent <agent-id>
 
-# 查看提供商使用
+# View provider usage
 librefang usage --provider
 ```
 
-### 成本追踪
+### Cost Tracking
 
 ```bash
-# 查看成本
+# View costs
 librefang cost
 
-# 按时间范围查看成本
+# View costs by date range
 librefang cost --from 2025-01-01 --to 2025-01-31
 
-# 导出报告
+# Export report
 librefang cost export --format csv
 ```
 
 ---
 
-## API 端点
+## API Endpoints
 
-### 内存操作
+### Memory Operations
 
-| 端点 | 方法 | 说明 |
-|------|------|------|
-| `/api/memory` | GET | 搜索记忆 |
-| `/api/memory` | POST | 存储记忆 |
-| `/api/memory/{id}` | GET | 获取记忆 |
-| `/api/memory/{id}` | DELETE | 删除记忆 |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/memory` | GET | Search memory |
+| `/api/memory` | POST | Store memory |
+| `/api/memory/{id}` | GET | Get memory |
+| `/api/memory/{id}` | DELETE | Delete memory |
 
-### 会话操作
+### Session Operations
 
-| 端点 | 方法 | 说明 |
-|------|------|------|
-| `/api/memory/sessions` | GET | 列出会话 |
-| `/api/memory/sessions/{id}` | GET | 获取会话 |
-| `/api/memory/sessions/{id}/compact` | POST | 压缩会话 |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/memory/sessions` | GET | List sessions |
+| `/api/memory/sessions/{id}` | GET | Get session |
+| `/api/memory/sessions/{id}/compact` | POST | Compact session |
 
-### 知识图谱
+### Knowledge Graph
 
-| 端点 | 方法 | 说明 |
-|------|------|------|
-| `/api/memory/kg/entities` | GET | 列出实体 |
-| `/api/memory/kg/relations` | GET | 列出关系 |
-| `/api/memory/kg/query` | POST | 查询图谱 |
-
----
-
-## 最佳实践
-
-1. **定期压缩** - 防止会话过大
-2. **使用标签** - 便于组织和搜索
-3. **设置衰减率** - 控制记忆置信度
-4. **监控使用** - 跟踪成本和使用量
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/memory/kg/entities` | GET | List entities |
+| `/api/memory/kg/relations` | GET | List relations |
+| `/api/memory/kg/query` | POST | Query graph |
 
 ---
 
-## 故障排除
+## Best Practices
 
-### 内存搜索慢
+1. **Regular Compaction** - Prevent sessions from growing too large
+2. **Use Tags** - Easy organization and search
+3. **Set Decay Rate** - Control memory confidence
+4. **Monitor Usage** - Track costs and usage
+
+---
+
+## Troubleshooting
+
+### Slow Memory Search
 
 ```bash
-# 重建向量索引
+# Rebuild vector index
 librefang memory reindex
 
-# 检查索引状态
+# Check index status
 librefang memory index-status
 ```
 
-### 数据库膨胀
+### Database Bloat
 
 ```bash
-# 清理旧数据
+# Clean old data
 librefang memory cleanup --older-than 30d
 
-# 压缩数据库
+# Vacuum database
 librefang memory vacuum
 ```
 
-### 记忆丢失
+### Memory Loss
 
 ```bash
-# 检查数据库完整性
+# Check database integrity
 librefang doctor
 
-# 恢复备份
+# Restore backup
 librefang memory restore --backup <path>
 ```
+
+export const sections = [];

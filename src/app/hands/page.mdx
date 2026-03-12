@@ -1,50 +1,50 @@
-# 自主 Hands
+# Autonomous Hands
 
-LibreFang 的核心创新——7 个预构建的自主能力包，独立运行、按计划执行，无需人工干预。
+LibreFang's core innovation — 7 pre-built autonomous capability packages that run independently and execute on schedule without human intervention.
 
 <Note>
-**提示**: Hands 可以通过 cron 表达式配置定时执行，也支持事件触发模式。
+**Tip**: Hands can be configured with cron expressions for scheduled execution, and also support event-triggered mode.
 </Note>
 
 ---
 
-## 概述
+## Overview
 
-Hands 是 LibreFang 的独特功能，它们是自主工作的 Agent，可以：
-- 按计划自动执行任务
-- 跨多个平台操作
-- 处理复杂的多步骤工作流
-- 在无人干预的情况下做出决策
+Hands are LibreFang's unique feature — they are autonomous agents that can:
+- Execute tasks automatically on schedule
+- Operate across multiple platforms
+- Handle complex multi-step workflows
+- Make decisions without human intervention
 
 ---
 
-## 7 个内置 Hands
+## 7 Built-in Hands
 
-| Hand | 功能 | 自主级别 |
-|------|------|----------|
-| **Clip** | YouTube 视频下载、剪辑、字幕生成、垂直短视频发布 | 高 |
-| **Lead** | 每日潜在客户发现、信息丰富、0-100 评分、去重 | 高 |
-| **Collector** | OSINT 情报收集、变更检测、情感追踪、知识图谱 | 高 |
-| **Predictor** | 超级预测引擎、置信区间、反向模式 | 高 |
-| **Researcher** | 深度自主研究、CRAAP 可信度评估、APA 引用 | 高 |
-| **Twitter** | 自主 X/Twitter 账号管理、7 种内容格式、审批队列 | 高 |
-| **Browser** | Web 自动化、Playwright、强制购买审批 gate | 中 |
+| Hand | Function | Autonomy Level |
+|------|----------|----------------|
+| **Clip** | YouTube video download, clipping, subtitle generation, vertical short video publishing | High |
+| **Lead** | Daily lead discovery, enrichment, 0-100 scoring, deduplication | High |
+| **Collector** | OSINT intelligence collection, change detection, sentiment tracking, knowledge graph | High |
+| **Predictor** | Superforecasting engine, confidence intervals, contrarian patterns | High |
+| **Researcher** | Deep autonomous research, CRAAP credibility assessment, APA citation | High |
+| **Twitter** | Autonomous X/Twitter account management, 7 content formats, approval queue | High |
+| **Browser** | Web automation, Playwright, mandatory purchase approval gate | Medium |
 
 ---
 
 ## Clip Hand
 
-YouTube 视频自动化 Hand。
+YouTube video automation Hand.
 
-### 功能
+### Features
 
-- 视频下载（支持多种格式和质量）
-- 自动剪辑和裁剪
-- 字幕生成和翻译
-- 垂直短视频适配（9:16）
-- 自动发布到社交平台
+- Video download (multiple formats and quality options)
+- Automatic clipping and trimming
+- Subtitle generation and translation
+- Vertical short video adaptation (9:16)
+- Auto-publish to social platforms
 
-### 配置
+### Configuration
 
 ```toml
 [clip]
@@ -54,37 +54,37 @@ vertical_format = true
 publish_targets = ["tiktok", "youtube_shorts"]
 ```
 
-### CLI 命令
+### CLI Commands
 
 ```bash
-# 激活 Clip Hand
+# Activate Clip Hand
 librefang hand activate clip
 
-# 下载视频
+# Download video
 librefang hand clip download "https://youtube.com/watch?v=..."
 
-# 剪辑视频
+# Clip video
 librefang hand clip clip --start 60 --end 120 --input video.mp4
 
-# 生成字幕
-librefang hand clip subtitle --lang zh video.mp4
+# Generate subtitles
+librefang hand clip subtitle --lang en video.mp4
 ```
 
 ---
 
 ## Lead Hand
 
-每日潜在客户发现和评分 Hand。
+Daily lead discovery and scoring Hand.
 
-### 功能
+### Features
 
-- 自动发现潜在客户
-- 企业信息丰富（规模、行业、联系方式）
-- 0-100 质量评分
-- 去重和合并
-- CRM 集成
+- Automatic lead discovery
+- Company information enrichment (size, industry, contact info)
+- 0-100 quality scoring
+- Deduplication and merging
+- CRM integration
 
-### 配置
+### Configuration
 
 ```toml
 [lead]
@@ -95,19 +95,19 @@ deduplicate = true
 crm_integration = "salesforce"
 ```
 
-### CLI 命令
+### CLI Commands
 
 ```bash
-# 激活 Lead Hand
+# Activate Lead Hand
 librefang hand activate lead
 
-# 手动运行潜在客户发现
+# Manual lead discovery
 librefang hand lead discover --icp "B2B SaaS, >50 employees"
 
-# 查看潜在客户列表
+# View leads list
 librefang hand lead list
 
-# 导出到 CSV
+# Export to CSV
 librefang hand lead export --format csv
 ```
 
@@ -115,17 +115,17 @@ librefang hand lead export --format csv
 
 ## Collector Hand
 
-OSINT 情报收集 Hand。
+OSINT intelligence collection Hand.
 
-### 功能
+### Features
 
-- 持续监控目标
-- 变更检测和通知
-- 情感分析
-- 知识图谱构建
-- 多源数据聚合
+- Continuous target monitoring
+- Change detection and notifications
+- Sentiment analysis
+- Knowledge graph construction
+- Multi-source data aggregation
 
-### 配置
+### Configuration
 
 ```toml
 [collector]
@@ -136,19 +136,19 @@ knowledge_graph = true
 alert_channels = ["telegram", "email"]
 ```
 
-### CLI 命令
+### CLI Commands
 
 ```bash
-# 激活 Collector Hand
+# Activate Collector Hand
 librefang hand activate collector
 
-# 添加监控目标
+# Add monitoring target
 librefang hand collector add-target "https://example.com"
 
-# 查看收集的数据
+# View collected data
 librefang hand collector list
 
-# 导出知识图谱
+# Export knowledge graph
 librefang hand collector export-graph
 ```
 
@@ -156,17 +156,17 @@ librefang hand collector export-graph
 
 ## Predictor Hand
 
-超级预测引擎 Hand。
+Superforecasting engine Hand.
 
-### 功能
+### Features
 
-- 基于数据的预测
-- 置信区间计算
-- 反向模式识别
-- 预测验证和校准
-- 趋势分析
+- Data-based predictions
+- Confidence interval calculation
+- Contrarian pattern recognition
+- Prediction verification and calibration
+- Trend analysis
 
-### 配置
+### Configuration
 
 ```toml
 [predictor]
@@ -176,19 +176,19 @@ contrarian_mode = true
 calibration_history = true
 ```
 
-### CLI 命令
+### CLI Commands
 
 ```bash
-# 激活 Predictor Hand
+# Activate Predictor Hand
 librefang hand activate predictor
 
-# 创建预测
+# Create prediction
 librefang hand predictor predict --question "Will Q4 revenue exceed $1M?"
 
-# 查看预测历史
+# View prediction history
 librefang hand predictor history
 
-# 验证预测
+# Verify prediction
 librefang hand predictor verify --prediction-id <id> --actual <value>
 ```
 
@@ -196,17 +196,17 @@ librefang hand predictor verify --prediction-id <id> --actual <value>
 
 ## Researcher Hand
 
-深度自主研究 Hand。
+Deep autonomous research Hand.
 
-### 功能
+### Features
 
-- 自动研究主题
-- 多源信息收集
-- CRAAP 可信度评估
-- APA 格式引用
-- 结构化报告生成
+- Automatic topic research
+- Multi-source information collection
+- CRAAP credibility assessment
+- APA format citations
+- Structured report generation
 
-### 配置
+### Configuration
 
 ```toml
 [scientist]
@@ -217,19 +217,19 @@ credibility_threshold = 0.7
 report_format = "markdown"
 ```
 
-### CLI 命令
+### CLI Commands
 
 ```bash
-# 激活 Researcher Hand
+# Activate Researcher Hand
 librefang hand activate researcher
 
-# 执行研究
+# Execute research
 librefang hand researcher search "impact of AI on software development"
 
-# 查看研究历史
+# View research history
 librefang hand researcher history
 
-# 生成报告
+# Generate report
 librefang hand researcher report --id <research-id>
 ```
 
@@ -237,27 +237,27 @@ librefang hand researcher report --id <research-id>
 
 ## Twitter Hand
 
-自主社交媒体管理 Hand。
+Autonomous social media management Hand.
 
-### 功能
+### Features
 
-- 自动内容创作
-- 7 种内容格式
-- 审批队列
-- 自动发布
-- 互动回复
+- Automatic content creation
+- 7 content formats
+- Approval queue
+- Auto-publishing
+- Interaction replies
 
-### 内容格式
+### Content Formats
 
-1. **Thread** - 长文推文串
-2. **Hot Take** - 热门观点
-3. **Question** - 社区问题
-4. **Fact** - 事实分享
-5. **Quote** - 引用推文
-6. **Announcement** - 产品公告
-7. **Engagement** - 互动推文
+1. **Thread** - Long tweet threads
+2. **Hot Take** - Hot takes
+3. **Question** - Community questions
+4. **Fact** - Fact sharing
+5. **Quote** - Quote tweets
+6. **Announcement** - Product announcements
+7. **Engagement** - Engagement tweets
 
-### 配置
+### Configuration
 
 ```toml
 [twitter]
@@ -267,19 +267,19 @@ auto_schedule = true
 posting_times = ["9:00", "12:00", "18:00"]
 ```
 
-### CLI 命令
+### CLI Commands
 
 ```bash
-# 激活 Twitter Hand
+# Activate Twitter Hand
 librefang hand activate twitter
 
-# 创建内容
+# Create content
 librefang hand twitter create --format thread --topic "AI trends"
 
-# 查看审批队列
+# View approval queue
 librefang hand twitter queue
 
-# 批准推文
+# Approve tweet
 librefang hand twitter approve <tweet-id>
 ```
 
@@ -287,17 +287,17 @@ librefang hand twitter approve <tweet-id>
 
 ## Browser Hand
 
-Web 自动化 Hand。
+Web automation Hand.
 
-### 功能
+### Features
 
-- Playwright 驱动
-- 表单填写
-- 点击交互
-- 多步骤工作流
-- 购买审批 gate
+- Playwright-driven
+- Form filling
+- Click interactions
+- Multi-step workflows
+- Purchase approval gate
 
-### 配置
+### Configuration
 
 ```toml
 [browser]
@@ -307,62 +307,62 @@ screenshot_on_error = true
 timeout = 30000
 ```
 
-### CLI 命令
+### CLI Commands
 
 ```bash
-# 激活 Browser Hand
+# Activate Browser Hand
 librefang hand activate browser
 
-# 执行自动化任务
+# Execute automation task
 librefang hand browser run --workflow "checkout-flow"
 
-# 录制新工作流
+# Record new workflow
 librefang hand browser record --name "my-workflow"
 
-# 列出工作流
+# List workflows
 librefang hand browser list
 ```
 
 ---
 
-## Hand 管理
+## Hand Management
 
-### CLI 命令
+### CLI Commands
 
 ```bash
-# 列出所有 Hands
+# List all Hands
 librefang hand list
 
-# 激活 Hand
+# Activate Hand
 librefang hand activate <hand-name>
 
-# 暂停 Hand
+# Pause Hand
 librefang hand pause <hand-name>
 
-# 查看状态
+# View status
 librefang hand status <hand-name>
 
-# 查看日志
+# View logs
 librefang hand logs <hand-name>
 
-# 配置 Hand
+# Configure Hand
 librefang hand config <hand-name> --key <value>
 ```
 
-### Hand 状态
+### Hand Status
 
-| 状态 | 说明 |
-|------|------|
-| Active | 运行中，按计划执行 |
-| Paused | 暂停，可恢复 |
-| Error | 发生错误，需要干预 |
-| Pending | 等待审批 |
+| Status | Description |
+|--------|-------------|
+| Active | Running, executing on schedule |
+| Paused | Paused, can be resumed |
+| Error | Error occurred, intervention needed |
+| Pending | Waiting for approval |
 
 ---
 
-## 创建自定义 Hand
+## Creating Custom Hands
 
-### Hand.toml 结构
+### Hand.toml Structure
 
 ```toml
 name = "my-hand"
@@ -386,7 +386,7 @@ required = false
 channels = ["telegram"]
 ```
 
-### 实现代码
+### Implementation Code
 
 ```python
 # hands/my-hand/main.py
@@ -411,26 +411,26 @@ async def execute(context: HandContext) -> HandResult:
 
 ---
 
-## 调度配置
+## Schedule Configuration
 
-### Cron 表达式
+### Cron Expressions
 
 ```toml
 [schedule]
-# 每天 9 点
+# Every day at 9 AM
 cron = "0 9 * * *"
 
-# 工作日 9 点
+# Weekdays at 9 AM
 cron = "0 9 * * 1-5"
 
-# 每小时
+# Every hour
 cron = "0 * * * *"
 
-# 每周一
+# Every Monday
 cron = "0 9 * * 1"
 ```
 
-### 时区
+### Timezone
 
 ```toml
 [schedule]
@@ -439,37 +439,39 @@ timezone = "Asia/Shanghai"
 
 ---
 
-## 最佳实践
+## Best Practices
 
-1. **从简单开始** - 先使用单个 Hand
-2. **设置监控** - 定期检查 Hand 状态
-3. **配置告警** - 及时收到错误通知
-4. **审批流程** - 敏感操作需要审批
-5. **日志审查** - 定期审查执行日志
+1. **Start Simple** - Use a single Hand first
+2. **Set Up Monitoring** - Regularly check Hand status
+3. **Configure Alerts** - Get timely error notifications
+4. **Approval Workflow** - Sensitive operations need approval
+5. **Log Review** - Regularly review execution logs
 
 ---
 
-## 故障排除
+## Troubleshooting
 
-### Hand 不执行
+### Hand Not Executing
 
 ```bash
-# 检查 Hand 状态
+# Check Hand status
 librefang hand status <hand-name>
 
-# 查看详细日志
+# View detailed logs
 librefang hand logs <hand-name> --level debug
 
-# 手动触发执行
+# Manually trigger execution
 librefang hand run <hand-name>
 ```
 
-### 错误处理
+### Error Handling
 
 ```bash
-# 查看错误详情
+# View error details
 librefang hand error <hand-name> --last
 
-# 重置 Hand
+# Reset Hand
 librefang hand reset <hand-name>
 ```
+
+export const sections = [];

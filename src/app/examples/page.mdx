@@ -1,18 +1,19 @@
-# 使用示例
+# Usage Examples
 
-LibreFang 常用场景的完整示例。
+Complete examples for common LibreFang use cases.
 
 ---
 
-## 场景 1: 客户服务 Agent
+## Scenario 1: Customer Service Agent
 
-### 需求
-- 7x24 小时自动回复客户咨询
-- 接入 Telegram 和 Discord
-- 记住客户历史对话
-- 需要人工审批复杂问题
+### Requirements
 
-### Agent 清单
+- 7x24 automatic response to customer inquiries
+- Connect to Telegram and Discord
+- Remember customer conversation history
+- Require human approval for complex issues
+
+### Agent Manifest
 
 ```toml
 # customer-support.toml
@@ -26,11 +27,11 @@ provider = "groq"
 model = "llama-3.3-70b-versatile"
 
 [system_prompt]
-prompt = """你是一个专业的客服 agent。你的职责是：
-1. 礼貌回复客户咨询
-2. 提供准确的产品信息
-3. 复杂问题转人工
-4. 保持专业和友好"""
+prompt = """You are a professional customer support agent. Your responsibilities are:
+1. Respond to customer inquiries politely
+2. Provide accurate product information
+3. Escalate complex issues to human agents
+4. Maintain professionalism and friendliness"""
 
 [capabilities]
 tools = ["file_read", "web_fetch", "memory_recall", "memory_store"]
@@ -47,7 +48,7 @@ channels = ["telegram"]
 keywords = ["refund", "complaint", "manager"]
 ```
 
-### 通道配置
+### Channel Configuration
 
 ```toml
 [telegram]
@@ -59,21 +60,22 @@ bot_token_env = "DISCORD_BOT_TOKEN"
 guild_ids = ["123456789"]
 
 [channels.customer-support]
-system_prompt = "你是一个客服 agent，请礼貌专业地回复客户。"
+system_prompt = "You are a customer support agent. Please respond politely and professionally."
 rate_limit = 20
 ```
 
 ---
 
-## 场景 2: 每日新闻摘要
+## Scenario 2: Daily News Digest
 
-### 需求
-- 每天早上 8 点自动运行
-- 抓取多个新闻源
-- 生成摘要
-- 发送到 Slack
+### Requirements
 
-### 工作流
+- Automatically run every morning at 8 AM
+- Scrape multiple news sources
+- Generate summary
+- Send to Slack
+
+### Workflow
 
 ```json
 {
@@ -117,14 +119,15 @@ rate_limit = 20
 
 ---
 
-## 场景 3: 代码审查助手
+## Scenario 3: Code Review Assistant
 
-### 需求
-- 监听 GitHub PR
-- 自动进行代码审查
-- 提供改进建议
+### Requirements
 
-### Agent 清单
+- Monitor GitHub PRs
+- Automatically perform code review
+- Provide improvement suggestions
+
+### Agent Manifest
 
 ```toml
 # code-reviewer.toml
@@ -138,11 +141,11 @@ provider = "anthropic"
 model = "claude-sonnet-4-20250514"
 
 [system_prompt]
-prompt = """你是一个专业的代码审查专家。你的职责是：
-1. 检查代码质量和风格
-2. 识别潜在 bug 和安全问题
-3. 提供具体的改进建议
-4. 保持建设性和专业"""
+prompt = """You are a professional code reviewer. Your responsibilities are:
+1. Check code quality and style
+2. Identify potential bugs and security issues
+3. Provide specific improvement suggestions
+4. Remain constructive and professional"""
 
 [capabilities]
 tools = ["file_read", "web_fetch", "git"]
@@ -154,7 +157,7 @@ enabled = true
 cron = "0 * * * *"
 ```
 
-### Webhook 触发器
+### Webhook Trigger
 
 ```json
 {
@@ -166,15 +169,16 @@ cron = "0 * * * *"
 
 ---
 
-## 场景 4: 销售潜在客户挖掘
+## Scenario 4: Sales Lead Generation
 
-### 需求
-- 每天自动挖掘潜在客户
-- 丰富公司信息
-- 评分和排序
-- 发送到 CRM
+### Requirements
 
-### Hand 配置
+- Automatically generate leads daily
+- Enrich company information
+- Score and rank
+- Send to CRM
+
+### Hand Configuration
 
 ```toml
 [lead]
@@ -198,7 +202,7 @@ score = 50
 action = "require_approval"
 ```
 
-### 工作流
+### Workflow
 
 ```json
 {
@@ -238,14 +242,15 @@ action = "require_approval"
 
 ---
 
-## 场景 5: 内容创作助手
+## Scenario 5: Content Creation Assistant
 
-### 需求
-- 定期生成社交媒体内容
-- 支持多个平台
-- 审批工作流
+### Requirements
 
-### Twitter Hand 配置
+- Regularly generate social media content
+- Support multiple platforms
+- Approval workflow
+
+### Twitter Hand Configuration
 
 ```toml
 [twitter]
@@ -260,7 +265,7 @@ enabled = true
 posting_times = ["10:00"]
 ```
 
-### 内容审批工作流
+### Content Approval Workflow
 
 ```json
 {
@@ -296,14 +301,15 @@ posting_times = ["10:00"]
 
 ---
 
-## 场景 6: 数据库助手
+## Scenario 6: Database Assistant
 
-### 需求
-- 回答数据库相关问题
-- 执行只读查询
-- 生成 SQL
+### Requirements
 
-### Agent 清单
+- Answer database-related questions
+- Execute read-only queries
+- Generate SQL
+
+### Agent Manifest
 
 ```toml
 # db-assistant.toml
@@ -316,11 +322,11 @@ provider = "anthropic"
 model = "claude-sonnet-4-20250514"
 
 [system_prompt]
-prompt = """你是一个数据库助手。你可以：
-1. 回答关于数据库设计的问题
-2. 编写和优化 SQL 查询
-3. 解释查询执行计划
-注意：不要执行任何修改数据的操作。"""
+prompt = """You are a database assistant. You can:
+1. Answer questions about database design
+2. Write and optimize SQL queries
+3. Explain query execution plans
+Note: Do not execute any data-modifying operations."""
 
 [capabilities]
 tools = ["file_read", "postgres_query"]
@@ -334,14 +340,15 @@ max_rows = 1000
 
 ---
 
-## 场景 7: 个人知识助手
+## Scenario 7: Personal Knowledge Assistant
 
-### 需求
-- 管理和检索个人笔记
-- 语义搜索
-- 自动整理
+### Requirements
 
-### Agent 清单
+- Manage and retrieve personal notes
+- Semantic search
+- Auto-organization
+
+### Agent Manifest
 
 ```toml
 # knowledge-assistant.toml
@@ -362,29 +369,30 @@ memory_write = ["knowledge:*", "notes:*"]
 decay_rate = 0.02
 ```
 
-### 使用示例
+### Usage Examples
 
 ```bash
-# 存储笔记
+# Store note
 librefang memory set --key "notes:meeting-2025-01-15" --value "Discussed project roadmap"
 
-# 语义搜索
+# Semantic search
 librefang memory search "project planning"
 
-# 知识图谱查询
+# Knowledge graph query
 librefang kg query --from "person:alice" --relation "works_with"
 ```
 
 ---
 
-## 场景 8: CI/CD 监控助手
+## Scenario 8: CI/CD Monitor Assistant
 
-### 需求
-- 监控 GitHub Actions
-- 失败时告警
-- 提供调试建议
+### Requirements
 
-### 配置
+- Monitor GitHub Actions
+- Alert on failures
+- Provide debugging suggestions
+
+### Configuration
 
 ```toml
 [github]
@@ -399,7 +407,7 @@ events = ["workflow_run.completed", "workflow_run.failed"]
 channels = ["slack", "telegram"]
 ```
 
-### 工作流
+### Workflow
 
 ```json
 {
@@ -427,14 +435,15 @@ channels = ["slack", "telegram"]
 
 ---
 
-## 场景 9: 智能家居控制
+## Scenario 9: Smart Home Control
 
-### 需求
-- 通过聊天控制智能设备
-- 定时任务
-- 场景自动化
+### Requirements
 
-### Agent 清单
+- Control smart devices via chat
+- Scheduled tasks
+- Scene automation
+
+### Agent Manifest
 
 ```toml
 # smart-home.toml
@@ -456,29 +465,30 @@ locks = ["front_door", "back_door"]
 cameras = ["front_porch", "backyard"]
 ```
 
-### 命令示例
+### Command Examples
 
 ```
-用户: "帮我关掉客厅的灯"
-Agent: 已关闭客厅的灯 ✓
+User: "Turn off the living room light"
+Agent: Living room light turned off ✓
 
-用户: "设置下午 6 点的温度为 22 度"
-Agent: 已设置定时任务：18:00 温度调节至 22°C ✓
+User: "Set temperature to 22°C at 6 PM"
+Agent: Scheduled task created: 18:00 temperature adjustment to 22°C ✓
 
-用户: "如果有人在前门摄像头出现，就给我发 Telegram"
-Agent: 已创建自动化规则：摄像头检测 → Telegram 通知 ✓
+User: "Notify me on Telegram if someone appears on the front door camera"
+Agent: Automation rule created: Camera detection → Telegram notification ✓
 ```
 
 ---
 
-## 场景 10: 会议助手
+## Scenario 10: Meeting Assistant
 
-### 需求
-- 安排会议
-- 发送邀请
-- 会议纪要
+### Requirements
 
-### Agent 清单
+- Schedule meetings
+- Send invitations
+- Meeting notes
+
+### Agent Manifest
 
 ```toml
 # meeting-assistant.toml
@@ -503,10 +513,10 @@ timezone = "Asia/Shanghai"
 smtp_host = "smtp.gmail.com"
 ```
 
-### 功能
+### Features
 
-- 自然语言安排会议
-- 自动查找空闲时间
-- 发送日历邀请
-- 会后生成纪要
-- 跟踪行动项目
+- Natural language meeting scheduling
+- Auto-find available times
+- Send calendar invitations
+- Generate meeting notes after meetings
+- Track action items

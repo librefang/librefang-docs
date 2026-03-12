@@ -1,93 +1,93 @@
-# 常见问题
+# FAQ
 
-LibreFang 常见问题解答。
+Frequently asked questions about LibreFang.
 
 ---
 
-## 安装与配置
+## Installation and Configuration
 
-### Q: 如何安装 LibreFang？
+### Q: How to install LibreFang?
 
 ```bash
-# 使用 cargo 安装
+# Install using cargo
 cargo install --git https://github.com/librefang/librefang librefang-cli
 
-# 或从源码构建
+# Or build from source
 git clone https://github.com/librefang/librefang.git
 cd librefang
 cargo install --path crates/librefang-cli
 ```
 
-### Q: 需要配置哪些 API 密钥？
+### Q: Which API keys do I need to configure?
 
-LibreFang 需要至少一个 LLM 提供商的 API 密钥：
+LibreFang requires API keys from at least one LLM provider:
 
 ```bash
-# 选项 1: Anthropic (推荐)
+# Option 1: Anthropic (recommended)
 export ANTHROPIC_API_KEY="sk-ant-..."
 
-# 选项 2: OpenAI
+# Option 2: OpenAI
 export OPENAI_API_KEY="sk-..."
 
-# 选项 3: Groq (有免费额度)
+# Option 3: Groq (has free tier)
 export GROQ_API_KEY="gsk_..."
 ```
 
-### Q: 配置文件在哪里？
+### Q: Where is the configuration file?
 
-默认位置：`~/.librefang/config.toml`
+Default location: `~/.librefang/config.toml`
 
-首次运行 `librefang init` 时会自动创建。
+Automatically created when running `librefang init` for the first time.
 
-### Q: 如何查看日志？
+### Q: How to view logs?
 
 ```bash
-# 实时日志
+# Real-time logs
 librefang logs
 
-# 或手动查看
+# Or manually view
 tail -f ~/.librefang/logs/librefang.log
 
-# 调试模式
+# Debug mode
 RUST_LOG=debug librefang start
 ```
 
 ---
 
-## Agent 操作
+## Agent Operations
 
-### Q: 如何创建自定义 Agent？
+### Q: How to create a custom Agent?
 
 ```bash
-# 使用模板创建
+# Create using template
 librefang agent spawn agents/hello-world/agent.toml
 
-# 或交互式创建
+# Or interactive creation
 librefang agent new
 ```
 
-### Q: Agent 无响应怎么办？
+### Q: What to do if Agent is not responding?
 
-1. 检查 Agent 状态：`librefang agent list`
-2. 查看 Agent 日志：`librefang agent logs <id>`
-3. 重启 Agent：`librefang agent kill <id>` 然后重新生成
+1. Check Agent status: `librefang agent list`
+2. View Agent logs: `librefang agent logs <id>`
+3. Restart Agent: `librefang agent kill <id>` then respawn
 
-### Q: 如何限制 Agent 的能力？
+### Q: How to limit Agent capabilities?
 
-在 Agent 清单中使用 capabilities：
+Use capabilities in the Agent manifest:
 
 ```toml
 [capabilities]
-tools = ["file_read", "web_fetch"]  # 只允许这些工具
-network = ["example.com"]  # 只允许访问这个域名
-memory_read = ["self.*"]  # 只允许读取自己的记忆
-memory_write = ["self.*"]  # 只允许写入自己的记忆
-agent_spawn = false  # 禁止生成子 Agent
+tools = ["file_read", "web_fetch"]  # Only allow these tools
+network = ["example.com"]  # Only allow this domain
+memory_read = ["self.*"]  # Only allow reading own memory
+memory_write = ["self.*"]  # Only allow writing own memory
+agent_spawn = false  # Disable sub-agent spawning
 ```
 
-### Q: 如何实现多 Agent 协作？
+### Q: How to implement multi-Agent collaboration?
 
-使用 orchestrator Agent 或工作流：
+Use orchestrator Agent or workflows:
 
 ```json
 {
@@ -101,53 +101,53 @@ agent_spawn = false  # 禁止生成子 Agent
 
 ---
 
-## 技能与工具
+## Skills and Tools
 
-### Q: 什么是技能？
+### Q: What are Skills?
 
-技能是扩展 Agent 能力的可插拔工具包。例如：
+Skills are pluggable toolkits that extend Agent capabilities. For example:
 
-- `git` - Git 操作
-- `python` - Python 代码执行
-- `web_search` - 网络搜索
+- `git` - Git operations
+- `python` - Python code execution
+- `web_search` - Web search
 
-### Q: 如何安装自定义技能？
+### Q: How to install custom Skills?
 
 ```bash
-# 从本地安装
+# Install from local
 librefang skill install ./my-skill
 
-# 从 FangHub 安装
+# Install from FangHub
 librefang skill install fanghub:skill-name
 ```
 
-### Q: 如何创建自定义工具？
+### Q: How to create custom tools?
 
-在技能中定义工具函数：
+Define tool functions in a skill:
 
 ```python
 def my_tool(param: str) -> str:
-    """工具描述"""
+    """Tool description"""
     return f"Result: {param}"
 ```
 
 ---
 
-## 通道与集成
+## Channels and Integrations
 
-### Q: 支持哪些消息平台？
+### Q: Which messaging platforms are supported?
 
-LibreFang 支持 40+ 通道适配器：
+LibreFang supports 40+ channel adapters:
 
-- **核心**: Telegram, Discord, Slack, WhatsApp, Signal, Matrix, Email
-- **企业**: Microsoft Teams, Google Chat, Webex, Feishu
-- **社交**: LINE, Viber, Facebook Messenger, Twitter
+- **Core**: Telegram, Discord, Slack, WhatsApp, Signal, Matrix, Email
+- **Enterprise**: Microsoft Teams, Google Chat, Webex, Feishu
+- **Social**: LINE, Viber, Facebook Messenger, Twitter
 
-### Q: 如何配置 Telegram Bot？
+### Q: How to configure Telegram Bot?
 
-1. 创建 Bot: @BotFather on Telegram
-2. 获取 Bot Token
-3. 配置 LibreFang：
+1. Create Bot: @BotFather on Telegram
+2. Get Bot Token
+3. Configure LibreFang:
 
 ```toml
 [telegram]
@@ -155,7 +155,7 @@ bot_token_env = "TELEGRAM_BOT_TOKEN"
 allowed_users = ["user_id_1", "user_id_2"]
 ```
 
-### Q: 如何使用 MCP 服务器？
+### Q: How to use MCP servers?
 
 ```toml
 [[mcp_servers]]
@@ -166,50 +166,50 @@ args = ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
 
 ---
 
-## 安全
+## Security
 
-### Q: LibreFang 如何保护我的数据？
+### Q: How does LibreFang protect my data?
 
-LibreFang 采用 16 层安全防护：
+LibreFang uses 16-layer security protection:
 
-1. **WASM 双计量沙箱** - 工具在隔离环境中运行
-2. **Merkle 哈希链** - 所有操作可审计
-3. **污点追踪** - 敏感信息被追踪
-4. **SSRF 保护** - 防止服务器端请求伪造
-5. **Secret 零化** - API 密钥自动清除
+1. **WASM Dual-Metering Sandbox** - Tools run in isolated environment
+2. **Merkle Hash Chain** - All operations are auditable
+3. **Taint Tracking** - Sensitive information is tracked
+4. **SSRF Protection** - Prevents server-side request forgery
+5. **Secret Zeroing** - API keys are automatically cleared
 
-### Q: 如何启用 API 认证？
+### Q: How to enable API authentication?
 
 ```toml
 api_key = "your-secure-api-key"
 ```
 
-然后在请求中使用：
+Then use in requests:
 
 ```
 Authorization: Bearer your-secure-api-key
 ```
 
-### Q: 什么是能力门？
+### Q: What are Capability Gates?
 
-能力门控制 Agent 可以访问哪些资源：
+Capability gates control what resources an Agent can access:
 
 ```toml
 [capabilities]
-tools = ["file_read"]  # 只读文件
-file_system = false  # 禁止写入
-agent_spawn = false  # 禁止生成子 Agent
+tools = ["file_read"]  # Read-only files
+file_system = false  # Disable file system write
+agent_spawn = false  # Disable sub-agent spawning
 ```
 
 ---
 
-## 性能
+## Performance
 
-### Q: 如何优化性能？
+### Q: How to optimize performance?
 
-1. **选择合适的模型**: 简单任务用小模型
-2. **启用压缩**: 自动压缩会话历史
-3. **配置限制**: 限制并发 Agent 数量
+1. **Choose the right model**: Use smaller models for simple tasks
+2. **Enable compression**: Auto-compact session history
+3. **Configure limits**: Limit concurrent Agent count
 
 ```toml
 [compaction]
@@ -218,155 +218,155 @@ keep_recent = 20
 max_summary_tokens = 1024
 ```
 
-### Q: 内存占用太高怎么办？
+### Q: What to do if memory usage is too high?
 
-1. 压缩会话：`librefang session compact <id>`
-2. 限制 Agent 数量
-3. 使用更小的模型
+1. Compact sessions: `librefang session compact <id>`
+2. Limit Agent count
+3. Use smaller models
 
-### Q: 如何监控使用情况？
+### Q: How to monitor usage?
 
 ```bash
-# 查看使用统计
+# View usage statistics
 librefang usage
 
-# 查看成本
+# View costs
 librefang cost
 
-# API 端点
+# API endpoint
 curl http://127.0.0.1:4200/api/usage
 ```
 
 ---
 
-## 故障排除
+## Troubleshooting
 
-### Q: 守护进程无法启动？
+### Q: Daemon won't start?
 
 ```bash
-# 检查端口是否被占用
+# Check if port is in use
 lsof -i :4200
 
-# 查看详细错误
+# View detailed errors
 RUST_LOG=debug librefang start
 
-# 运行诊断
+# Run diagnostics
 librefang doctor
 ```
 
-### Q: API 密钥无效？
+### Q: API key invalid?
 
-1. 确认环境变量已设置：`echo $ANTHROPIC_API_KEY`
-2. 验证密钥有效
-3. 检查配置文件中的 `api_key_env` 名称
+1. Confirm environment variable is set: `echo $ANTHROPIC_API_KEY`
+2. Verify key is valid
+3. Check `api_key_env` name in config file
 
-### Q: 通道连接失败？
+### Q: Channel connection failed?
 
 ```bash
-# 测试通道
+# Test channel
 librefang channel test telegram
 
-# 检查 Bot Token
+# Check Bot Token
 curl -X POST "https://api.telegram.org/bot<TOKEN>/getMe"
 ```
 
-### Q: 技能无法加载？
+### Q: Skill won't load?
 
 ```bash
-# 列出技能
+# List skills
 librefang skill list
 
-# 验证技能
+# Verify skill
 librefang skill verify my-skill
 
-# 查看错误日志
+# View error logs
 RUST_LOG=debug librefang skill list
 ```
 
 ---
 
-## 迁移
+## Migration
 
-### Q: 如何从 OpenClaw 迁移？
+### Q: How to migrate from OpenClaw?
 
 ```bash
-# 自动迁移
+# Automatic migration
 librefang migrate --from openclaw
 
-# 预览模式
+# Preview mode
 librefang migrate --from openclaw --dry-run
 ```
 
-### Q: 支持哪些迁移来源？
+### Q: Which migration sources are supported?
 
-- OpenClaw (直接支持)
-- LangChain (兼容层)
-- AutoGPT (配置转换)
+- OpenClaw (direct support)
+- LangChain (compatibility layer)
+- AutoGPT (configuration conversion)
 
 ---
 
-## 计费与成本
+## Billing and Costs
 
-### Q: LibreFang 收费吗？
+### Q: Does LibreFang charge?
 
-LibreFang 本身是开源免费的。您只需支付 LLM 提供商的 API 费用。
+LibreFang itself is open source and free. You only pay for LLM provider API fees.
 
-### Q: 如何跟踪成本？
+### Q: How to track costs?
 
 ```bash
-# 查看成本
+# View costs
 librefang cost
 
-# 按提供商查看
+# View by provider
 curl http://127.0.0.1:4200/api/usage/providers
 ```
 
-### Q: 如何设置预算限制？
+### Q: How to set budget limits?
 
 ```toml
 [budget]
-monthly_limit = 100  # 美元
-alert_threshold = 0.8  # 80% 时告警
+monthly_limit = 100  # USD
+alert_threshold = 0.8  # Alert at 80%
 ```
 
 ---
 
-## 开发
+## Development
 
-### Q: 如何贡献代码？
+### Q: How to contribute code?
 
-1. Fork 仓库
-2. 创建特性分支
-3. 提交 PR
+1. Fork the repository
+2. Create feature branch
+3. Submit PR
 
-确保：
-- `cargo clippy` 无警告
-- `cargo test` 通过
-- 添加测试覆盖
+Make sure:
+- `cargo clippy` has no warnings
+- `cargo test` passes
+- Add test coverage
 
-### Q: 如何添加新通道？
+### Q: How to add new channels?
 
-参考开发指南中的"添加新通道"部分。
+Refer to the "Adding New Channels" section in the Development Guide.
 
 ---
 
-## 其他
+## Other
 
-### Q: LibreFang 与其他框架的区别？
+### Q: How is LibreFang different from other frameworks?
 
-| 特性 | LibreFang | OpenClaw | LangChain |
-|------|-----------|----------|-----------|
-| 语言 | Rust | Node.js | Python |
-| 内存 | ~40MB | ~200MB | 依赖语言 |
-| 通道 | 40+ | ~15 | 无 |
-| 安全 | 16层 | 基础 | 无 |
-| 桌面 | Tauri | Electron | 无 |
+| Feature | LibreFang | OpenClaw | LangChain |
+|---------|-----------|----------|-----------|
+| Language | Rust | Node.js | Python |
+| Memory | ~40MB | ~200MB | Language-dependent |
+| Channels | 40+ | ~15 | None |
+| Security | 16-layer | Basic | None |
+| Desktop | Tauri | Electron | None |
 
-### Q: 如何获取帮助？
+### Q: How to get help?
 
 - GitHub Issues: https://github.com/librefang/librefang/issues
 - Discord: https://discord.gg/librefang
 
-### Q: 如何报告安全漏洞？
+### Q: How to report security vulnerabilities?
 
-请参考 SECURITY.md: https://github.com/librefang/librefang/blob/main/SECURITY.md
+Please refer to SECURITY.md: https://github.com/librefang/librefang/blob/main/SECURITY.md
