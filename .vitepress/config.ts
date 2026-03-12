@@ -61,6 +61,7 @@ export default defineConfig({
         items: [
           { text: '故障排除', link: '/troubleshooting' },
           { text: '生产部署', link: '/production' },
+          { text: '常见问题', link: '/faq' },
         ]
       }
     ],

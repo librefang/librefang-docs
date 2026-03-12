@@ -236,6 +236,7 @@ export const navigation: Array<NavGroup> = [
 		links: [
 			{ title: '故障排除', href: withPrefix('/troubleshooting') },
 			{ title: '生产部署', href: withPrefix('/production') },
+			{ title: '常见问题', href: withPrefix('/faq') },
 		],
 	},
 ];
