@@ -50,6 +50,7 @@ export default defineConfig({
           { text: 'MCP/A2A', link: '/mcp-a2a' },
           { text: '迁移指南', link: '/migration' },
           { text: '桌面应用', link: '/desktop' },
+          { text: '开发指南', link: '/development' },
         ]
       },
       {

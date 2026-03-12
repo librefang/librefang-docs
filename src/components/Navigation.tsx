@@ -225,6 +225,7 @@ export const navigation: Array<NavGroup> = [
 			{ title: 'MCP/A2A', href: withPrefix('/mcp-a2a') },
 			{ title: '迁移指南', href: withPrefix('/migration') },
 			{ title: '桌面应用', href: withPrefix('/desktop') },
+			{ title: '开发指南', href: withPrefix('/development') },
 		],
 	},
 	{
