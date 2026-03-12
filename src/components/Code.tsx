@@ -157,7 +157,7 @@ function CodePanel({
 	}
 
 	return (
-		<div className='group dark:bg-white/2.5'>
+		<div className='group bg-zinc-900 dark:bg-white/2.5'>
 			<CodePanelHeader tag={tag} label={label} />
 			<div className='relative'>
 				<pre className='overflow-x-auto p-4 text-xs text-white'>{children}</pre>
