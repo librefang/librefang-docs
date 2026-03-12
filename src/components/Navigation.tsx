@@ -186,52 +186,49 @@ function NavigationGroup({ group, className }: { group: NavGroup; className?: st
 
 export const navigation: Array<NavGroup> = [
 	{
-		title: '概览',
+		title: '入门',
 		links: [
-			{ title: '简介', href: withPrefix('/') },
-			{ title: '架构', href: withPrefix('/architecture') },
-			{ title: '目录结构', href: withPrefix('/structure') },
+			{ title: '快速开始', href: withPrefix('/librefang') },
+			{ title: '发布路线图', href: withPrefix('/roadmap') },
 		],
 	},
 	{
-		title: 'YLDM TEAM',
+		title: '配置',
 		links: [
-			{ title: '指挥手册 (必读)', href: withPrefix('/team-manual') },
-			{ title: '团队矩阵', href: withPrefix('/team') },
-			{ title: 'Ship Faster 工作流', href: withPrefix('/workflow') },
+			{ title: '配置文件', href: withPrefix('/configuration') },
+			{ title: 'LLM 提供商', href: withPrefix('/providers') },
 		],
 	},
 	{
-		title: '自动化',
+		title: '架构',
 		links: [
-			{ title: 'Cron 任务', href: withPrefix('/automation') },
-			{ title: 'n8n Webhooks', href: withPrefix('/n8n') },
-			{ title: 'Gmail Hook', href: withPrefix('/gmail') },
+			{ title: '系统架构', href: withPrefix('/architecture') },
+			{ title: '安全', href: withPrefix('/security') },
 		],
 	},
 	{
-		title: '基础设施',
+		title: 'Agent',
 		links: [
-			{ title: '总览', href: withPrefix('/infrastructure') },
-			{ title: 'K8s 集群', href: withPrefix('/k8s') },
-			{ title: 'NAS', href: withPrefix('/nas') },
-			{ title: 'Cloudflare', href: withPrefix('/cloudflare') },
-			{ title: '监控', href: withPrefix('/monitoring') },
+			{ title: 'Agent 模板', href: withPrefix('/agents') },
+			{ title: '技能开发', href: withPrefix('/skills') },
+			{ title: '工作流', href: withPrefix('/workflows') },
 		],
 	},
 	{
-		title: 'Workspace',
+		title: '集成',
 		links: [
-			{ title: '核心资产 & AGENTS.md', href: withPrefix('/workspace-files') },
-			{ title: 'Skills', href: withPrefix('/skills') },
-			{ title: '脚本', href: withPrefix('/scripts') },
+			{ title: '通道适配器', href: withPrefix('/channels') },
+			{ title: 'API 参考', href: withPrefix('/api') },
+			{ title: 'CLI 参考', href: withPrefix('/cli') },
+			{ title: 'MCP/A2A', href: withPrefix('/mcp-a2a') },
+			{ title: '桌面应用', href: withPrefix('/desktop') },
 		],
 	},
 	{
 		title: '运维',
 		links: [
-			{ title: '配置变更规则', href: withPrefix('/git-rules') },
-			{ title: 'CLI 速查', href: withPrefix('/cli') },
+			{ title: '故障排除', href: withPrefix('/troubleshooting') },
+			{ title: '生产部署', href: withPrefix('/production') },
 		],
 	},
 ];
