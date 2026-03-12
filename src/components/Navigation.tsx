@@ -211,6 +211,7 @@ export const navigation: Array<NavGroup> = [
 		links: [
 			{ title: 'Agent 模板', href: withPrefix('/agents') },
 			{ title: '自主 Hands', href: withPrefix('/hands') },
+			{ title: '内存系统', href: withPrefix('/memory') },
 			{ title: '技能开发', href: withPrefix('/skills') },
 			{ title: '工作流', href: withPrefix('/workflows') },
 		],
@@ -222,6 +223,7 @@ export const navigation: Array<NavGroup> = [
 			{ title: 'API 参考', href: withPrefix('/api') },
 			{ title: 'CLI 参考', href: withPrefix('/cli') },
 			{ title: 'MCP/A2A', href: withPrefix('/mcp-a2a') },
+			{ title: '迁移指南', href: withPrefix('/migration') },
 			{ title: '桌面应用', href: withPrefix('/desktop') },
 		],
 	},

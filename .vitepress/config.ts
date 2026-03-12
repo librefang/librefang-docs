@@ -36,6 +36,7 @@ export default defineConfig({
         items: [
           { text: 'Agent 模板', link: '/agents' },
           { text: '自主 Hands', link: '/hands' },
+          { text: '内存系统', link: '/memory' },
           { text: '技能开发', link: '/skills' },
           { text: '工作流', link: '/workflows' },
         ]
@@ -47,6 +48,7 @@ export default defineConfig({
           { text: 'API 参考', link: '/api' },
           { text: 'CLI 参考', link: '/cli' },
           { text: 'MCP/A2A', link: '/mcp-a2a' },
+          { text: '迁移指南', link: '/migration' },
           { text: '桌面应用', link: '/desktop' },
         ]
       },
