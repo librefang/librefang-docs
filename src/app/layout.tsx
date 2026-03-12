@@ -9,8 +9,8 @@ import '@/styles/tailwind.css';
 
 export const metadata: Metadata = {
 	title: {
-		template: '%s - OpenClaw Config',
-		default: 'OpenClaw Config',
+		template: '%s - LibreFang Docs',
+		default: 'LibreFang Docs',
 	},
 };
 

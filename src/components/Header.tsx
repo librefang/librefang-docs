@@ -70,7 +70,7 @@ export const Header = forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<
 				<nav className='hidden md:block'>
 					<ul className='flex items-center gap-8'>
 						<TopLevelNavItem href={withPrefix('/')}>文档</TopLevelNavItem>
-						<TopLevelNavItem href='https://github.com/houko/openclaw-config'>GitHub</TopLevelNavItem>
+						<TopLevelNavItem href='https://github.com/librefang/librefang'>GitHub</TopLevelNavItem>
 					</ul>
 				</nav>
 				<div className='hidden md:block md:h-5 md:w-px md:bg-zinc-900/10 md:dark:bg-white/15' />

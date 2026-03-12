@@ -1,8 +1,8 @@
 {
-  "name": "openclaw-config-docs",
+  "name": "librefang-docs",
   "version": "0.0.1",
   "type": "module",
-  "description": "YLDM documentation template",
+  "description": "LibreFang Agent OS Documentation",
   "private": true,
   "packageManager": "pnpm@10.11.1",
   "scripts": {

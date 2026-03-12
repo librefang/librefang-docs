@@ -241,7 +241,7 @@ export function Navigation(props: React.ComponentPropsWithoutRef<'nav'>) {
 		<nav {...props}>
 			<ul>
 				<TopLevelNavItem href={withPrefix('/')}>文档</TopLevelNavItem>
-				<TopLevelNavItem href='https://github.com/houko/openclaw-config'>GitHub</TopLevelNavItem>
+				<TopLevelNavItem href='https://github.com/librefang/librefang'>GitHub</TopLevelNavItem>
 				{navigation.map((group, groupIndex) => (
 					<NavigationGroup key={group.title} group={group} className={groupIndex === 0 ? 'md:mt-0' : ''} />
 				))}
