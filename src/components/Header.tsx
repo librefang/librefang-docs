@@ -2,6 +2,7 @@ import { CloseButton } from '@headlessui/react';
 import clsx from 'clsx';
 import { motion, useScroll, useTransform } from 'motion/react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { forwardRef } from 'react';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
@@ -20,6 +21,22 @@ function TopLevelNavItem({ href, children }: { href: string; children: React.Rea
 				{children}
 			</Link>
 		</li>
+	);
+}
+
+function LangSwitch() {
+	const pathname = usePathname();
+	const isEn = pathname?.startsWith('/en');
+
+	const targetPath = isEn ? pathname?.replace('/en', '') || '/' : `/en${pathname}`;
+
+	return (
+		<Link
+			href={targetPath}
+			className="flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1.5 text-xs font-medium text-zinc-600 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+		>
+			{isEn ? '中' : 'EN'}
+		</Link>
 	);
 }
 
@@ -76,6 +93,7 @@ export const Header = forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<
 				<div className='hidden md:block md:h-5 md:w-px md:bg-zinc-900/10 md:dark:bg-white/15' />
 				<div className='flex gap-4'>
 					<MobileSearch />
+					<LangSwitch />
 					<ThemeToggle />
 				</div>
 			</div>

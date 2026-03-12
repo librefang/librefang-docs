@@ -189,6 +189,7 @@ export const navigation: Array<NavGroup> = [
 		title: '入门',
 		links: [
 			{ title: '快速开始', href: withPrefix('/librefang') },
+			{ title: 'Getting Started (EN)', href: withPrefix('/en/getting-started') },
 			{ title: '发布路线图', href: withPrefix('/roadmap') },
 			{ title: '使用示例', href: withPrefix('/examples') },
 			{ title: '术语表', href: withPrefix('/glossary') },
@@ -198,14 +199,18 @@ export const navigation: Array<NavGroup> = [
 		title: '配置',
 		links: [
 			{ title: '配置文件', href: withPrefix('/configuration') },
+			{ title: 'Configuration (EN)', href: withPrefix('/en/configuration') },
 			{ title: 'LLM 提供商', href: withPrefix('/providers') },
+			{ title: 'Providers (EN)', href: withPrefix('/en/providers') },
 		],
 	},
 	{
 		title: '架构',
 		links: [
 			{ title: '系统架构', href: withPrefix('/architecture') },
+			{ title: 'Architecture (EN)', href: withPrefix('/en/architecture') },
 			{ title: '安全', href: withPrefix('/security') },
+			{ title: 'Security (EN)', href: withPrefix('/en/security') },
 		],
 	},
 	{
@@ -216,6 +221,7 @@ export const navigation: Array<NavGroup> = [
 			{ title: '内存系统', href: withPrefix('/memory') },
 			{ title: '技能开发', href: withPrefix('/skills') },
 			{ title: '工作流', href: withPrefix('/workflows') },
+			{ title: 'Workflows (EN)', href: withPrefix('/en/workflows') },
 		],
 	},
 	{
@@ -225,7 +231,9 @@ export const navigation: Array<NavGroup> = [
 			{ title: 'API 参考', href: withPrefix('/api') },
 			{ title: 'SDK 参考', href: withPrefix('/sdk') },
 			{ title: 'CLI 参考', href: withPrefix('/cli') },
+			{ title: 'CLI (EN)', href: withPrefix('/en/cli') },
 			{ title: 'MCP/A2A', href: withPrefix('/mcp-a2a') },
+			{ title: 'MCP/A2A (EN)', href: withPrefix('/en/mcp-a2a') },
 			{ title: '迁移指南', href: withPrefix('/migration') },
 			{ title: '桌面应用', href: withPrefix('/desktop') },
 			{ title: '开发指南', href: withPrefix('/development') },
@@ -235,6 +243,7 @@ export const navigation: Array<NavGroup> = [
 		title: '运维',
 		links: [
 			{ title: '故障排除', href: withPrefix('/troubleshooting') },
+			{ title: 'Troubleshooting (EN)', href: withPrefix('/en/troubleshooting') },
 			{ title: '生产部署', href: withPrefix('/production') },
 			{ title: '常见问题', href: withPrefix('/faq') },
 		],

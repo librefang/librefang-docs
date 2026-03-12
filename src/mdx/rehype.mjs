@@ -30,7 +30,7 @@ function rehypeShiki() {
 					"javascript", "bash", "json", "typescript", "shell", "tsx", "jsx",
 					"python", "php", "ruby", "go", "rust", "java", "c", "cpp",
 					"csharp", "html", "css", "sql", "yaml", "xml", "markdown", "toml",
-					"nginx", "dockerfile", "ini"
+					"nginx", "dockerfile", "ini", "powershell", "docker"
 				],
 			}));
 
