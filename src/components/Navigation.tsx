@@ -268,32 +268,22 @@ export const enNavigation: Array<NavGroup> = [
 	{
 		title: 'Agent',
 		links: [
-			{ title: 'Agent Templates', href: withPrefix('/agents') },
-			{ title: 'Hands', href: withPrefix('/hands') },
-			{ title: 'Memory', href: withPrefix('/memory') },
-			{ title: 'Skills', href: withPrefix('/skills') },
+			{ title: 'Agent Templates', href: withPrefix('/en/agents') },
 			{ title: 'Workflows', href: withPrefix('/en/workflows') },
 		],
 	},
 	{
 		title: 'Integrations',
 		links: [
-			{ title: 'Channels', href: withPrefix('/channels') },
-			{ title: 'API Reference', href: withPrefix('/api') },
-			{ title: 'SDK Reference', href: withPrefix('/sdk') },
+			{ title: 'Channels', href: withPrefix('/en/channels') },
 			{ title: 'CLI', href: withPrefix('/en/cli') },
 			{ title: 'MCP/A2A', href: withPrefix('/en/mcp-a2a') },
-			{ title: 'Migration', href: withPrefix('/migration') },
-			{ title: 'Desktop', href: withPrefix('/desktop') },
-			{ title: 'Development', href: withPrefix('/development') },
 		],
 	},
 	{
 		title: 'Operations',
 		links: [
 			{ title: 'Troubleshooting', href: withPrefix('/en/troubleshooting') },
-			{ title: 'Production', href: withPrefix('/production') },
-			{ title: 'FAQ', href: withPrefix('/faq') },
 		],
 	},
 ];

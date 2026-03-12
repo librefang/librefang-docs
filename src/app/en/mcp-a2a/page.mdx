@@ -705,8 +705,8 @@ pub struct A2aArtifact {
 | `GET` | `/.well-known/agent.json` | Public | Agent Card for the primary agent |
 | `GET` | `/a2a/agents` | Public | List all agent cards |
 | `POST` | `/a2a/tasks/send` | Public | Submit a task to an agent |
-| `GET` | `/a2a/tasks/{id}` | Public | Get task status and messages |
-| `POST` | `/a2a/tasks/{id}/cancel` | Public | Cancel a running task |
+| `GET` | `/a2a/tasks/&lbrace;id&rbrace;` | Public | Get task status and messages |
+| `POST` | `/a2a/tasks/&lbrace;id&rbrace;/cancel` | Public | Cancel a running task |
 
 #### GET /.well-known/agent.json
 
@@ -774,11 +774,11 @@ Response (completed task):
 }
 ```
 
-#### GET /a2a/tasks/{id}
+#### GET /a2a/tasks/&lbrace;id&rbrace;
 
 Poll for task status. Returns `404` if the task is not found or has been evicted.
 
-#### POST /a2a/tasks/{id}/cancel
+#### POST /a2a/tasks/&lbrace;id&rbrace;/cancel
 
 Cancel a running task. Sets its status to `Cancelled`. Returns `404` if the task is not found.
 
