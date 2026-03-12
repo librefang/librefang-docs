@@ -184,12 +184,11 @@ function NavigationGroup({ group, className }: { group: NavGroup; className?: st
 	);
 }
 
-export const navigation: Array<NavGroup> = [
+const zhNavigation: Array<NavGroup> = [
 	{
 		title: '入门',
 		links: [
 			{ title: '快速开始', href: withPrefix('/librefang') },
-			{ title: 'Getting Started (EN)', href: withPrefix('/en/getting-started') },
 			{ title: '发布路线图', href: withPrefix('/roadmap') },
 			{ title: '使用示例', href: withPrefix('/examples') },
 			{ title: '术语表', href: withPrefix('/glossary') },
@@ -199,18 +198,14 @@ export const navigation: Array<NavGroup> = [
 		title: '配置',
 		links: [
 			{ title: '配置文件', href: withPrefix('/configuration') },
-			{ title: 'Configuration (EN)', href: withPrefix('/en/configuration') },
 			{ title: 'LLM 提供商', href: withPrefix('/providers') },
-			{ title: 'Providers (EN)', href: withPrefix('/en/providers') },
 		],
 	},
 	{
 		title: '架构',
 		links: [
 			{ title: '系统架构', href: withPrefix('/architecture') },
-			{ title: 'Architecture (EN)', href: withPrefix('/en/architecture') },
 			{ title: '安全', href: withPrefix('/security') },
-			{ title: 'Security (EN)', href: withPrefix('/en/security') },
 		],
 	},
 	{
@@ -221,7 +216,6 @@ export const navigation: Array<NavGroup> = [
 			{ title: '内存系统', href: withPrefix('/memory') },
 			{ title: '技能开发', href: withPrefix('/skills') },
 			{ title: '工作流', href: withPrefix('/workflows') },
-			{ title: 'Workflows (EN)', href: withPrefix('/en/workflows') },
 		],
 	},
 	{
@@ -231,9 +225,7 @@ export const navigation: Array<NavGroup> = [
 			{ title: 'API 参考', href: withPrefix('/api') },
 			{ title: 'SDK 参考', href: withPrefix('/sdk') },
 			{ title: 'CLI 参考', href: withPrefix('/cli') },
-			{ title: 'CLI (EN)', href: withPrefix('/en/cli') },
 			{ title: 'MCP/A2A', href: withPrefix('/mcp-a2a') },
-			{ title: 'MCP/A2A (EN)', href: withPrefix('/en/mcp-a2a') },
 			{ title: '迁移指南', href: withPrefix('/migration') },
 			{ title: '桌面应用', href: withPrefix('/desktop') },
 			{ title: '开发指南', href: withPrefix('/development') },
@@ -243,18 +235,81 @@ export const navigation: Array<NavGroup> = [
 		title: '运维',
 		links: [
 			{ title: '故障排除', href: withPrefix('/troubleshooting') },
-			{ title: 'Troubleshooting (EN)', href: withPrefix('/en/troubleshooting') },
 			{ title: '生产部署', href: withPrefix('/production') },
 			{ title: '常见问题', href: withPrefix('/faq') },
 		],
 	},
 ];
 
+export const enNavigation: Array<NavGroup> = [
+	{
+		title: 'Getting Started',
+		links: [
+			{ title: 'Getting Started', href: withPrefix('/en/getting-started') },
+			{ title: 'Roadmap', href: withPrefix('/roadmap') },
+			{ title: 'Examples', href: withPrefix('/examples') },
+			{ title: 'Glossary', href: withPrefix('/glossary') },
+		],
+	},
+	{
+		title: 'Configuration',
+		links: [
+			{ title: 'Configuration', href: withPrefix('/en/configuration') },
+			{ title: 'Providers', href: withPrefix('/en/providers') },
+		],
+	},
+	{
+		title: 'Architecture',
+		links: [
+			{ title: 'Architecture', href: withPrefix('/en/architecture') },
+			{ title: 'Security', href: withPrefix('/en/security') },
+		],
+	},
+	{
+		title: 'Agent',
+		links: [
+			{ title: 'Agent Templates', href: withPrefix('/agents') },
+			{ title: 'Hands', href: withPrefix('/hands') },
+			{ title: 'Memory', href: withPrefix('/memory') },
+			{ title: 'Skills', href: withPrefix('/skills') },
+			{ title: 'Workflows', href: withPrefix('/en/workflows') },
+		],
+	},
+	{
+		title: 'Integrations',
+		links: [
+			{ title: 'Channels', href: withPrefix('/channels') },
+			{ title: 'API Reference', href: withPrefix('/api') },
+			{ title: 'SDK Reference', href: withPrefix('/sdk') },
+			{ title: 'CLI', href: withPrefix('/en/cli') },
+			{ title: 'MCP/A2A', href: withPrefix('/en/mcp-a2a') },
+			{ title: 'Migration', href: withPrefix('/migration') },
+			{ title: 'Desktop', href: withPrefix('/desktop') },
+			{ title: 'Development', href: withPrefix('/development') },
+		],
+	},
+	{
+		title: 'Operations',
+		links: [
+			{ title: 'Troubleshooting', href: withPrefix('/en/troubleshooting') },
+			{ title: 'Production', href: withPrefix('/production') },
+			{ title: 'FAQ', href: withPrefix('/faq') },
+		],
+	},
+];
+
+// Export zhNavigation as named export for backward compatibility
+export const navigation = zhNavigation;
+
 export function Navigation(props: React.ComponentPropsWithoutRef<'nav'>) {
+	const pathname = usePathname();
+	const isEn = pathname?.startsWith('/en');
+	const navigation = isEn ? enNavigation : zhNavigation;
+
 	return (
 		<nav {...props}>
 			<ul>
-				<TopLevelNavItem href={withPrefix('/')}>文档</TopLevelNavItem>
+				<TopLevelNavItem href={withPrefix('/')}>{isEn ? 'Docs' : '文档'}</TopLevelNavItem>
 				<TopLevelNavItem href='https://github.com/librefang/librefang'>GitHub</TopLevelNavItem>
 				{navigation.map((group, groupIndex) => (
 					<NavigationGroup key={group.title} group={group} className={groupIndex === 0 ? 'md:mt-0' : ''} />
