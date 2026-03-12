@@ -71,7 +71,7 @@ api_key = "your-secret-api-key"
 ]
 ```
 
-### GET /api/agents/{id}
+### GET /api/agents/\{id\}
 
 获取单个 Agent 详情。
 
@@ -87,23 +87,23 @@ api_key = "your-secret-api-key"
 }
 ```
 
-### PUT /api/agents/{id}/update
+### PUT /api/agents/\{id\}/update
 
 运行时更新 Agent 配置。
 
-### PUT /api/agents/{id}/mode
+### PUT /api/agents/\{id\}/mode
 
 设置 Agent 运行模式。`Stable` 模式固定当前模型和技能注册表。
 
-### POST /api/agents/{id}/message
+### POST /api/agents/\{id\}/message
 
 向 Agent 发送消息并接收完整响应。
 
-### GET /api/agents/{id}/session
+### GET /api/agents/\{id\}/session
 
 获取 Agent 对话历史。
 
-### DELETE /api/agents/{id}
+### DELETE /api/agents/\{id\}
 
 终止 Agent。
 
@@ -119,23 +119,23 @@ api_key = "your-secret-api-key"
 
 创建新工作流。
 
-### GET /api/workflows/{id}
+### GET /api/workflows/\{id\}
 
 获取工作流详情。
 
-### PUT /api/workflows/{id}
+### PUT /api/workflows/\{id\}
 
 更新工作流。
 
-### DELETE /api/workflows/{id}
+### DELETE /api/workflows/\{id\}
 
 删除工作流。
 
-### POST /api/workflows/{id}/run
+### POST /api/workflows/\{id\}/run
 
 运行工作流。
 
-### GET /api/workflows/{id}/runs
+### GET /api/workflows/\{id\}/runs
 
 获取工作流运行历史。
 
@@ -151,15 +151,15 @@ api_key = "your-secret-api-key"
 
 创建新触发器。
 
-### GET /api/triggers/{id}
+### GET /api/triggers/\{id\}
 
 获取触发器详情。
 
-### PUT /api/triggers/{id}
+### PUT /api/triggers/\{id\}
 
 更新触发器。
 
-### DELETE /api/triggers/{id}
+### DELETE /api/triggers/\{id\}
 
 删除触发器。
 
@@ -175,7 +175,7 @@ api_key = "your-secret-api-key"
 
 存储新记忆。
 
-### DELETE /api/memory/{id}
+### DELETE /api/memory/\{id\}
 
 删除记忆。
 
@@ -183,7 +183,7 @@ api_key = "your-secret-api-key"
 
 列出所有会话。
 
-### GET /api/memory/sessions/{id}
+### GET /api/memory/sessions/\{id\}
 
 获取会话详情。
 
@@ -215,7 +215,7 @@ api_key = "your-secret-api-key"
 
 列出所有 Agent 模板。
 
-### GET /api/templates/{id}
+### GET /api/templates/\{id\}
 
 获取模板详情。
 
@@ -251,7 +251,7 @@ api_key = "your-secret-api-key"
 
 列出所有可用模型。
 
-### GET /api/models/{id}
+### GET /api/models/\{id\}
 
 获取模型详情。
 
@@ -259,7 +259,7 @@ api_key = "your-secret-api-key"
 
 列出所有提供商。
 
-### GET /api/providers/{id}
+### GET /api/providers/\{id\}
 
 获取提供商详情。
 
@@ -291,7 +291,7 @@ api_key = "your-secret-api-key"
 
 安装新技能。
 
-### DELETE /api/skills/{id}
+### DELETE /api/skills/\{id\}
 
 卸载技能。
 
@@ -311,11 +311,11 @@ api_key = "your-secret-api-key"
 
 创建 A2A 任务。
 
-### GET /a2a/tasks/{id}
+### GET /a2a/tasks/\{id\}
 
 获取 A2A 任务状态。
 
-### GET /a2a/tasks/{id}/messages
+### GET /a2a/tasks/\{id\}/messages
 
 获取 A2A 消息历史。
 
@@ -383,15 +383,15 @@ api_key = "your-secret-api-key"
 
 列出所有会话。
 
-### GET /api/sessions/{id}
+### GET /api/sessions/\{id\}
 
 获取会话详情。
 
-### DELETE /api/sessions/{id}
+### DELETE /api/sessions/\{id\}
 
 删除会话。
 
-### POST /api/sessions/{id}/compact
+### POST /api/sessions/\{id\}/compact
 
 压缩会话。
 
@@ -399,12 +399,12 @@ api_key = "your-secret-api-key"
 
 ## WebSocket 协议
 
-### ws://127.0.0.1:4200/api/agents/{id}/ws
+### ws://127.0.0.1:4200/api/agents/\{id\}/ws
 
 WebSocket 实时聊天。
 
 ```javascript
-const ws = new WebSocket('ws://127.0.0.1:4200/api/agents/{id}/ws');
+const ws = new WebSocket('ws://127.0.0.1:4200/api/agents/\{id\}/ws');
 
 ws.onmessage = (event) => {
   console.log(event.data);
@@ -417,12 +417,12 @@ ws.send(JSON.stringify({ message: "Hello!" }));
 
 ## SSE 流式传输
 
-### GET /api/agents/{id}/stream
+### GET /api/agents/\{id\}/stream
 
 SSE 流式响应。
 
 ```bash
-curl -N http://127.0.0.1:4200/api/agents/{id}/stream \
+curl -N http://127.0.0.1:4200/api/agents/\{id\}/stream \
   -H "Content-Type: application/json" \
   -d '{"message": "Hello!"}'
 ```
