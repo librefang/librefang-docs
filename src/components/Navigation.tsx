@@ -210,6 +210,7 @@ export const navigation: Array<NavGroup> = [
 		title: 'Agent',
 		links: [
 			{ title: 'Agent 模板', href: withPrefix('/agents') },
+			{ title: '自主 Hands', href: withPrefix('/hands') },
 			{ title: '技能开发', href: withPrefix('/skills') },
 			{ title: '工作流', href: withPrefix('/workflows') },
 		],

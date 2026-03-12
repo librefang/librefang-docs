@@ -35,6 +35,7 @@ export default defineConfig({
         text: 'Agent',
         items: [
           { text: 'Agent 模板', link: '/agents' },
+          { text: '自主 Hands', link: '/hands' },
           { text: '技能开发', link: '/skills' },
           { text: '工作流', link: '/workflows' },
         ]
