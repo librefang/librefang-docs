@@ -7,6 +7,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
+      { text: 'LibreFang', link: '/librefang' },
       { text: 'GitHub', link: 'https://github.com/yldm-tech/openclaw-config' }
     ],
     sidebar: [
@@ -16,6 +17,12 @@ export default defineConfig({
           { text: '简介', link: '/' },
           { text: '架构', link: '/architecture' },
           { text: '目录结构', link: '/structure' },
+        ]
+      },
+      {
+        text: 'LibreFang',
+        items: [
+          { text: '快速开始', link: '/librefang' },
         ]
       },
       {
