@@ -6,12 +6,16 @@ import { AnimatePresence, motion, useIsPresent } from 'motion/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRef } from 'react';
-import { Button } from '@/components/Button';
 import { useIsInsideMobileNavigation } from '@/components/MobileNavigation';
 import { useSectionStore } from '@/components/SectionProvider';
 import { Tag } from '@/components/Tag';
 import { remToPx } from '@/lib/remToPx';
-import { withPrefix } from '@/lib/utils';
+import {
+	getLocalizedHomePath,
+	isZhPath,
+	normalizePathname,
+	withPrefix,
+} from '@/lib/utils';
 
 interface NavGroup {
 	title: string;
@@ -26,7 +30,13 @@ function useInitialValue<T>(value: T, condition = true) {
 	return condition ? initialValue : value;
 }
 
-function TopLevelNavItem({ href, children }: { href: string; children: React.ReactNode }) {
+function TopLevelNavItem({
+	href,
+	children,
+}: {
+	href: string;
+	children: React.ReactNode;
+}) {
 	return (
 		<li className='md:hidden'>
 			<CloseButton
@@ -63,7 +73,7 @@ function NavLink({
 				isAnchorLink ? 'pl-7' : 'pl-4',
 				active
 					? 'text-zinc-900 dark:text-white'
-					: 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'
+					: 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white',
 			)}
 		>
 			<span className='truncate'>{children}</span>
@@ -76,21 +86,36 @@ function NavLink({
 	);
 }
 
-function VisibleSectionHighlight({ group, pathname }: { group: NavGroup; pathname: string }) {
+function VisibleSectionHighlight({
+	group,
+	pathname,
+}: {
+	group: NavGroup;
+	pathname: string;
+}) {
 	const [sections, visibleSections] = useInitialValue(
-		[useSectionStore((s) => s.sections), useSectionStore((s) => s.visibleSections)],
-		useIsInsideMobileNavigation()
+		[
+			useSectionStore((s) => s.sections),
+			useSectionStore((s) => s.visibleSections),
+		],
+		useIsInsideMobileNavigation(),
 	);
 
 	const isPresent = useIsPresent();
 	const firstVisibleSectionIndex = Math.max(
 		0,
-		[{ id: '_top' }, ...sections].findIndex((section) => section.id === visibleSections[0])
+		[{ id: '_top' }, ...sections].findIndex(
+			(section) => section.id === visibleSections[0],
+		),
 	);
 	const itemHeight = remToPx(2);
-	const height = isPresent ? Math.max(1, visibleSections.length) * itemHeight : itemHeight;
+	const height = isPresent
+		? Math.max(1, visibleSections.length) * itemHeight
+		: itemHeight;
 	const top =
-		group.links.findIndex((link) => link.href === pathname) * itemHeight + firstVisibleSectionIndex * itemHeight;
+		group.links.findIndex((link) => normalizePathname(link.href) === pathname) *
+			itemHeight +
+		firstVisibleSectionIndex * itemHeight;
 
 	return (
 		<motion.div
@@ -104,10 +129,18 @@ function VisibleSectionHighlight({ group, pathname }: { group: NavGroup; pathnam
 	);
 }
 
-function ActivePageMarker({ group, pathname }: { group: NavGroup; pathname: string }) {
+function ActivePageMarker({
+	group,
+	pathname,
+}: {
+	group: NavGroup;
+	pathname: string;
+}) {
 	const itemHeight = remToPx(2);
 	const offset = remToPx(0.25);
-	const activePageIndex = group.links.findIndex((link) => link.href === pathname);
+	const activePageIndex = group.links.findIndex(
+		(link) => normalizePathname(link.href) === pathname,
+	);
 	const top = offset + activePageIndex * itemHeight;
 
 	return (
@@ -122,59 +155,86 @@ function ActivePageMarker({ group, pathname }: { group: NavGroup; pathname: stri
 	);
 }
 
-function NavigationGroup({ group, className }: { group: NavGroup; className?: string }) {
+function NavigationGroup({
+	group,
+	className,
+}: {
+	group: NavGroup;
+	className?: string;
+}) {
 	// If this is the mobile navigation then we always render the initial
 	// state, so that the state does not change during the close animation.
 	// The state will still update when we re-open (re-render) the navigation.
 	const isInsideMobileNavigation = useIsInsideMobileNavigation();
 	const [pathname, sections] = useInitialValue(
-		[usePathname(), useSectionStore((s) => s.sections)],
-		isInsideMobileNavigation
+		[normalizePathname(usePathname()), useSectionStore((s) => s.sections)],
+		isInsideMobileNavigation,
 	);
 
-	const isActiveGroup = group.links.findIndex((link) => link.href === pathname) !== -1;
+	const isActiveGroup =
+		group.links.findIndex(
+			(link) => normalizePathname(link.href) === pathname,
+		) !== -1;
 
 	return (
 		<li className={clsx('relative mt-6', className)}>
-			<motion.h2 layout='position' className='text-xs font-semibold text-zinc-900 dark:text-white'>
+			<motion.h2
+				layout='position'
+				className='text-xs font-semibold text-zinc-900 dark:text-white'
+			>
 				{group.title}
 			</motion.h2>
 			<div className='relative mt-3 pl-2'>
 				<AnimatePresence initial={!isInsideMobileNavigation}>
-					{isActiveGroup && <VisibleSectionHighlight group={group} pathname={pathname} />}
+					{isActiveGroup && (
+						<VisibleSectionHighlight group={group} pathname={pathname} />
+					)}
 				</AnimatePresence>
-				<motion.div layout className='absolute inset-y-0 left-2 w-px bg-zinc-900/10 dark:bg-white/5' />
+				<motion.div
+					layout
+					className='absolute inset-y-0 left-2 w-px bg-zinc-900/10 dark:bg-white/5'
+				/>
 				<AnimatePresence initial={false}>
-					{isActiveGroup && <ActivePageMarker group={group} pathname={pathname} />}
+					{isActiveGroup && (
+						<ActivePageMarker group={group} pathname={pathname} />
+					)}
 				</AnimatePresence>
 				<ul className='border-l border-transparent'>
 					{group.links.map((link) => (
 						<motion.li key={link.href} layout='position' className='relative'>
-							<NavLink href={link.href} active={link.href === pathname}>
+							<NavLink
+								href={link.href}
+								active={normalizePathname(link.href) === pathname}
+							>
 								{link.title}
 							</NavLink>
 							<AnimatePresence mode='popLayout' initial={false}>
-								{link.href === pathname && sections.length > 0 && (
-									<motion.ul
-										initial={{ opacity: 0 }}
-										animate={{
-											opacity: 1,
-											transition: { delay: 0.1 },
-										}}
-										exit={{
-											opacity: 0,
-											transition: { duration: 0.15 },
-										}}
-									>
-										{sections.map((section) => (
-											<li key={section.id}>
-												<NavLink href={`${link.href}#${section.id}`} tag={section.tag} isAnchorLink>
-													{section.title}
-												</NavLink>
-											</li>
-										))}
-									</motion.ul>
-								)}
+								{normalizePathname(link.href) === pathname &&
+									sections.length > 0 && (
+										<motion.ul
+											initial={{ opacity: 0 }}
+											animate={{
+												opacity: 1,
+												transition: { delay: 0.1 },
+											}}
+											exit={{
+												opacity: 0,
+												transition: { duration: 0.15 },
+											}}
+										>
+											{sections.map((section) => (
+												<li key={section.id}>
+													<NavLink
+														href={`${link.href}#${section.id}`}
+														tag={section.tag}
+														isAnchorLink
+													>
+														{section.title}
+													</NavLink>
+												</li>
+											))}
+										</motion.ul>
+									)}
 							</AnimatePresence>
 						</motion.li>
 					))}
@@ -225,7 +285,6 @@ const zhNavigation: Array<NavGroup> = [
 			{ title: 'API 参考', href: withPrefix('/zh/api') },
 			{ title: 'SDK 参考', href: withPrefix('/zh/sdk') },
 			{ title: 'CLI 参考', href: withPrefix('/zh/cli') },
-			{ title: 'MCP/A2A', href: withPrefix('/zh/mcp-a2a') },
 			{ title: '迁移指南', href: withPrefix('/zh/migration') },
 			{ title: '桌面应用', href: withPrefix('/zh/desktop') },
 			{ title: '开发指南', href: withPrefix('/zh/development') },
@@ -297,9 +356,7 @@ export const enNavigation: Array<NavGroup> = [
 	},
 	{
 		title: 'Development',
-		links: [
-			{ title: 'Development Guide', href: withPrefix('/development') },
-		],
+		links: [{ title: 'Development Guide', href: withPrefix('/development') }],
 	},
 ];
 
@@ -308,16 +365,24 @@ export const navigation = zhNavigation;
 
 export function Navigation(props: React.ComponentPropsWithoutRef<'nav'>) {
 	const pathname = usePathname();
-	const isZh = pathname?.startsWith('/zh');
+	const isZh = isZhPath(pathname);
 	const navigation = isZh ? zhNavigation : enNavigation;
 
 	return (
 		<nav {...props}>
 			<ul>
-				<TopLevelNavItem href={isZh ? withPrefix('/zh') : withPrefix('/')}>{isZh ? '文档' : 'Docs'}</TopLevelNavItem>
-				<TopLevelNavItem href='https://github.com/librefang/librefang'>GitHub</TopLevelNavItem>
+				<TopLevelNavItem href={getLocalizedHomePath(pathname)}>
+					{isZh ? '文档' : 'Docs'}
+				</TopLevelNavItem>
+				<TopLevelNavItem href='https://github.com/librefang/librefang'>
+					GitHub
+				</TopLevelNavItem>
 				{navigation.map((group, groupIndex) => (
-					<NavigationGroup key={group.title} group={group} className={groupIndex === 0 ? 'md:mt-0' : ''} />
+					<NavigationGroup
+						key={group.title}
+						group={group}
+						className={groupIndex === 0 ? 'md:mt-0' : ''}
+					/>
 				))}
 			</ul>
 		</nav>

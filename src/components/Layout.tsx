@@ -9,7 +9,7 @@ import { Header } from '@/components/Header';
 import { Logo } from '@/components/Logo';
 import { Navigation } from '@/components/Navigation';
 import { type Section, SectionProvider } from '@/components/SectionProvider';
-import { withPrefix } from '@/lib/utils';
+import { getLocalizedHomePath, normalizePathname } from '@/lib/utils';
 
 export function Layout({
 	children,
@@ -19,14 +19,18 @@ export function Layout({
 	allSections: Record<string, Array<Section>>;
 }) {
 	const pathname = usePathname();
+	const currentPath = normalizePathname(pathname);
 
 	return (
-		<SectionProvider sections={allSections[pathname] ?? []}>
+		<SectionProvider sections={allSections[currentPath] ?? []}>
 			<div className='h-full lg:ml-72 xl:ml-80'>
-				<motion.header layoutScroll className='contents lg:pointer-events-none lg:fixed lg:inset-0 lg:z-40 lg:flex'>
+				<motion.header
+					layoutScroll
+					className='contents lg:pointer-events-none lg:fixed lg:inset-0 lg:z-40 lg:flex'
+				>
 					<div className='contents lg:pointer-events-auto lg:block lg:w-72 lg:overflow-y-auto lg:border-r lg:border-zinc-900/10 lg:px-6 lg:pt-4 lg:pb-8 xl:w-80 lg:dark:border-white/10'>
 						<div className='hidden lg:flex'>
-							<Link href={withPrefix('/')} aria-label='Home'>
+							<Link href={getLocalizedHomePath(currentPath)} aria-label='Home'>
 								<Logo className='h-6' />
 							</Link>
 						</div>
