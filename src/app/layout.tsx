@@ -17,10 +17,17 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
 	const pages = await glob('**/*.mdx', { cwd: 'src/app' });
 	const allSectionsEntries = (await Promise.all(
-		pages.map(async (filename) => [
-			`/${filename.replace(/(^|\/)page\.mdx$/, '')}`,
-			(await import(`./${filename}`)).sections,
-		])
+		pages.map(async (filename) => {
+			try {
+				const module = await import(`./${filename}`);
+				return [
+					`/${filename.replace(/(^|\/)page\.mdx$/, '')}`,
+					module.sections || [],
+				];
+			} catch (e) {
+				return [`/${filename.replace(/(^|\/)page\.mdx$/, '')}`, []];
+			}
+		})
 	)) as Array<[string, Array<Section>]>;
 	const allSections = Object.fromEntries(allSectionsEntries);
 

@@ -31,10 +31,24 @@ export default defineConfig({
         ]
       },
       {
+        text: 'Agent',
+        items: [
+          { text: 'Agent 模板', link: '/agents' },
+          { text: '技能开发', link: '/skills' },
+          { text: '工作流', link: '/workflows' },
+        ]
+      },
+      {
         text: '集成',
         items: [
           { text: '通道适配器', link: '/channels' },
           { text: 'CLI 参考', link: '/cli' },
+        ]
+      },
+      {
+        text: '运维',
+        items: [
+          { text: '故障排除', link: '/troubleshooting' },
         ]
       }
     ],
