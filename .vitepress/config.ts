@@ -43,12 +43,15 @@ export default defineConfig({
         items: [
           { text: '通道适配器', link: '/channels' },
           { text: 'CLI 参考', link: '/cli' },
+          { text: 'MCP/A2A', link: '/mcp-a2a' },
+          { text: '桌面应用', link: '/desktop' },
         ]
       },
       {
         text: '运维',
         items: [
           { text: '故障排除', link: '/troubleshooting' },
+          { text: '生产部署', link: '/production' },
         ]
       }
     ],
