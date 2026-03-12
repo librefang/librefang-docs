@@ -309,7 +309,7 @@ export function Navigation(props: React.ComponentPropsWithoutRef<'nav'>) {
 	return (
 		<nav {...props}>
 			<ul>
-				<TopLevelNavItem href={withPrefix('/')}>{isEn ? 'Docs' : '文档'}</TopLevelNavItem>
+				<TopLevelNavItem href={isEn ? withPrefix('/en') : withPrefix('/')}>{isEn ? 'Docs' : '文档'}</TopLevelNavItem>
 				<TopLevelNavItem href='https://github.com/librefang/librefang'>GitHub</TopLevelNavItem>
 				{navigation.map((group, groupIndex) => (
 					<NavigationGroup key={group.title} group={group} className={groupIndex === 0 ? 'md:mt-0' : ''} />
