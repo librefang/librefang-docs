@@ -337,10 +337,11 @@ export function Code({ children, ...props }: React.ComponentPropsWithoutRef<'cod
 	const isGrouped = useContext(CodeGroupContext);
 
 	if (isGrouped) {
-		if (typeof children !== 'string') {
-			throw new Error('`Code` children must be a string when nested inside a `CodeGroup`.');
+		if (typeof children === 'string') {
+			return <code {...props} dangerouslySetInnerHTML={{ __html: children }} />;
 		}
-		return <code {...props} dangerouslySetInnerHTML={{ __html: children }} />;
+
+		return <code {...props}>{children}</code>;
 	}
 
 	return <code {...props}>{children}</code>;
