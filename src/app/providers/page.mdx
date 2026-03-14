@@ -1,6 +1,6 @@
 # LLM Providers Guide
 
-LibreFang ships with a comprehensive model catalog covering **3 native LLM drivers**, **20 providers**, **51 builtin models**, and **23 aliases**. Every provider uses one of three battle-tested drivers: the native **Anthropic** driver, the native **Gemini** driver, or the universal **OpenAI-compatible** driver. This guide is the single source of truth for configuring, selecting, and managing LLM providers in LibreFang.
+LibreFang ships with a comprehensive model catalog covering **6 native LLM drivers**, **32 providers**, **90+ builtin models**, and **23 aliases**. Every provider uses one of six battle-tested drivers: the native **Anthropic** driver, the native **Gemini** driver, the **ChatGPT** session driver, the **GitHub Copilot** OAuth driver, the **Claude Code** subprocess driver, or the universal **OpenAI-compatible** driver. This guide is the single source of truth for configuring, selecting, and managing LLM providers in LibreFang.
 
 ---
 
@@ -549,9 +549,412 @@ For Gemini specifically, either `GEMINI_API_KEY` or `GOOGLE_API_KEY` will work.
 
 ---
 
+### 21. ChatGPT (Session Auth)
+
+| | |
+|---|---|
+| **Display Name** | ChatGPT (Session Auth) |
+| **Driver** | ChatGPT session driver |
+| **Env Var** | `CHATGPT_SESSION_TOKEN` |
+| **Base URL** | `https://chatgpt.com/backend-api` |
+| **Key Required** | Yes (session token) |
+| **Free Tier** | Uses your ChatGPT subscription |
+| **Auth** | Session-based cookie auth |
+| **Models** | 5 |
+
+**Available Models:**
+- `gpt-5.4-codex` (Frontier)
+- `gpt-5.3-codex` (Frontier)
+- `gpt-5.2-codex` (Smart)
+- `gpt-5.1-codex` (Smart)
+- `gpt-5.1-codex-mini` (Balanced)
+
+**Setup:**
+1. Run `librefang auth chatgpt` to authenticate via browser session
+2. The session token is captured automatically
+3. Alternatively: `export CHATGPT_SESSION_TOKEN="your-session-token"`
+
+**Notes:** This provider uses ChatGPT's internal backend API with session-based authentication. It leverages your existing ChatGPT subscription (Plus/Team/Enterprise). Models appear at zero API cost since they use your subscription. This is not the official OpenAI API -- it's the ChatGPT web interface backend.
+
+---
+
+### 22. GitHub Copilot
+
+| | |
+|---|---|
+| **Display Name** | GitHub Copilot |
+| **Driver** | Copilot OAuth driver |
+| **Env Var** | `GITHUB_TOKEN` (auto via OAuth) |
+| **Base URL** | `https://api.githubcopilot.com` |
+| **Key Required** | Yes (auto token exchange) |
+| **Free Tier** | Requires GitHub Copilot subscription |
+| **Auth** | OAuth device flow + automatic token exchange |
+| **Models** | 2 |
+
+**Available Models:**
+- `copilot/gpt-4` (Frontier)
+- `copilot/gpt-4o` (Smart)
+
+**Setup:**
+1. Ensure you have an active GitHub Copilot subscription
+2. Run `librefang auth copilot` to authenticate via GitHub device flow
+3. Token exchange is handled automatically -- no manual key management needed
+
+**Notes:** The Copilot driver implements GitHub's OAuth device flow and automatic token exchange. Your GitHub token is exchanged for a Copilot API token transparently. Models appear at zero API cost since they use your Copilot subscription.
+
+---
+
+### 23. Moonshot (Kimi)
+
+| | |
+|---|---|
+| **Display Name** | Moonshot (Kimi) |
+| **Driver** | OpenAI-compatible |
+| **Env Var** | `MOONSHOT_API_KEY` |
+| **Base URL** | `https://api.moonshot.ai/v1` |
+| **Key Required** | Yes |
+| **Free Tier** | No |
+| **Auth** | `Authorization: Bearer` header |
+| **Aliases** | `kimi`, `kimi2` |
+| **Models** | 5 |
+
+**Available Models:**
+- `kimi-k2.5` (Frontier) -- latest Kimi model with vision
+- `kimi-k2` (Frontier) -- strong reasoning with vision
+- `moonshot-v1-128k` (Smart) -- 128K context
+- `moonshot-v1-32k` (Balanced) -- 32K context
+- `moonshot-v1-8k` (Fast) -- 8K context, cheapest
+
+**Setup:**
+1. Sign up at [platform.moonshot.cn](https://platform.moonshot.cn)
+2. Create an API key
+3. `export MOONSHOT_API_KEY="sk-..."`
+
+**Example config:**
+```toml
+[default_model]
+provider = "moonshot"
+model = "kimi-k2"
+```
+
+---
+
+### 24. Qwen (Alibaba DashScope)
+
+| | |
+|---|---|
+| **Display Name** | Qwen (Alibaba) |
+| **Driver** | OpenAI-compatible |
+| **Env Var** | `DASHSCOPE_API_KEY` |
+| **Base URL** | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| **Key Required** | Yes |
+| **Free Tier** | Yes (limited free credits) |
+| **Auth** | `Authorization: Bearer` header |
+| **Aliases** | `dashscope`, `model_studio` |
+| **Models** | 11 |
+
+**Available Models:**
+- `qwen3-235b-a22b` (Frontier) -- Qwen3 MoE 235B
+- `qwen-max` (Frontier) -- strongest Qwen model
+- `qwen-vl-max` (Frontier) -- vision flagship
+- `qwen-plus` (Smart) -- good balance of cost and capability
+- `qwen-vl-plus` (Smart) -- vision
+- `qwen-coder-plus` (Smart) -- code-specialized
+- `qwen-coder-plus-latest` (Smart) -- latest coder snapshot
+- `qwen-long` (Balanced) -- 1M context window
+- `qwen2.5-coder-32b-instruct` (Balanced) -- open-source coder
+- `qwen3-30b-a3b` (Fast) -- small MoE, very cheap
+- `qwen-turbo` (Fast) -- fastest Qwen model
+
+**Setup:**
+1. Sign up at [dashscope.console.aliyun.com](https://dashscope.console.aliyun.com)
+2. Create an API key under DashScope console
+3. `export DASHSCOPE_API_KEY="sk-..."`
+
+**Example config:**
+```toml
+[default_model]
+provider = "qwen"
+model = "qwen-plus"
+```
+
+**Notes:** Qwen uses Alibaba Cloud's DashScope platform. The API is OpenAI-compatible. The `qwen-long` model supports up to 1M token context window.
+
+---
+
+### 25. Zhipu AI (GLM)
+
+| | |
+|---|---|
+| **Display Name** | Zhipu AI (GLM) |
+| **Driver** | OpenAI-compatible |
+| **Env Var** | `ZHIPU_API_KEY` |
+| **Base URL** | `https://open.bigmodel.cn/api/paas/v4` |
+| **Key Required** | Yes |
+| **Free Tier** | Yes (GLM-4 Flash is free) |
+| **Auth** | `Authorization: Bearer` header |
+| **Aliases** | `glm` |
+| **Models** | 6 |
+
+**Available Models:**
+- `glm-5-20250605` (Frontier) -- GLM-5, latest with vision
+- `glm-4-plus` (Smart) -- strong reasoning, 128K context
+- `glm-4.7` (Smart) -- enhanced with vision
+- `glm-4v-plus` (Smart) -- vision-specialized
+- `glm-4-long` (Balanced) -- 1M context window
+- `glm-4-flash` (Fast) -- free tier, 128K context
+
+**Setup:**
+1. Sign up at [open.bigmodel.cn](https://open.bigmodel.cn)
+2. Create an API key
+3. `export ZHIPU_API_KEY="..."`
+
+**Example config:**
+```toml
+[default_model]
+provider = "zhipu"
+model = "glm-4-plus"
+```
+
+**Notes:** GLM-4 Flash is completely free with no rate limits, making it excellent for development and testing.
+
+---
+
+### 26. MiniMax (International)
+
+| | |
+|---|---|
+| **Display Name** | MiniMax (International) |
+| **Driver** | OpenAI-compatible |
+| **Env Var** | `MINIMAX_API_KEY` |
+| **Base URL** | `https://api.minimax.io/v1` |
+| **Key Required** | Yes |
+| **Free Tier** | No |
+| **Auth** | `Authorization: Bearer` header |
+| **Models** | 6 |
+
+**Available Models:**
+- `MiniMax-M2.5` (Frontier) -- vision, 1M context
+- `MiniMax-M2.5-highspeed` (Smart) -- fast variant with vision
+- `MiniMax-M2.1` (Smart) -- 1M context
+- `minimax-text-01` (Smart) -- 1M context
+- `abab7-chat` (Smart) -- vision, 512K context
+- `abab6.5-chat` (Balanced) -- 245K context
+
+**Setup:**
+1. Sign up at [platform.minimax.chat](https://platform.minimax.chat)
+2. Create an API key
+3. `export MINIMAX_API_KEY="..."`
+
+**Example config:**
+```toml
+[default_model]
+provider = "minimax"
+model = "MiniMax-M2.5"
+```
+
+---
+
+### 27. MiniMax (China)
+
+| | |
+|---|---|
+| **Display Name** | MiniMax (China) |
+| **Driver** | OpenAI-compatible |
+| **Env Var** | `MINIMAX_CN_API_KEY` |
+| **Base URL** | `https://api.minimaxi.com/v1` |
+| **Key Required** | Yes |
+| **Free Tier** | No |
+| **Auth** | `Authorization: Bearer` header |
+| **Models** | 6 |
+
+**Available Models:**
+Same models as MiniMax International, served from China endpoints.
+
+**Setup:**
+1. Sign up at [platform.minimaxi.com](https://platform.minimaxi.com) (China)
+2. Create an API key
+3. `export MINIMAX_CN_API_KEY="..."`
+
+**Notes:** This is the China-domestic version of MiniMax with servers in mainland China. Use this if you need lower latency from China or compliance with data residency requirements.
+
+---
+
+### 28. Baidu Qianfan (ERNIE)
+
+| | |
+|---|---|
+| **Display Name** | Baidu Qianfan |
+| **Driver** | OpenAI-compatible |
+| **Env Var** | `QIANFAN_API_KEY` |
+| **Base URL** | `https://qianfan.baidubce.com/v2` |
+| **Key Required** | Yes |
+| **Free Tier** | Yes (ERNIE Speed is free) |
+| **Auth** | `Authorization: Bearer` header |
+| **Aliases** | `baidu` |
+| **Models** | 3 |
+
+**Available Models:**
+- `ernie-4.5-8k` (Smart) -- Baidu's flagship model
+- `ernie-4.0-turbo-8k` (Balanced) -- fast variant
+- `ernie-speed-128k` (Fast) -- free, 128K context
+
+**Setup:**
+1. Sign up at [qianfan.cloud.baidu.com](https://qianfan.cloud.baidu.com)
+2. Create an API key
+3. `export QIANFAN_API_KEY="..."`
+
+**Example config:**
+```toml
+[default_model]
+provider = "qianfan"
+model = "ernie-4.5-8k"
+```
+
+**Notes:** ERNIE Speed 128K is free with no usage limits, making it a great option for development and high-volume tasks.
+
+---
+
+### 29. Volcano Engine (Doubao)
+
+| | |
+|---|---|
+| **Display Name** | Volcano Engine (Doubao) |
+| **Driver** | OpenAI-compatible |
+| **Env Var** | `VOLCENGINE_API_KEY` |
+| **Base URL** | `https://ark.cn-beijing.volces.com/api/v3` |
+| **Key Required** | Yes |
+| **Free Tier** | No |
+| **Auth** | `Authorization: Bearer` header |
+| **Aliases** | `doubao` |
+| **Models** | 4 |
+
+**Available Models:**
+- `doubao-seed-1-6-251015` (Smart) -- Doubao flagship, 256K context
+- `doubao-seed-code` (Smart) -- code-specialized
+- `doubao-seed-2-0-lite` (Balanced) -- cost-effective
+- `doubao-seed-2-0-mini` (Fast) -- cheapest option
+
+**Setup:**
+1. Sign up at [console.volcengine.com](https://console.volcengine.com)
+2. Enable the Ark (model service) product
+3. Create an API key
+4. `export VOLCENGINE_API_KEY="..."`
+
+**Example config:**
+```toml
+[default_model]
+provider = "volcengine"
+model = "doubao-seed-1-6-251015"
+```
+
+**Notes:** Volcano Engine is ByteDance's cloud platform. Doubao models are ByteDance's in-house LLMs.
+
+---
+
+### 30. Venice.ai
+
+| | |
+|---|---|
+| **Display Name** | Venice.ai |
+| **Driver** | OpenAI-compatible |
+| **Env Var** | `VENICE_API_KEY` |
+| **Base URL** | `https://api.venice.ai/api/v1` |
+| **Key Required** | Yes |
+| **Free Tier** | No |
+| **Auth** | `Authorization: Bearer` header |
+| **Models** | 3 |
+
+**Available Models:**
+- `qwen3-235b-a22b-instruct-2507` (Smart) -- Qwen3 235B
+- `llama-3.3-70b` (Balanced) -- Llama 3.3 70B
+- `venice-uncensored` (Fast) -- uncensored model
+
+**Setup:**
+1. Sign up at [venice.ai](https://venice.ai)
+2. Create an API key from dashboard
+3. `export VENICE_API_KEY="..."`
+
+**Example config:**
+```toml
+[default_model]
+provider = "venice"
+model = "llama-3.3-70b"
+```
+
+**Notes:** Venice.ai is an OpenAI-compatible inference platform focused on privacy and uncensored models.
+
+---
+
+### 31. Chutes.ai
+
+| | |
+|---|---|
+| **Display Name** | Chutes.ai |
+| **Driver** | OpenAI-compatible |
+| **Env Var** | `CHUTES_API_KEY` |
+| **Base URL** | `https://llm.chutes.ai/v1` |
+| **Key Required** | Yes |
+| **Free Tier** | No |
+| **Auth** | `Authorization: Bearer` header |
+| **Models** | 5 |
+
+**Available Models:**
+- `chutes/deepseek-ai/DeepSeek-V3` (Smart) -- DeepSeek V3
+- `chutes/deepseek-ai/DeepSeek-R1` (Smart) -- DeepSeek R1 reasoning
+- `chutes/Qwen/Qwen3-235B-A22B` (Smart) -- Qwen3 235B
+- `chutes/meta-llama/Llama-4-Maverick-17B-128E-Instruct` (Balanced) -- Llama 4 Maverick
+- `chutes/meta-llama/Llama-3.3-70B-Instruct` (Balanced) -- Llama 3.3 70B
+
+**Setup:**
+1. Sign up at [chutes.ai](https://chutes.ai)
+2. Create an API key
+3. `export CHUTES_API_KEY="..."`
+
+**Example config:**
+```toml
+[default_model]
+provider = "chutes"
+model = "chutes/deepseek-ai/DeepSeek-V3"
+```
+
+**Notes:** Chutes.ai provides serverless inference for popular open-source models at competitive pricing.
+
+---
+
+### 32. Z.AI
+
+| | |
+|---|---|
+| **Display Name** | Z.AI |
+| **Driver** | OpenAI-compatible |
+| **Env Var** | `ZHIPU_API_KEY` |
+| **Base URL** | `https://api.z.ai/api/paas/v4` |
+| **Key Required** | Yes |
+| **Free Tier** | No |
+| **Auth** | `Authorization: Bearer` header |
+| **Aliases** | `z.ai` |
+| **Models** | Shared with Zhipu catalog |
+
+**Setup:**
+1. Sign up at [z.ai](https://z.ai)
+2. Uses the same API key as Zhipu AI
+3. `export ZHIPU_API_KEY="..."`
+
+**Example config:**
+```toml
+[default_model]
+provider = "zai"
+model = "glm-4-plus"
+```
+
+**Notes:** Z.AI is an international endpoint for Zhipu AI models. It shares the same API key (`ZHIPU_API_KEY`) and model catalog as Zhipu.
+
+---
+
 ## Model Catalog
 
-The complete catalog of all 51 builtin models, sorted by provider. Pricing is per million tokens.
+The complete catalog of all 90+ builtin models, sorted by provider. Pricing is per million tokens.
 
 | # | Model ID | Display Name | Provider | Tier | Context Window | Max Output | Input $/M | Output $/M | Tools | Vision |
 |---|----------|-------------|----------|------|---------------|------------|-----------|------------|-------|--------|
@@ -903,7 +1306,7 @@ Returns a map of all alias-to-canonical-ID mappings.
 GET /api/providers
 ```
 
-Returns all 20 providers with auth status and model counts.
+Returns all 32 providers with auth status and model counts.
 
 **Response:**
 ```json
@@ -998,7 +1401,7 @@ Local:
 
 ### `/providers`
 
-Lists all 20 providers with their authentication status.
+Lists all 32 providers with their authentication status.
 
 ```
 /providers
@@ -1006,7 +1409,7 @@ Lists all 20 providers with their authentication status.
 
 Example output:
 ```
-LLM Providers (20):
+LLM Providers (32):
 
   Anthropic          ANTHROPIC_API_KEY       Configured    3 models
   OpenAI             OPENAI_API_KEY          Missing       6 models
@@ -1047,6 +1450,18 @@ Quick reference for all provider environment variables:
 | Hugging Face | `HF_API_KEY` | Yes |
 | xAI | `XAI_API_KEY` | Yes |
 | Replicate | `REPLICATE_API_TOKEN` | Yes |
+| ChatGPT | `CHATGPT_SESSION_TOKEN` | Yes (session) |
+| GitHub Copilot | `GITHUB_TOKEN` | Yes (OAuth) |
+| Moonshot (Kimi) | `MOONSHOT_API_KEY` | Yes |
+| Qwen (Alibaba) | `DASHSCOPE_API_KEY` | Yes |
+| Zhipu AI (GLM) | `ZHIPU_API_KEY` | Yes |
+| MiniMax | `MINIMAX_API_KEY` | Yes |
+| MiniMax (China) | `MINIMAX_CN_API_KEY` | Yes |
+| Baidu Qianfan | `QIANFAN_API_KEY` | Yes |
+| Volcano Engine | `VOLCENGINE_API_KEY` | Yes |
+| Venice.ai | `VENICE_API_KEY` | Yes |
+| Chutes.ai | `CHUTES_API_KEY` | Yes |
+| Z.AI | `ZHIPU_API_KEY` | Yes |
 
 ---
 
