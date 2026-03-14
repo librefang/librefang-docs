@@ -724,5 +724,56 @@ In `crates/librefang-cli/src/main.rs`, add a case to `cmd_channel_setup` with st
 
 Write integration tests. Use the `ChannelMessage` type to simulate incoming messages without connecting to the real platform.
 
+### 7. Add Feature Flag
+
+Since [PR #223](https://github.com/librefang/librefang/pull/223), each channel adapter is gated behind a Cargo feature flag for smaller binary sizes.
+
+In `crates/librefang-channels/Cargo.toml`:
+
+```toml
+[features]
+channel-myplatform = []  # Add your channel feature
+```
+
+Gate your module in `lib.rs`:
+
+```rust
+#[cfg(feature = "channel-myplatform")]
+pub mod myplatform;
+```
+
+Forward the feature through `crates/librefang-api/Cargo.toml` and `crates/librefang-cli/Cargo.toml`:
+
+```toml
+[features]
+channel-myplatform = ["librefang-channels/channel-myplatform"]
+```
+
+If your adapter needs platform-specific dependencies (e.g., a client library), make them optional and tie them to your feature flag:
+
+```toml
+[dependencies]
+myplatform-sdk = { version = "1.0", optional = true }
+
+[features]
+channel-myplatform = ["myplatform-sdk"]
+```
+
+When a user configures a channel whose feature is disabled, LibreFang emits a `tracing::warn` at startup instead of failing silently.
+
+### Example: Contributing a New Channel Adapter
+
+Here's a step-by-step checklist for contributing a new channel adapter:
+
+1. **Create** `crates/librefang-channels/src/myplatform.rs` implementing `ChannelAdapter`
+2. **Register** the module in `lib.rs` (with `#[cfg(feature = "channel-myplatform")]`)
+3. **Add** feature flag in `Cargo.toml` (channels → api → cli chain)
+4. **Add** config struct in `librefang-types`
+5. **Wire** into `channel_bridge.rs`
+6. **Add** CLI setup wizard step
+7. **Write** integration tests
+8. **Update** the channel count in README.md and docs
+
+See the [examples/custom-channel/](https://github.com/librefang/librefang/tree/main/examples/custom-channel) directory in the main repo for a reference template.
 
 export const sections = [];
