@@ -55,6 +55,45 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all -- --check
 ```
 
+### Quick Commands with just
+
+LibreFang provides a [`justfile`](https://github.com/casey/just) for common development commands:
+
+```bash
+# Install just (if not already installed)
+# macOS: brew install just
+# Linux: cargo install just
+
+# List all available commands
+just
+
+# Common workflows
+just build          # Build workspace (lib only)
+just test           # Run all tests
+just lint           # Clippy with zero warnings
+just fmt            # Format all code
+just ci             # Run full local CI (fmt-check + lint + test)
+just check          # Quick compilation check
+just doc            # Generate and open docs
+just sync-versions  # Sync version across all crates
+```
+
+Using `just ci` before pushing ensures your PR will pass CI checks.
+
+### Pre-commit Hooks
+
+LibreFang includes a `.pre-commit-config.yaml` for automatic code quality checks:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install the hooks
+pre-commit install
+
+# Now cargo fmt and clippy run automatically on each commit
+```
+
 ---
 
 ## Project Structure
@@ -326,6 +365,36 @@ async fn test_agent_spawn() {
     assert!(agent.is_running());
 }
 ```
+
+### Writing Integration Tests
+
+Integration tests live in `crates/*/tests/` directories. They test cross-module behavior and real component interaction.
+
+```rust
+// crates/librefang-kernel/tests/my_feature_test.rs
+
+use librefang_kernel::Kernel;
+use librefang_types::AgentManifest;
+
+#[tokio::test]
+async fn test_my_feature() {
+    // 1. Setup — create test fixtures
+    let kernel = Kernel::new_for_testing().await;
+    let manifest = AgentManifest::default();
+
+    // 2. Action — exercise the feature
+    let agent_id = kernel.spawn_agent(manifest).await.unwrap();
+
+    // 3. Assert — verify expected behavior
+    assert!(kernel.get_agent(&agent_id).is_some());
+}
+```
+
+**Tips:**
+- Use `#[tokio::test]` for async tests
+- Run a specific crate's tests: `cargo test -p librefang-kernel`
+- Run a single test: `cargo test -p librefang-kernel test_my_feature`
+- Integration tests in `tests/` directory have access to the crate's public API only
 
 ### Benchmark Tests
 
