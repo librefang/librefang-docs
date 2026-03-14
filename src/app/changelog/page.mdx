@@ -1,0 +1,61 @@
+# Changelog
+
+All notable changes to LibreFang are documented here. For the full changelog, see [CHANGELOG.md](https://github.com/librefang/librefang/blob/main/CHANGELOG.md) and [GitHub Releases](https://github.com/librefang/librefang/releases).
+
+---
+
+## v0.4.1 (2026-03-14)
+
+### Fixed
+- Inherit environment variables when spawning daemon process — API keys (e.g., `MINIMAX_API_KEY`) are now correctly passed to the daemon subprocess ([#210](https://github.com/librefang/librefang/pull/210))
+
+---
+
+## v0.4.0 (2026-03-14)
+
+### Added
+
+#### Authentication & Drivers
+- **ChatGPT Session Auth**: Browser-based OAuth flow for ChatGPT Plus/Ultra subscribers with PKCE S256, automatic model discovery, `librefang auth chatgpt` subcommand, and 7-day session caching ([#205](https://github.com/librefang/librefang/pull/205))
+- **MiniMax Dual-Platform Support**: Separate `minimax-cn` provider for China-specific endpoints using `MINIMAX_CN_API_KEY`
+- **QQ Bot Adapter**: Native support for QQ Bot messaging channel ([#208](https://github.com/librefang/librefang/pull/208))
+
+#### Web Dashboard & i18n
+- Full internationalization (i18n) with `zh-CN` locale and unified `t()` translation helper
+- New sidebar layout with theme/language switchers
+- High-quality inline SVG icons replacing emoji icons
+- Improved ClawHub responsiveness on small screens
+
+#### Core Platform
+- Version alignment across all 31 built-in agents and sub-packages
+- Enhanced config hot-reloading reliability
+
+#### CI/CD
+- Optimized Docker multi-arch build with native ARM runner ([#203](https://github.com/librefang/librefang/pull/203))
+
+#### CLI
+- `librefang doctor` now checks for version updates and network connectivity ([#202](https://github.com/librefang/librefang/pull/202))
+
+---
+
+## v0.3.58 (2026-03-13)
+
+Maintenance release with dependency updates and bug fixes.
+
+---
+
+## v0.1.0 (2026-02-24)
+
+Initial release. See [CHANGELOG.md](https://github.com/librefang/librefang/blob/main/CHANGELOG.md) for the complete v0.1.0 feature list including:
+- 14-crate Rust workspace
+- 27 LLM providers with 130+ models
+- 40 channel adapters
+- 41 built-in tools
+- WASM sandbox with dual metering
+- Visual workflow builder
+- 16 security systems
+- JavaScript and Python SDKs
+- Google A2A protocol support
+
+
+export const sections = [];
