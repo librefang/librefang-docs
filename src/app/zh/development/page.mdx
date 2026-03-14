@@ -55,6 +55,45 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all -- --check
 ```
 
+### 使用 just 快速命令
+
+LibreFang 提供了 [`justfile`](https://github.com/casey/just) 来简化常用开发命令：
+
+```bash
+# 安装 just
+# macOS: brew install just
+# Linux: cargo install just
+
+# 列出所有可用命令
+just
+
+# 常用工作流
+just build          # 构建工作空间（仅 lib）
+just test           # 运行所有测试
+just lint           # Clippy 零警告检查
+just fmt            # 格式化所有代码
+just ci             # 运行完整本地 CI（格式检查 + lint + 测试）
+just check          # 快速编译检查
+just doc            # 生成并打开文档
+just sync-versions  # 同步所有 crate 版本
+```
+
+推送代码前运行 `just ci` 可以确保 PR 通过 CI 检查。
+
+### Pre-commit 钩子
+
+LibreFang 包含 `.pre-commit-config.yaml` 用于自动代码质量检查：
+
+```bash
+# 安装 pre-commit
+pip install pre-commit
+
+# 安装钩子
+pre-commit install
+
+# 之后每次 commit 时会自动运行 cargo fmt 和 clippy
+```
+
 ---
 
 ## 项目结构
@@ -326,6 +365,43 @@ async fn test_agent_spawn() {
     assert!(agent.is_running());
 }
 ```
+
+#### 编写集成测试指南
+
+集成测试应放在各 crate 的 `tests/` 目录下，用于验证跨模块的交互行为：
+
+```rust
+// crates/librefang-api/tests/api_integration.rs
+
+use librefang_api::create_app;
+use axum::http::StatusCode;
+use tower::ServiceExt;
+
+#[tokio::test]
+async fn test_health_endpoint() {
+    let app = create_app().await;
+
+    let response = app
+        .oneshot(
+            axum::http::Request::builder()
+                .uri("/api/health")
+                .body(axum::body::Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+}
+```
+
+**集成测试最佳实践：**
+
+- 每个新 API 端点都应有对应的集成测试
+- 测试应验证实际的 HTTP 请求/响应，而非仅调用内部函数
+- 使用 `tower::ServiceExt::oneshot` 避免启动真实服务器
+- 写入操作后应读取验证数据是否持久化
+- 使用 `just test` 运行所有测试（包括集成测试）
 
 ### 基准测试
 
