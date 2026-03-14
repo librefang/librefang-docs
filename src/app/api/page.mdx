@@ -1,6 +1,6 @@
 # API Reference
 
-LibreFang exposes a REST API, WebSocket endpoints, and SSE streaming when the daemon is running. The default listen address is `http://127.0.0.1:4200`.
+LibreFang exposes a REST API, WebSocket endpoints, and SSE streaming when the daemon is running. The default listen address is `http://127.0.0.1:4545`.
 
 All responses include security headers (CSP, X-Frame-Options, X-Content-Type-Options, HSTS) and are protected by a GCRA cost-aware rate limiter with per-IP token bucket tracking and automatic stale entry cleanup. LibreFang implements 16 security systems including Merkle audit trails, taint tracking, WASM dual metering, Ed25519 manifest signing, SSRF protection, subprocess sandboxing, and secret zeroization.
 
@@ -619,6 +619,1667 @@ Get a specific template's manifest and raw TOML.
 
 ---
 
+## Hands Endpoints
+
+Hands are autonomous background capabilities (e.g., browser automation, code execution) that run alongside agents. Each hand has a definition, requirements, and can be activated as instances.
+
+### GET /api/hands
+
+List all available hand definitions with their requirements status.
+
+**Response** `200 OK`:
+
+```json
+{
+  "hands": [
+    {
+      "id": "browser",
+      "name": "Browser Automation",
+      "description": "Headless browser for web scraping and testing",
+      "category": "automation",
+      "icon": "globe",
+      "tools": ["browser_navigate", "browser_click"],
+      "requirements_met": true,
+      "active": false,
+      "degraded": false,
+      "requirements": [
+        {"key": "playwright", "label": "Playwright", "satisfied": true, "optional": false}
+      ],
+      "has_settings": true,
+      "settings_count": 3
+    }
+  ],
+  "total": 5
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/hands
+```
+
+### GET /api/hands/active
+
+List currently active hand instances.
+
+**Response** `200 OK`:
+
+```json
+{
+  "instances": [
+    {
+      "instance_id": "inst-1234",
+      "hand_id": "browser",
+      "status": "running",
+      "agent_id": "a1b2c3d4-...",
+      "agent_name": "web-scraper",
+      "activated_at": "2025-01-15T10:30:00Z",
+      "updated_at": "2025-01-15T10:35:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/hands/active
+```
+
+### GET /api/hands/&lbrace;hand_id&rbrace;
+
+Get detailed information about a specific hand definition including requirements and settings.
+
+**Response** `200 OK`:
+
+```json
+{
+  "id": "browser",
+  "name": "Browser Automation",
+  "description": "Headless browser for web scraping and testing",
+  "category": "automation",
+  "icon": "globe",
+  "tools": ["browser_navigate", "browser_click"],
+  "requirements_met": true,
+  "active": false,
+  "requirements": [
+    {
+      "key": "playwright",
+      "label": "Playwright",
+      "type": "Binary",
+      "satisfied": true,
+      "optional": false,
+      "install": {"command": "npx playwright install"}
+    }
+  ],
+  "agent": {"name": "browser-agent", "provider": "groq", "model": "llama-3.3-70b-versatile"},
+  "dashboard": [],
+  "settings": []
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/hands/browser
+```
+
+### POST /api/hands/install
+
+Install a hand from a definition path or URL.
+
+**Request Body**:
+
+```json
+{
+  "source": "/path/to/hand"
+}
+```
+
+**Response** `201 Created`:
+
+```json
+{
+  "status": "installed",
+  "hand_id": "custom-hand"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/hands/install \
+  -H "Content-Type: application/json" \
+  -d '{"source": "/path/to/hand"}'
+```
+
+### POST /api/hands/&lbrace;hand_id&rbrace;/activate
+
+Activate a hand, creating a running instance with its associated agent.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "activated",
+  "instance_id": "inst-5678",
+  "hand_id": "browser"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/hands/browser/activate
+```
+
+### POST /api/hands/&lbrace;hand_id&rbrace;/check-deps
+
+Re-check dependency status for a hand.
+
+**Response** `200 OK`:
+
+```json
+{
+  "hand_id": "browser",
+  "requirements": [
+    {"key": "playwright", "label": "Playwright", "satisfied": true}
+  ],
+  "all_met": true
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/hands/browser/check-deps
+```
+
+### POST /api/hands/&lbrace;hand_id&rbrace;/install-deps
+
+Install missing dependencies for a hand.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "ok",
+  "installed": ["playwright"]
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/hands/browser/install-deps
+```
+
+### GET /api/hands/&lbrace;hand_id&rbrace;/settings
+
+Get the current settings for a hand.
+
+**Response** `200 OK`:
+
+```json
+{
+  "hand_id": "browser",
+  "settings": [
+    {"key": "headless", "value": true, "type": "boolean"},
+    {"key": "timeout_ms", "value": 30000, "type": "integer"}
+  ]
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/hands/browser/settings
+```
+
+### PUT /api/hands/&lbrace;hand_id&rbrace;/settings
+
+Update settings for a hand.
+
+**Request Body**:
+
+```json
+{
+  "headless": false,
+  "timeout_ms": 60000
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "ok",
+  "hand_id": "browser"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X PUT http://127.0.0.1:4545/api/hands/browser/settings \
+  -H "Content-Type: application/json" \
+  -d '{"headless": false}'
+```
+
+### POST /api/hands/instances/&lbrace;id&rbrace;/pause
+
+Pause a running hand instance.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "paused",
+  "instance_id": "inst-1234"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/hands/instances/inst-1234/pause
+```
+
+### POST /api/hands/instances/&lbrace;id&rbrace;/resume
+
+Resume a paused hand instance.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "resumed",
+  "instance_id": "inst-1234"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/hands/instances/inst-1234/resume
+```
+
+### DELETE /api/hands/instances/&lbrace;id&rbrace;
+
+Deactivate and remove a hand instance.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "deactivated",
+  "instance_id": "inst-1234"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X DELETE http://127.0.0.1:4545/api/hands/instances/inst-1234
+```
+
+### GET /api/hands/instances/&lbrace;id&rbrace;/stats
+
+Get runtime statistics for a hand instance.
+
+**Response** `200 OK`:
+
+```json
+{
+  "instance_id": "inst-1234",
+  "hand_id": "browser",
+  "uptime_seconds": 3600,
+  "tasks_completed": 42,
+  "errors": 0
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/hands/instances/inst-1234/stats
+```
+
+### GET /api/hands/instances/&lbrace;id&rbrace;/browser
+
+Get the browser state for a browser hand instance (live DOM snapshot, URL, etc.).
+
+**Response** `200 OK`:
+
+```json
+{
+  "instance_id": "inst-1234",
+  "url": "https://example.com",
+  "title": "Example Domain",
+  "screenshot_base64": "iVBOR..."
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/hands/instances/inst-1234/browser
+```
+
+---
+
+## Schedule Endpoints
+
+Manage cron-based scheduled jobs that trigger agent actions on a time schedule.
+
+### GET /api/schedules
+
+List all scheduled jobs.
+
+**Response** `200 OK`:
+
+```json
+{
+  "schedules": [
+    {
+      "id": "sched-1234",
+      "name": "daily-report",
+      "cron": "0 9 * * *",
+      "agent_id": "a1b2c3d4-...",
+      "prompt": "Generate the daily status report",
+      "enabled": true,
+      "last_run": "2025-01-15T09:00:00Z",
+      "next_run": "2025-01-16T09:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/schedules
+```
+
+### POST /api/schedules
+
+Create a new scheduled job.
+
+**Request Body**:
+
+```json
+{
+  "name": "daily-report",
+  "cron": "0 9 * * *",
+  "agent_id": "a1b2c3d4-...",
+  "prompt": "Generate the daily status report",
+  "enabled": true
+}
+```
+
+**Response** `201 Created`:
+
+```json
+{
+  "id": "sched-1234",
+  "status": "created"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/schedules \
+  -H "Content-Type: application/json" \
+  -d '{"name": "daily-report", "cron": "0 9 * * *", "agent_id": "AGENT_ID", "prompt": "Generate report"}'
+```
+
+### PUT /api/schedules/&lbrace;id&rbrace;
+
+Update an existing scheduled job.
+
+**Request Body**:
+
+```json
+{
+  "cron": "0 8 * * *",
+  "prompt": "Updated prompt",
+  "enabled": false
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "updated",
+  "id": "sched-1234"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X PUT http://127.0.0.1:4545/api/schedules/sched-1234 \
+  -H "Content-Type: application/json" \
+  -d '{"cron": "0 8 * * *"}'
+```
+
+### DELETE /api/schedules/&lbrace;id&rbrace;
+
+Delete a scheduled job.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "deleted",
+  "id": "sched-1234"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X DELETE http://127.0.0.1:4545/api/schedules/sched-1234
+```
+
+### POST /api/schedules/&lbrace;id&rbrace;/run
+
+Manually trigger an immediate run of a scheduled job.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "triggered",
+  "id": "sched-1234",
+  "response": "Daily report generated..."
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/schedules/sched-1234/run
+```
+
+---
+
+## Cron Job Endpoints
+
+Lower-level cron job management tied to specific agents.
+
+### GET /api/cron/jobs
+
+List all cron jobs, optionally filtered by agent.
+
+**Query Parameters:**
+- `agent_id` (optional): Filter by agent UUID
+
+**Response** `200 OK`:
+
+```json
+{
+  "jobs": [
+    {
+      "id": "job-5678",
+      "agent_id": "a1b2c3d4-...",
+      "cron_expr": "*/30 * * * *",
+      "prompt": "Check system health",
+      "enabled": true,
+      "last_run": "2025-01-15T10:30:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/cron/jobs
+curl -s "http://127.0.0.1:4545/api/cron/jobs?agent_id=AGENT_ID"
+```
+
+### POST /api/cron/jobs
+
+Create a new cron job.
+
+**Request Body**:
+
+```json
+{
+  "agent_id": "a1b2c3d4-...",
+  "cron_expr": "*/30 * * * *",
+  "prompt": "Check system health"
+}
+```
+
+**Response** `201 Created`:
+
+```json
+{
+  "id": "job-5678",
+  "status": "created"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/cron/jobs \
+  -H "Content-Type: application/json" \
+  -d '{"agent_id": "AGENT_ID", "cron_expr": "0 * * * *", "prompt": "Hourly check"}'
+```
+
+### DELETE /api/cron/jobs/&lbrace;id&rbrace;
+
+Delete a cron job.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "deleted",
+  "id": "job-5678"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X DELETE http://127.0.0.1:4545/api/cron/jobs/job-5678
+```
+
+### PUT /api/cron/jobs/&lbrace;id&rbrace;/enable
+
+Enable or disable a cron job.
+
+**Request Body**:
+
+```json
+{
+  "enabled": false
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "ok",
+  "id": "job-5678",
+  "enabled": false
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X PUT http://127.0.0.1:4545/api/cron/jobs/job-5678/enable \
+  -H "Content-Type: application/json" \
+  -d '{"enabled": false}'
+```
+
+### GET /api/cron/jobs/&lbrace;id&rbrace;/status
+
+Get the current status of a cron job.
+
+**Response** `200 OK`:
+
+```json
+{
+  "id": "job-5678",
+  "enabled": true,
+  "last_run": "2025-01-15T10:30:00Z",
+  "next_run": "2025-01-15T11:00:00Z",
+  "run_count": 42,
+  "last_error": null
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/cron/jobs/job-5678/status
+```
+
+---
+
+## Budget Endpoints
+
+Track and control spending across agents with hourly, daily, and monthly budget limits.
+
+### GET /api/budget
+
+Get global budget status including spend vs. limits.
+
+**Response** `200 OK`:
+
+```json
+{
+  "hourly": {"spend": 0.05, "limit": 1.0, "pct": 0.05},
+  "daily": {"spend": 0.42, "limit": 10.0, "pct": 0.042},
+  "monthly": {"spend": 8.50, "limit": 100.0, "pct": 0.085},
+  "alert_threshold": 0.8
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/budget
+```
+
+### PUT /api/budget
+
+Update global budget limits (in-memory, not persisted to config.toml).
+
+**Request Body**:
+
+```json
+{
+  "max_hourly_usd": 2.0,
+  "max_daily_usd": 20.0,
+  "max_monthly_usd": 200.0,
+  "alert_threshold": 0.9,
+  "default_max_llm_tokens_per_hour": 500000
+}
+```
+
+All fields are optional.
+
+**Response** `200 OK`: Returns updated budget status (same format as GET).
+
+**Example**:
+
+```bash
+curl -s -X PUT http://127.0.0.1:4545/api/budget \
+  -H "Content-Type: application/json" \
+  -d '{"max_daily_usd": 25.0}'
+```
+
+### GET /api/budget/agents
+
+Get per-agent cost ranking (top spenders).
+
+**Response** `200 OK`:
+
+```json
+{
+  "agents": [
+    {
+      "agent_id": "a1b2c3d4-...",
+      "name": "coder",
+      "daily_cost_usd": 0.35,
+      "hourly_limit": 0.5,
+      "daily_limit": 5.0,
+      "monthly_limit": 50.0,
+      "max_llm_tokens_per_hour": 100000
+    }
+  ],
+  "total": 2
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/budget/agents
+```
+
+### GET /api/budget/agents/&lbrace;id&rbrace;
+
+Get detailed budget and quota status for a specific agent.
+
+**Response** `200 OK`:
+
+```json
+{
+  "agent_id": "a1b2c3d4-...",
+  "agent_name": "coder",
+  "hourly": {"spend": 0.02, "limit": 0.5, "pct": 0.04},
+  "daily": {"spend": 0.35, "limit": 5.0, "pct": 0.07},
+  "monthly": {"spend": 4.20, "limit": 50.0, "pct": 0.084},
+  "tokens": {"used": 45000, "limit": 100000, "pct": 0.45}
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/budget/agents/AGENT_ID
+```
+
+### PUT /api/budget/agents/&lbrace;id&rbrace;
+
+Update per-agent budget limits at runtime.
+
+**Request Body**:
+
+```json
+{
+  "max_cost_per_hour_usd": 1.0,
+  "max_cost_per_day_usd": 10.0,
+  "max_cost_per_month_usd": 100.0,
+  "max_llm_tokens_per_hour": 200000
+}
+```
+
+At least one field must be provided.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "ok",
+  "message": "Agent budget updated"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X PUT http://127.0.0.1:4545/api/budget/agents/AGENT_ID \
+  -H "Content-Type: application/json" \
+  -d '{"max_cost_per_day_usd": 10.0}'
+```
+
+---
+
+## Integration Endpoints
+
+Manage external service integrations (MCP-based). Integrations provide tools from third-party services like GitHub, Jira, Notion, etc.
+
+### GET /api/integrations
+
+List installed integrations with their status.
+
+**Response** `200 OK`:
+
+```json
+{
+  "installed": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "icon": "octocat",
+      "category": "development",
+      "status": "ready",
+      "tool_count": 12,
+      "installed_at": "2025-01-10T08:00:00Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/integrations
+```
+
+### GET /api/integrations/available
+
+List all available integration templates (both installed and not-yet-installed).
+
+**Response** `200 OK`:
+
+```json
+{
+  "integrations": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "description": "GitHub API integration",
+      "icon": "octocat",
+      "category": "development",
+      "installed": true,
+      "tags": ["vcs", "issues", "pr"],
+      "required_env": [
+        {"name": "GITHUB_TOKEN", "label": "GitHub Token", "is_secret": true, "get_url": "https://github.com/settings/tokens"}
+      ],
+      "has_oauth": false,
+      "setup_instructions": "Create a personal access token..."
+    }
+  ],
+  "count": 15
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/integrations/available
+```
+
+### POST /api/integrations/add
+
+Install an integration by ID.
+
+**Request Body**:
+
+```json
+{
+  "id": "github"
+}
+```
+
+**Response** `201 Created`:
+
+```json
+{
+  "id": "github",
+  "status": "installed",
+  "connected": true,
+  "message": "Integration 'github' installed"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/integrations/add \
+  -H "Content-Type: application/json" \
+  -d '{"id": "github"}'
+```
+
+### DELETE /api/integrations/&lbrace;id&rbrace;
+
+Remove an installed integration.
+
+**Response** `200 OK`:
+
+```json
+{
+  "id": "github",
+  "status": "removed"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X DELETE http://127.0.0.1:4545/api/integrations/github
+```
+
+### POST /api/integrations/&lbrace;id&rbrace;/reconnect
+
+Reconnect an integration's MCP server.
+
+**Response** `200 OK`:
+
+```json
+{
+  "id": "github",
+  "status": "connected",
+  "tool_count": 12
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/integrations/github/reconnect
+```
+
+### GET /api/integrations/health
+
+Get health status for all installed integrations.
+
+**Response** `200 OK`:
+
+```json
+{
+  "health": [
+    {
+      "id": "github",
+      "status": "Ready",
+      "tool_count": 12,
+      "last_ok": "2025-01-15T10:30:00Z",
+      "last_error": null,
+      "consecutive_failures": 0,
+      "reconnecting": false
+    }
+  ],
+  "count": 1
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/integrations/health
+```
+
+### POST /api/integrations/reload
+
+Hot-reload integration configs and reconnect all MCP servers.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "reloaded",
+  "new_connections": 2
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/integrations/reload
+```
+
+---
+
+## Comms & Network Endpoints
+
+Inter-agent communication topology, event bus, and peer networking.
+
+### GET /api/comms/topology
+
+Get the agent communication topology graph (nodes and edges).
+
+**Response** `200 OK`:
+
+```json
+{
+  "nodes": [
+    {"id": "a1b2c3d4-...", "name": "coder", "state": "Running", "model": "llama-3.3-70b-versatile"}
+  ],
+  "edges": [
+    {"from": "a1b2c3d4-...", "to": "e5f6a7b8-...", "kind": "ParentChild"}
+  ]
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/comms/topology
+```
+
+### GET /api/comms/events
+
+Get recent inter-agent communication events.
+
+**Query Parameters:**
+- `limit` (optional): Number of events (default: 100)
+
+**Response** `200 OK`:
+
+```json
+{
+  "events": [
+    {
+      "id": "evt-1234",
+      "timestamp": "2025-01-15T10:30:00Z",
+      "kind": "AgentMessage",
+      "source_id": "a1b2c3d4-...",
+      "source_name": "coder",
+      "target_id": "e5f6a7b8-...",
+      "target_name": "reviewer",
+      "detail": "Review this code..."
+    }
+  ],
+  "total": 42
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/comms/events
+```
+
+### GET /api/comms/events/stream
+
+SSE stream of real-time inter-agent communication events.
+
+**Response**: Server-Sent Events stream.
+
+```
+event: comms
+data: {"id":"evt-1234","kind":"AgentMessage","source_name":"coder","target_name":"reviewer","detail":"..."}
+```
+
+**Example**:
+
+```bash
+curl -s -N http://127.0.0.1:4545/api/comms/events/stream
+```
+
+### POST /api/comms/send
+
+Send a message from one agent to another.
+
+**Request Body**:
+
+```json
+{
+  "from": "a1b2c3d4-...",
+  "to": "e5f6a7b8-...",
+  "message": "Please review this code"
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "sent",
+  "event_id": "evt-5678"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/comms/send \
+  -H "Content-Type: application/json" \
+  -d '{"from": "AGENT1_ID", "to": "AGENT2_ID", "message": "Hello"}'
+```
+
+### POST /api/comms/task
+
+Delegate a task from one agent to another.
+
+**Request Body**:
+
+```json
+{
+  "from": "a1b2c3d4-...",
+  "to": "e5f6a7b8-...",
+  "prompt": "Analyze this data and return findings"
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "completed",
+  "response": "Analysis results...",
+  "usage": {"input_tokens": 150, "output_tokens": 200}
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/comms/task \
+  -H "Content-Type: application/json" \
+  -d '{"from": "AGENT1_ID", "to": "AGENT2_ID", "prompt": "Summarize the data"}'
+```
+
+### GET /api/network/status
+
+Get OFP (LibreFang Protocol) network status.
+
+**Response** `200 OK`:
+
+```json
+{
+  "network_enabled": true,
+  "peer_count": 3,
+  "node_id": "node-abc123",
+  "listen_addr": "0.0.0.0:4000"
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/network/status
+```
+
+---
+
+## Approval Endpoints
+
+Human-in-the-loop approval gates for high-risk tool invocations.
+
+### GET /api/approvals
+
+List all pending approval requests.
+
+**Response** `200 OK`:
+
+```json
+{
+  "approvals": [
+    {
+      "id": "appr-1234",
+      "agent_id": "a1b2c3d4-...",
+      "agent_name": "coder",
+      "tool_name": "shell_exec",
+      "description": "Execute: rm -rf /tmp/old-files",
+      "action_summary": "shell_exec",
+      "risk_level": "High",
+      "requested_at": "2025-01-15T10:30:00Z",
+      "timeout_secs": 300,
+      "status": "pending"
+    }
+  ],
+  "total": 1
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/approvals
+```
+
+### POST /api/approvals
+
+Create a manual approval request (for external integrations).
+
+**Request Body**:
+
+```json
+{
+  "agent_id": "a1b2c3d4-...",
+  "tool_name": "deploy",
+  "description": "Deploy to production",
+  "action_summary": "Production deployment"
+}
+```
+
+**Response** `201 Created`:
+
+```json
+{
+  "id": "appr-5678",
+  "status": "pending"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/approvals \
+  -H "Content-Type: application/json" \
+  -d '{"agent_id": "AGENT_ID", "tool_name": "deploy", "description": "Deploy to prod"}'
+```
+
+### POST /api/approvals/&lbrace;id&rbrace;/approve
+
+Approve a pending request.
+
+**Response** `200 OK`:
+
+```json
+{
+  "id": "appr-1234",
+  "status": "approved",
+  "decided_at": "2025-01-15T10:31:00Z"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/approvals/appr-1234/approve
+```
+
+### POST /api/approvals/&lbrace;id&rbrace;/reject
+
+Reject a pending request.
+
+**Response** `200 OK`:
+
+```json
+{
+  "id": "appr-1234",
+  "status": "rejected",
+  "decided_at": "2025-01-15T10:31:00Z"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/approvals/appr-1234/reject
+```
+
+---
+
+## Device Pairing Endpoints
+
+Pair mobile devices and external clients with the LibreFang daemon for push notifications and remote control.
+
+### POST /api/pairing/request
+
+Create a new pairing request. Returns a token and QR URI for device scanning.
+
+**Response** `200 OK`:
+
+```json
+{
+  "token": "pair-abc123def456",
+  "qr_uri": "librefang://pair?token=pair-abc123def456",
+  "expires_at": "2025-01-15T10:35:00Z"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/pairing/request
+```
+
+### POST /api/pairing/complete
+
+Complete a pairing with the token and device information.
+
+**Request Body**:
+
+```json
+{
+  "token": "pair-abc123def456",
+  "display_name": "My iPhone",
+  "platform": "ios",
+  "push_token": "apns-token-here"
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "device_id": "dev-1234",
+  "display_name": "My iPhone",
+  "platform": "ios",
+  "paired_at": "2025-01-15T10:31:00Z"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/pairing/complete \
+  -H "Content-Type: application/json" \
+  -d '{"token": "pair-abc123", "display_name": "My Phone", "platform": "android"}'
+```
+
+### GET /api/pairing/devices
+
+List all paired devices.
+
+**Response** `200 OK`:
+
+```json
+{
+  "devices": [
+    {
+      "device_id": "dev-1234",
+      "display_name": "My iPhone",
+      "platform": "ios",
+      "paired_at": "2025-01-15T10:31:00Z",
+      "last_seen": "2025-01-15T10:35:00Z"
+    }
+  ]
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/pairing/devices
+```
+
+### DELETE /api/pairing/devices/&lbrace;id&rbrace;
+
+Remove a paired device.
+
+**Response** `200 OK`:
+
+```json
+{
+  "ok": true
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X DELETE http://127.0.0.1:4545/api/pairing/devices/dev-1234
+```
+
+### POST /api/pairing/notify
+
+Push a notification to all paired devices.
+
+**Request Body**:
+
+```json
+{
+  "title": "LibreFang Alert",
+  "message": "Agent 'coder' completed the code review"
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "ok": true,
+  "notified": 2
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/pairing/notify \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Alert", "message": "Task completed"}'
+```
+
+---
+
+## Config Management Endpoints
+
+Read, modify, and reload the daemon configuration at runtime.
+
+### GET /api/config/schema
+
+Get a JSON description of the configuration structure with field types and defaults.
+
+**Response** `200 OK`:
+
+```json
+{
+  "sections": [
+    {
+      "name": "default_model",
+      "fields": [
+        {"key": "provider", "type": "string", "default": "groq"},
+        {"key": "model", "type": "string", "default": "llama-3.3-70b-versatile"}
+      ]
+    },
+    {
+      "name": "budget",
+      "fields": [
+        {"key": "max_daily_usd", "type": "float", "default": 10.0}
+      ]
+    }
+  ]
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/config/schema
+```
+
+### POST /api/config/set
+
+Set a configuration value by dotted path. Writes to config.toml and triggers a hot-reload.
+
+**Request Body**:
+
+```json
+{
+  "path": "budget.max_daily_usd",
+  "value": 25.0
+}
+```
+
+Supports up to 3-level paths (e.g., `section.subsection.key`).
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "applied",
+  "path": "budget.max_daily_usd"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/config/set \
+  -H "Content-Type: application/json" \
+  -d '{"path": "default_model.provider", "value": "anthropic"}'
+```
+
+### POST /api/config/reload
+
+Reload configuration from disk and apply hot-reloadable changes.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "applied",
+  "restart_required": false,
+  "restart_reasons": [],
+  "hot_actions_applied": ["ApprovalPolicy", "BudgetLimits"],
+  "noop_changes": []
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/config/reload
+```
+
+---
+
+## Catalog Endpoints
+
+Manage the external model catalog sync.
+
+### POST /api/catalog/update
+
+Trigger an update of the model catalog from the upstream source.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "updated",
+  "models_added": 3,
+  "models_updated": 1
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/catalog/update
+```
+
+### GET /api/catalog/status
+
+Get the current catalog sync status.
+
+**Response** `200 OK`:
+
+```json
+{
+  "last_sync": "2025-01-15T08:00:00Z",
+  "source": "built-in",
+  "model_count": 51
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/catalog/status
+```
+
+---
+
+## Binding Endpoints
+
+Agent bindings map channels or triggers to specific agents.
+
+### GET /api/bindings
+
+List all agent bindings.
+
+**Response** `200 OK`:
+
+```json
+{
+  "bindings": [
+    {
+      "agent": "coder",
+      "channel": "telegram",
+      "filter": "*"
+    }
+  ]
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/bindings
+```
+
+### POST /api/bindings
+
+Add a new agent binding.
+
+**Request Body**:
+
+```json
+{
+  "agent": "coder",
+  "channel": "telegram",
+  "filter": "*"
+}
+```
+
+**Response** `201 Created`:
+
+```json
+{
+  "status": "created"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/bindings \
+  -H "Content-Type: application/json" \
+  -d '{"agent": "coder", "channel": "telegram"}'
+```
+
+### DELETE /api/bindings/&lbrace;index&rbrace;
+
+Remove a binding by index.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "removed"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X DELETE http://127.0.0.1:4545/api/bindings/0
+```
+
+---
+
+## Webhook Endpoints
+
+External event injection via authenticated webhooks.
+
+### POST /hooks/wake
+
+Inject a wake event through the full event processing pipeline. Requires a bearer token configured via the `LIBREFANG_WEBHOOK_TOKEN` environment variable (min 32 chars).
+
+**Headers**: `Authorization: Bearer <webhook-token>`
+
+**Request Body**:
+
+```json
+{
+  "mode": "event",
+  "text": "New deployment completed for service-x"
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "accepted",
+  "mode": "event"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/hooks/wake \
+  -H "Authorization: Bearer $WEBHOOK_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"mode": "event", "text": "Deploy complete"}'
+```
+
+### POST /hooks/agent
+
+Send a message to a specific agent via webhook and get the response. Useful for CI/CD, Slack bots, and other external integrations.
+
+**Headers**: `Authorization: Bearer <webhook-token>`
+
+**Request Body**:
+
+```json
+{
+  "agent": "coder",
+  "message": "Review the latest commit"
+}
+```
+
+The `agent` field can be a name or UUID. If omitted, the first available agent is used.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "completed",
+  "agent_id": "a1b2c3d4-...",
+  "response": "I've reviewed the commit...",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 200
+  }
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/hooks/agent \
+  -H "Authorization: Bearer $WEBHOOK_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"agent": "coder", "message": "Summarize recent changes"}'
+```
+
+---
+
 ## System Endpoints
 
 ### GET /api/health
@@ -777,6 +2438,71 @@ Retrieve current kernel configuration (secrets are redacted).
 }
 ```
 
+### GET /api/metrics
+
+Prometheus-compatible metrics endpoint. Returns metrics in Prometheus text exposition format.
+
+**Response** `200 OK` (`text/plain`):
+
+```
+# HELP librefang_agents_total Total number of agents
+# TYPE librefang_agents_total gauge
+librefang_agents_total 5
+# HELP librefang_requests_total Total API requests
+# TYPE librefang_requests_total counter
+librefang_requests_total 1042
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/metrics
+```
+
+### GET /api/logs/stream
+
+SSE stream of real-time daemon log entries. Useful for live monitoring.
+
+**Response**: Server-Sent Events stream.
+
+```
+event: log
+data: {"timestamp":"2025-01-15T10:30:00Z","level":"INFO","target":"librefang_api","message":"Request completed"}
+```
+
+**Example**:
+
+```bash
+curl -s -N http://127.0.0.1:4545/api/logs/stream
+```
+
+### GET /api/commands
+
+List available chat commands for the dynamic slash menu in WebChat.
+
+**Response** `200 OK`:
+
+```json
+{
+  "commands": [
+    {"cmd": "/help", "desc": "Show available commands"},
+    {"cmd": "/new", "desc": "Reset session (clear history)"},
+    {"cmd": "/compact", "desc": "Trigger LLM session compaction"},
+    {"cmd": "/model", "desc": "Show or switch model (/model [name])"},
+    {"cmd": "/stop", "desc": "Cancel current agent run"},
+    {"cmd": "/usage", "desc": "Show session token usage & cost"},
+    {"cmd": "/think", "desc": "Toggle extended thinking (/think [on|off|stream])"},
+    {"cmd": "/github", "desc": "Skill: GitHub integration", "source": "skill"}
+  ]
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/commands
+```
+
 ### GET /api/peers
 
 List OFP (LibreFang Protocol) wire peers and their connection status.
@@ -794,39 +2520,6 @@ List OFP (LibreFang Protocol) wire peers and their connection status.
       "last_seen": "2025-01-15T10:30:00Z"
     }
   ]
-}
-```
-
-### GET /api/sessions
-
-List all active sessions across agents.
-
-**Response** `200 OK`:
-
-```json
-{
-  "sessions": [
-    {
-      "id": "s1b2c3d4-...",
-      "agent_id": "a1b2c3d4-...",
-      "agent_name": "coder",
-      "message_count": 12,
-      "created_at": "2025-01-15T10:30:00Z"
-    }
-  ]
-}
-```
-
-### DELETE /api/sessions/&lbrace;id&rbrace;
-
-Delete a specific session and its conversation history.
-
-**Response** `200 OK`:
-
-```json
-{
-  "status": "deleted",
-  "session_id": "s1b2c3d4-..."
 }
 ```
 
@@ -1026,6 +2719,139 @@ Test provider connectivity by making a minimal API call. Verifies that the confi
   "provider": "anthropic",
   "error": "Invalid API key"
 }
+```
+
+### PUT /api/providers/&lbrace;name&rbrace;/url
+
+Set a custom base URL for a provider (e.g., for self-hosted instances or proxy endpoints).
+
+**Request Body**:
+
+```json
+{
+  "base_url": "https://my-proxy.example.com/v1"
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "ok",
+  "provider": "openai",
+  "base_url": "https://my-proxy.example.com/v1"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X PUT http://127.0.0.1:4545/api/providers/openai/url \
+  -H "Content-Type: application/json" \
+  -d '{"base_url": "https://my-proxy.example.com/v1"}'
+```
+
+### POST /api/providers/github-copilot/oauth/start
+
+Start GitHub Copilot OAuth device flow for authentication.
+
+**Response** `200 OK`:
+
+```json
+{
+  "poll_id": "poll-1234",
+  "user_code": "ABCD-1234",
+  "verification_uri": "https://github.com/login/device"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/providers/github-copilot/oauth/start
+```
+
+### GET /api/providers/github-copilot/oauth/poll/&lbrace;poll_id&rbrace;
+
+Poll for completion of a GitHub Copilot OAuth device flow.
+
+**Response** `200 OK` (pending):
+
+```json
+{
+  "status": "pending"
+}
+```
+
+**Response** `200 OK` (completed):
+
+```json
+{
+  "status": "authorized",
+  "provider": "github-copilot"
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/providers/github-copilot/oauth/poll/poll-1234
+```
+
+### POST /api/models/custom
+
+Add a custom model to the catalog.
+
+**Request Body**:
+
+```json
+{
+  "id": "my-fine-tuned-model",
+  "provider": "openai",
+  "display_name": "My Fine-tuned GPT-4",
+  "context_window": 128000,
+  "input_cost_per_1m": 5.0,
+  "output_cost_per_1m": 15.0,
+  "supports_tools": true,
+  "supports_vision": false,
+  "supports_streaming": true
+}
+```
+
+**Response** `201 Created`:
+
+```json
+{
+  "status": "added",
+  "model_id": "my-fine-tuned-model"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/models/custom \
+  -H "Content-Type: application/json" \
+  -d '{"id": "ft-gpt4", "provider": "openai", "display_name": "Fine-tuned GPT-4", "context_window": 128000}'
+```
+
+### DELETE /api/models/custom/&lbrace;id&rbrace;
+
+Remove a custom model from the catalog.
+
+**Response** `200 OK`:
+
+```json
+{
+  "status": "removed",
+  "model_id": "my-fine-tuned-model"
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X DELETE http://127.0.0.1:4545/api/models/custom/my-fine-tuned-model
 ```
 
 ---
@@ -1337,7 +3163,7 @@ A2A agent card discovery endpoint. Returns the server's A2A agent card, which de
 {
   "name": "LibreFang",
   "description": "LibreFang Agent Operating System",
-  "url": "http://127.0.0.1:4200",
+  "url": "http://127.0.0.1:4545",
   "version": "0.1.0",
   "capabilities": {
     "streaming": true,
@@ -1437,6 +3263,119 @@ Cancel a running A2A task.
   "task_id": "task-1234-...",
   "status": "cancelled"
 }
+```
+
+---
+
+## A2A Management Endpoints
+
+Manage outbound A2A (Agent-to-Agent) connections to external agent systems.
+
+### GET /api/a2a/agents
+
+List discovered external A2A agents.
+
+**Response** `200 OK`:
+
+```json
+{
+  "agents": [
+    {
+      "name": "External Coder",
+      "url": "https://remote-server.example.com",
+      "description": "Remote coding agent",
+      "skills": ["code-review"]
+    }
+  ]
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/a2a/agents
+```
+
+### POST /api/a2a/discover
+
+Discover an A2A agent at a given URL by fetching its agent card.
+
+**Request Body**:
+
+```json
+{
+  "url": "https://remote-server.example.com"
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "name": "External Coder",
+  "url": "https://remote-server.example.com",
+  "description": "Remote coding agent",
+  "skills": ["code-review", "debugging"]
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/a2a/discover \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://remote-server.example.com"}'
+```
+
+### POST /api/a2a/send
+
+Send a task to an external A2A agent.
+
+**Request Body**:
+
+```json
+{
+  "url": "https://remote-server.example.com",
+  "message": "Review this code for security issues"
+}
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "task_id": "ext-task-1234",
+  "status": "completed",
+  "response": "I found 2 potential issues..."
+}
+```
+
+**Example**:
+
+```bash
+curl -s -X POST http://127.0.0.1:4545/api/a2a/send \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://remote-server.example.com", "message": "Hello"}'
+```
+
+### GET /api/a2a/tasks/&lbrace;id&rbrace;/status
+
+Check the status of an external A2A task.
+
+**Response** `200 OK`:
+
+```json
+{
+  "task_id": "ext-task-1234",
+  "status": "completed",
+  "result": "Analysis complete..."
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/a2a/tasks/ext-task-1234/status
 ```
 
 ---
@@ -1605,6 +3544,39 @@ Get usage breakdown by model.
 }
 ```
 
+### GET /api/usage/daily
+
+Get daily usage time series data.
+
+**Response** `200 OK`:
+
+```json
+{
+  "daily": [
+    {
+      "date": "2025-01-14",
+      "input_tokens": 200000,
+      "output_tokens": 150000,
+      "cost_usd": 0.85,
+      "request_count": 250
+    },
+    {
+      "date": "2025-01-15",
+      "input_tokens": 125000,
+      "output_tokens": 87000,
+      "cost_usd": 0.42,
+      "request_count": 156
+    }
+  ]
+}
+```
+
+**Example**:
+
+```bash
+curl -s http://127.0.0.1:4545/api/usage/daily
+```
+
 ---
 
 ## Migration Endpoints
@@ -1691,80 +3663,6 @@ Run the migration. Converts manifests, imports skills, and optionally imports se
   "warnings": [
     "Skill 'legacy-plugin' uses unsupported runtime 'ruby', skipped"
   ]
-}
-```
-
----
-
-## Session Management Endpoints
-
-### POST /api/agents/&lbrace;id&rbrace;/session/reset
-
-Reset an agent's session, clearing all conversation history.
-
-**Response** `200 OK`:
-
-```json
-{
-  "status": "reset",
-  "agent_id": "a1b2c3d4-...",
-  "new_session_id": "s5e6f7g8-..."
-}
-```
-
-### POST /api/agents/&lbrace;id&rbrace;/session/compact
-
-Trigger LLM-based session compaction. The agent's conversation is summarized by an LLM, keeping only the most recent messages plus a generated summary.
-
-**Response** `200 OK`:
-
-```json
-{
-  "status": "compacted",
-  "message": "Session compacted: 80 messages summarized, 20 kept"
-}
-```
-
-**Response** `200 OK` (no compaction needed):
-
-```json
-{
-  "status": "ok",
-  "message": "Session does not need compaction (below threshold)"
-}
-```
-
-### POST /api/agents/&lbrace;id&rbrace;/stop
-
-Cancel the agent's current LLM run. Aborts any in-progress generation.
-
-**Response** `200 OK`:
-
-```json
-{
-  "status": "stopped",
-  "message": "Agent run cancelled"
-}
-```
-
-### PUT /api/agents/&lbrace;id&rbrace;/model
-
-Switch an agent's LLM model at runtime.
-
-**Request Body**:
-
-```json
-{
-  "model": "claude-sonnet-4-20250514"
-}
-```
-
-**Response** `200 OK`:
-
-```json
-{
-  "status": "updated",
-  "model": "claude-sonnet-4-20250514"
 }
 ```
 
@@ -2136,7 +4034,7 @@ The `Retry-After` header indicates the window duration in seconds.
 
 ## Endpoint Summary
 
-**76 endpoints total** across 15 groups.
+**150+ endpoints** across 25+ groups.
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -2150,14 +4048,19 @@ The `Retry-After` header indicates the window duration in seconds.
 | GET | `/api/profiles` | List agent profiles |
 | GET | `/api/tools` | List available tools |
 | GET | `/api/config` | Configuration (secrets redacted) |
+| GET | `/api/metrics` | Prometheus metrics |
+| GET | `/api/logs/stream` | Live log streaming (SSE) |
+| GET | `/api/commands` | Chat slash commands |
 | GET | `/api/peers` | List OFP wire peers |
+| GET | `/api/network/status` | OFP network status |
 | **Agents** | | |
 | GET | `/api/agents` | List agents |
 | POST | `/api/agents` | Spawn agent |
 | GET | `/api/agents/&lbrace;id&rbrace;` | Get agent details |
-| PUT | `/api/agents/&lbrace;id&rbrace;/update` | Update agent config |
-| PUT | `/api/agents/&lbrace;id&rbrace;/mode` | Set agent mode (Stable/Normal) |
+| PATCH | `/api/agents/&lbrace;id&rbrace;` | Partial update agent |
 | DELETE | `/api/agents/&lbrace;id&rbrace;` | Kill agent |
+| PUT | `/api/agents/&lbrace;id&rbrace;/update` | Full update agent |
+| PUT | `/api/agents/&lbrace;id&rbrace;/mode` | Set agent mode |
 | POST | `/api/agents/&lbrace;id&rbrace;/message` | Send message (blocking) |
 | POST | `/api/agents/&lbrace;id&rbrace;/message/stream` | Send message (SSE stream) |
 | GET | `/api/agents/&lbrace;id&rbrace;/session` | Get conversation history |
@@ -2166,6 +4069,30 @@ The `Retry-After` header indicates the window duration in seconds.
 | POST | `/api/agents/&lbrace;id&rbrace;/session/compact` | LLM-based compaction |
 | POST | `/api/agents/&lbrace;id&rbrace;/stop` | Cancel current run |
 | PUT | `/api/agents/&lbrace;id&rbrace;/model` | Switch model |
+| DELETE | `/api/agents/&lbrace;id&rbrace;/history` | Clear all history |
+| GET | `/api/agents/&lbrace;id&rbrace;/tools` | Get tool allowlist/blocklist |
+| PUT | `/api/agents/&lbrace;id&rbrace;/tools` | Set tool allowlist/blocklist |
+| GET | `/api/agents/&lbrace;id&rbrace;/skills` | Get skill config |
+| PUT | `/api/agents/&lbrace;id&rbrace;/skills` | Set skill config |
+| GET | `/api/agents/&lbrace;id&rbrace;/mcp_servers` | Get MCP servers |
+| PUT | `/api/agents/&lbrace;id&rbrace;/mcp_servers` | Set MCP servers |
+| PATCH | `/api/agents/&lbrace;id&rbrace;/identity` | Update visual identity |
+| PATCH | `/api/agents/&lbrace;id&rbrace;/config` | Hot-update agent config |
+| POST | `/api/agents/&lbrace;id&rbrace;/clone` | Clone agent |
+| POST | `/api/agents/&lbrace;id&rbrace;/upload` | Upload file attachment |
+| GET | `/api/agents/&lbrace;id&rbrace;/files` | List workspace files |
+| GET | `/api/agents/&lbrace;id&rbrace;/files/&lbrace;name&rbrace;` | Read workspace file |
+| PUT | `/api/agents/&lbrace;id&rbrace;/files/&lbrace;name&rbrace;` | Write workspace file |
+| GET | `/api/agents/&lbrace;id&rbrace;/deliveries` | Delivery receipts |
+| GET | `/api/agents/&lbrace;id&rbrace;/sessions` | List agent sessions |
+| POST | `/api/agents/&lbrace;id&rbrace;/sessions` | Create agent session |
+| POST | `/api/agents/&lbrace;id&rbrace;/sessions/&lbrace;sid&rbrace;/switch` | Switch session |
+| GET | `/api/agents/&lbrace;id&rbrace;/sessions/by-label/&lbrace;l&rbrace;` | Find session by label |
+| GET | `/api/uploads/&lbrace;file_id&rbrace;` | Serve uploaded file |
+| **Sessions** | | |
+| GET | `/api/sessions` | List all sessions |
+| DELETE | `/api/sessions/&lbrace;id&rbrace;` | Delete session |
+| PUT | `/api/sessions/&lbrace;id&rbrace;/label` | Set session label |
 | **Workflows** | | |
 | GET | `/api/workflows` | List workflows |
 | POST | `/api/workflows` | Create workflow |
@@ -2176,30 +4103,110 @@ The `Retry-After` header indicates the window duration in seconds.
 | POST | `/api/triggers` | Create trigger |
 | PUT | `/api/triggers/&lbrace;id&rbrace;` | Update trigger |
 | DELETE | `/api/triggers/&lbrace;id&rbrace;` | Delete trigger |
+| **Schedules** | | |
+| GET | `/api/schedules` | List scheduled jobs |
+| POST | `/api/schedules` | Create scheduled job |
+| PUT | `/api/schedules/&lbrace;id&rbrace;` | Update scheduled job |
+| DELETE | `/api/schedules/&lbrace;id&rbrace;` | Delete scheduled job |
+| POST | `/api/schedules/&lbrace;id&rbrace;/run` | Manually trigger job |
+| **Cron Jobs** | | |
+| GET | `/api/cron/jobs` | List cron jobs |
+| POST | `/api/cron/jobs` | Create cron job |
+| DELETE | `/api/cron/jobs/&lbrace;id&rbrace;` | Delete cron job |
+| PUT | `/api/cron/jobs/&lbrace;id&rbrace;/enable` | Enable/disable cron job |
+| GET | `/api/cron/jobs/&lbrace;id&rbrace;/status` | Cron job status |
 | **Memory** | | |
 | GET | `/api/memory/agents/&lbrace;id&rbrace;/kv` | List KV pairs |
 | GET | `/api/memory/agents/&lbrace;id&rbrace;/kv/&lbrace;key&rbrace;` | Get KV value |
 | PUT | `/api/memory/agents/&lbrace;id&rbrace;/kv/&lbrace;key&rbrace;` | Set KV value |
 | DELETE | `/api/memory/agents/&lbrace;id&rbrace;/kv/&lbrace;key&rbrace;` | Delete KV value |
 | **Channels** | | |
-| GET | `/api/channels` | List channels (40 adapters) |
+| GET | `/api/channels` | List channels |
+| POST | `/api/channels/&lbrace;name&rbrace;/configure` | Configure channel |
+| DELETE | `/api/channels/&lbrace;name&rbrace;/configure` | Remove channel config |
+| POST | `/api/channels/&lbrace;name&rbrace;/test` | Test channel |
+| POST | `/api/channels/reload` | Hot-reload channels |
+| POST | `/api/channels/whatsapp/qr/start` | WhatsApp QR login |
+| GET | `/api/channels/whatsapp/qr/status` | WhatsApp QR status |
 | **Templates** | | |
 | GET | `/api/templates` | List templates |
 | GET | `/api/templates/&lbrace;name&rbrace;` | Get template |
-| **Sessions** | | |
-| GET | `/api/sessions` | List sessions |
-| DELETE | `/api/sessions/&lbrace;id&rbrace;` | Delete session |
+| **Hands** | | |
+| GET | `/api/hands` | List hand definitions |
+| GET | `/api/hands/active` | List active instances |
+| GET | `/api/hands/&lbrace;id&rbrace;` | Get hand details |
+| POST | `/api/hands/install` | Install hand |
+| POST | `/api/hands/&lbrace;id&rbrace;/activate` | Activate hand |
+| POST | `/api/hands/&lbrace;id&rbrace;/check-deps` | Check dependencies |
+| POST | `/api/hands/&lbrace;id&rbrace;/install-deps` | Install dependencies |
+| GET | `/api/hands/&lbrace;id&rbrace;/settings` | Get settings |
+| PUT | `/api/hands/&lbrace;id&rbrace;/settings` | Update settings |
+| POST | `/api/hands/instances/&lbrace;id&rbrace;/pause` | Pause instance |
+| POST | `/api/hands/instances/&lbrace;id&rbrace;/resume` | Resume instance |
+| DELETE | `/api/hands/instances/&lbrace;id&rbrace;` | Deactivate instance |
+| GET | `/api/hands/instances/&lbrace;id&rbrace;/stats` | Instance statistics |
+| GET | `/api/hands/instances/&lbrace;id&rbrace;/browser` | Browser state |
+| **Budget** | | |
+| GET | `/api/budget` | Global budget status |
+| PUT | `/api/budget` | Update budget limits |
+| GET | `/api/budget/agents` | Per-agent cost ranking |
+| GET | `/api/budget/agents/&lbrace;id&rbrace;` | Agent budget detail |
+| PUT | `/api/budget/agents/&lbrace;id&rbrace;` | Update agent budget |
+| **Integrations** | | |
+| GET | `/api/integrations` | List installed |
+| GET | `/api/integrations/available` | List available |
+| POST | `/api/integrations/add` | Install integration |
+| DELETE | `/api/integrations/&lbrace;id&rbrace;` | Remove integration |
+| POST | `/api/integrations/&lbrace;id&rbrace;/reconnect` | Reconnect MCP |
+| GET | `/api/integrations/health` | Health status |
+| POST | `/api/integrations/reload` | Hot-reload |
+| **Comms & Network** | | |
+| GET | `/api/comms/topology` | Agent topology graph |
+| GET | `/api/comms/events` | Communication events |
+| GET | `/api/comms/events/stream` | Events SSE stream |
+| POST | `/api/comms/send` | Send inter-agent message |
+| POST | `/api/comms/task` | Delegate task |
+| **Approvals** | | |
+| GET | `/api/approvals` | List pending approvals |
+| POST | `/api/approvals` | Create approval request |
+| POST | `/api/approvals/&lbrace;id&rbrace;/approve` | Approve request |
+| POST | `/api/approvals/&lbrace;id&rbrace;/reject` | Reject request |
+| **Device Pairing** | | |
+| POST | `/api/pairing/request` | Create pairing request |
+| POST | `/api/pairing/complete` | Complete pairing |
+| GET | `/api/pairing/devices` | List paired devices |
+| DELETE | `/api/pairing/devices/&lbrace;id&rbrace;` | Remove device |
+| POST | `/api/pairing/notify` | Push notification |
+| **Config** | | |
+| GET | `/api/config/schema` | Config structure |
+| POST | `/api/config/set` | Set config value |
+| POST | `/api/config/reload` | Hot-reload config |
+| **Catalog** | | |
+| POST | `/api/catalog/update` | Sync model catalog |
+| GET | `/api/catalog/status` | Catalog sync status |
+| **Bindings** | | |
+| GET | `/api/bindings` | List bindings |
+| POST | `/api/bindings` | Add binding |
+| DELETE | `/api/bindings/&lbrace;index&rbrace;` | Remove binding |
+| **Webhooks** | | |
+| POST | `/hooks/wake` | Inject wake event |
+| POST | `/hooks/agent` | Webhook agent message |
 | **Model Catalog** | | |
-| GET | `/api/models` | Full model catalog (51+ models) |
+| GET | `/api/models` | Full model catalog |
 | GET | `/api/models/&lbrace;id&rbrace;` | Model details |
-| GET | `/api/models/aliases` | List 23 model aliases |
-| GET | `/api/providers` | Provider list with auth status |
+| GET | `/api/models/aliases` | Model aliases |
+| POST | `/api/models/custom` | Add custom model |
+| DELETE | `/api/models/custom/&lbrace;id&rbrace;` | Remove custom model |
+| GET | `/api/providers` | Provider list |
 | **Provider Config** | | |
 | POST | `/api/providers/&lbrace;name&rbrace;/key` | Set provider API key |
 | DELETE | `/api/providers/&lbrace;name&rbrace;/key` | Remove provider API key |
-| POST | `/api/providers/&lbrace;name&rbrace;/test` | Test provider connectivity |
+| POST | `/api/providers/&lbrace;name&rbrace;/test` | Test provider |
+| PUT | `/api/providers/&lbrace;name&rbrace;/url` | Set provider URL |
+| POST | `/api/providers/github-copilot/oauth/start` | Copilot OAuth start |
+| GET | `/api/providers/github-copilot/oauth/poll/&lbrace;id&rbrace;` | Copilot OAuth poll |
 | **Skills & Marketplace** | | |
-| GET | `/api/skills` | List installed skills (60 bundled) |
+| GET | `/api/skills` | List installed skills |
 | POST | `/api/skills/install` | Install skill |
 | POST | `/api/skills/uninstall` | Uninstall skill |
 | POST | `/api/skills/create` | Create new skill |
@@ -2208,23 +4215,30 @@ The `Retry-After` header indicates the window duration in seconds.
 | GET | `/api/clawhub/search` | Search ClawHub |
 | GET | `/api/clawhub/browse` | Browse ClawHub |
 | GET | `/api/clawhub/skill/&lbrace;slug&rbrace;` | Skill details |
+| GET | `/api/clawhub/skill/&lbrace;slug&rbrace;/code` | Skill source code |
 | POST | `/api/clawhub/install` | Install from ClawHub |
-| **MCP & A2A** | | |
+| **MCP & A2A Protocol** | | |
 | GET | `/api/mcp/servers` | MCP server connections |
-| POST | `/mcp` | MCP HTTP transport (JSON-RPC 2.0) |
+| POST | `/mcp` | MCP HTTP transport |
 | GET | `/.well-known/agent.json` | A2A agent card |
 | GET | `/a2a/agents` | A2A agent list |
 | POST | `/a2a/tasks/send` | Send A2A task |
 | GET | `/a2a/tasks/&lbrace;id&rbrace;` | Get A2A task status |
 | POST | `/a2a/tasks/&lbrace;id&rbrace;/cancel` | Cancel A2A task |
+| **A2A Management** | | |
+| GET | `/api/a2a/agents` | List external A2A agents |
+| POST | `/api/a2a/discover` | Discover external agent |
+| POST | `/api/a2a/send` | Send to external agent |
+| GET | `/api/a2a/tasks/&lbrace;id&rbrace;/status` | External task status |
 | **Audit & Security** | | |
 | GET | `/api/audit/recent` | Recent audit logs |
-| GET | `/api/audit/verify` | Verify Merkle chain integrity |
-| GET | `/api/security` | Security status (16 systems) |
+| GET | `/api/audit/verify` | Verify Merkle chain |
+| GET | `/api/security` | Security status |
 | **Usage & Analytics** | | |
 | GET | `/api/usage` | Usage statistics |
-| GET | `/api/usage/summary` | Usage summary with quota |
-| GET | `/api/usage/by-model` | Usage by model breakdown |
+| GET | `/api/usage/summary` | Usage summary |
+| GET | `/api/usage/by-model` | Usage by model |
+| GET | `/api/usage/daily` | Daily usage series |
 | **Migration** | | |
 | GET | `/api/migrate/detect` | Detect migration sources |
 | POST | `/api/migrate/scan` | Scan for importable data |
