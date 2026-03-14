@@ -1,0 +1,89 @@
+# 更新日志
+
+LibreFang 的所有重要变更记录在此。完整日志请参见 [CHANGELOG.md](https://github.com/librefang/librefang/blob/main/CHANGELOG.md) 和 [GitHub Releases](https://github.com/librefang/librefang/releases)。
+
+---
+
+## v0.4.1 (2026-03-14)
+
+### 新增
+- **模型目录同步**：`catalog_sync.rs` 模块，包含 `POST /api/catalog/sync` 和 `GET /api/catalog` 端点、仪表板同步卡片，以及三级模型加载（内置 → 目录 → 运行时）([#227](https://github.com/librefang/librefang/pull/227))
+- **频道 Sidecar 协议**：用于进程外频道适配器的外部 Sidecar 协议 ([#228](https://github.com/librefang/librefang/pull/228))
+- **Cargo Feature Flags**：42 个频道 feature flag，12 个默认频道，可选依赖实现精细构建 ([#223](https://github.com/librefang/librefang/pull/223))
+- **社区组织建设**：DevContainer 支持、good-first-issue 模板、PR 模板和版本同步脚本 ([#212](https://github.com/librefang/librefang/pull/212))
+
+### 变更
+- **静态提供商注册表**：用声明式 `PROVIDER_REGISTRY` 数组和新的 `ApiFormat` 枚举替换 400 行的 provider match 代码块 ([#224](https://github.com/librefang/librefang/pull/224))
+
+### 修复
+- 修复守护进程子进程未继承环境变量的问题 -- API 密钥（如 `MINIMAX_API_KEY`）现可正确传递 ([#210](https://github.com/librefang/librefang/pull/210))
+- 修复守护进程环境变量、MCP 探测和 SSE 解析问题 ([#211](https://github.com/librefang/librefang/pull/211))
+
+### CI
+- 升级 GitHub Actions 以兼容 Node.js 24 ([#229](https://github.com/librefang/librefang/pull/229))
+
+---
+
+## v0.4.0 (2026-03-14)
+
+### 新增
+
+#### 认证与驱动
+- **ChatGPT Session Auth**：基于浏览器的 OAuth 流程，支持 ChatGPT Plus/Ultra 订阅用户，含 PKCE S256、自动模型发现、`librefang auth chatgpt` 子命令和 7 天会话缓存 ([#205](https://github.com/librefang/librefang/pull/205))
+- **MiniMax 双平台支持**：为中国区端点新增独立的 `minimax-cn` 提供商，使用 `MINIMAX_CN_API_KEY`
+- **QQ Bot 适配器**：原生支持 QQ Bot 消息频道 ([#208](https://github.com/librefang/librefang/pull/208))
+
+#### Web 仪表板与国际化
+- 完整国际化（i18n）支持，包含 `zh-CN` 语言和统一的 `t()` 翻译函数
+- 新侧边栏布局，带主题/语言切换器
+- 高质量内联 SVG 图标替换 emoji 图标
+- 改进 ClawHub 在小屏设备上的响应式表现
+
+#### 核心平台
+- 所有 31 个内置 Agent 和子包的版本对齐
+- 增强配置热重载可靠性
+
+#### CI/CD
+- 优化 Docker 多架构构建，使用原生 ARM runner ([#203](https://github.com/librefang/librefang/pull/203))
+
+#### CLI
+- `librefang doctor` 现在可检查版本更新和网络连通性 ([#202](https://github.com/librefang/librefang/pull/202))
+
+---
+
+## v0.3.58 (2026-03-13)
+
+### 变更
+- 提取频道桥接重试辅助函数并改进错误匹配 ([#198](https://github.com/librefang/librefang/pull/198))
+
+### 文档
+- 添加双许可证说明和组织成员政策 ([#197](https://github.com/librefang/librefang/pull/197))
+- 确立 LibreFang 自由身份和贡献者政策 ([#196](https://github.com/librefang/librefang/pull/196))
+
+---
+
+## v0.3.57 及更早版本
+
+### 新增
+- 通用 `http_compat` MCP 传输层 ([#77](https://github.com/librefang/librefang/pull/77))
+- 扩展 CLI 命令覆盖范围和技能发布 ([#34](https://github.com/librefang/librefang/pull/34))
+- 原生内置路由器 ([#33](https://github.com/librefang/librefang/pull/33))
+- 默认守护进程后台启动/重启，支持 `--tail` 参数 ([#31](https://github.com/librefang/librefang/pull/31))
+- 从 OpenFang 移植 i18n 基础设施 ([#29](https://github.com/librefang/librefang/pull/29))
+
+---
+
+## v0.1.0 (2026-02-24)
+
+首次发布。完整 v0.1.0 功能列表请参见 [CHANGELOG.md](https://github.com/librefang/librefang/blob/main/CHANGELOG.md)，包括：
+- 14 个 crate 的 Rust 工作空间
+- 27 个 LLM 提供商，130+ 个模型
+- 40 个频道适配器
+- 41 个内置工具
+- WASM 沙箱与双重计量
+- 可视化工作流构建器
+- 16 个安全系统
+- JavaScript 和 Python SDK
+- Google A2A 协议支持
+
+export const sections = [];
