@@ -21,6 +21,27 @@ Complete reference for `config.toml`, covering every configurable field in the L
   - [\[\[fallback\_providers\]\]](#fallback_providers)
   - [\[\[users\]\]](#users)
   - [Channel Overrides](#channel-overrides)
+  - [\[budget\]](#budget)
+  - [\[vault\]](#vault)
+  - [\[exec\_policy\]](#exec_policy)
+  - [\[thinking\]](#thinking)
+  - [\[tts\]](#tts)
+  - [\[webhook\_triggers\]](#webhook_triggers)
+  - [\[approval\]](#approval)
+  - [\[\[bindings\]\]](#bindings)
+  - [\[broadcast\]](#broadcast)
+  - [\[auto\_reply\]](#auto_reply)
+  - [\[canvas\]](#canvas)
+  - [\[docker\]](#docker)
+  - [\[pairing\]](#pairing)
+  - [\[auth\_profiles\]](#auth_profiles)
+  - [\[oauth\]](#oauth)
+  - [\[browser\]](#browser)
+  - [\[extensions\]](#extensions)
+  - [\[reload\]](#reload)
+  - [\[provider\_urls\] / \[provider\_api\_keys\]](#provider_urls--provider_api_keys)
+  - [Config Include](#config-include)
+  - [\[\[sidecar\_channels\]\]](#sidecar_channels)
 - [Environment Variables](#environment-variables)
 - [Validation](#validation)
 
@@ -115,6 +136,9 @@ api_key_env = "GROQ_API_KEY"
 embedding_model = "all-MiniLM-L6-v2"
 consolidation_threshold = 10000
 decay_rate = 0.1
+# embedding_provider = "openai"     # auto-detect if omitted
+# embedding_api_key_env = "OPENAI_API_KEY"
+consolidation_interval_hours = 24
 
 # --- Network (OFP Wire Protocol) ---
 [network]
@@ -212,6 +236,182 @@ intents = 33280
 app_token_env = "SLACK_APP_TOKEN"
 bot_token_env = "SLACK_BOT_TOKEN"
 allowed_channels = []
+
+# --- Budget ---
+[budget]
+max_hourly_usd = 0.0                # 0.0 = unlimited
+max_daily_usd = 10.0
+max_monthly_usd = 100.0
+alert_threshold = 0.8               # warn at 80% of any limit
+default_max_llm_tokens_per_hour = 0  # 0 = per-agent defaults
+
+# --- Vault ---
+[vault]
+enabled = true
+# path = "~/.librefang/vault.enc"   # auto-detected if omitted
+
+# --- Shell Execution Policy ---
+[exec_policy]
+mode = "allowlist"                   # deny | allowlist | full
+safe_bins = ["cat", "sort", "head", "tail", "wc", "date", "echo"]
+allowed_commands = []
+timeout_secs = 30
+max_output_bytes = 102400            # 100 KB
+no_output_timeout_secs = 30
+
+# --- Extended Thinking ---
+[thinking]
+budget_tokens = 10000
+stream_thinking = false
+
+# --- Text-to-Speech ---
+[tts]
+enabled = false
+# provider = "openai"               # openai | elevenlabs
+max_text_length = 4096
+timeout_secs = 30
+
+[tts.openai]
+voice = "alloy"                      # alloy | echo | fable | onyx | nova | shimmer
+model = "tts-1"                      # tts-1 | tts-1-hd
+format = "mp3"                       # mp3 | opus | aac | flac
+speed = 1.0                          # 0.25 - 4.0
+
+[tts.elevenlabs]
+voice_id = "21m00Tcm4TlvDq8ikWAM"   # Rachel
+model_id = "eleven_monolingual_v1"
+stability = 0.5
+similarity_boost = 0.75
+
+# --- Webhook Triggers ---
+[webhook_triggers]
+enabled = false
+token_env = "LIBREFANG_WEBHOOK_TOKEN"
+max_payload_bytes = 65536
+rate_limit_per_minute = 30
+
+# --- Approval Policy ---
+[approval]
+require_approval = ["shell_exec"]    # or false to disable, true for defaults
+timeout_secs = 60
+auto_approve_autonomous = false
+auto_approve = false
+
+# --- Agent Bindings ---
+[[bindings]]
+agent = "support-bot"
+[bindings.match_rule]
+channel = "discord"
+guild_id = "123456789"
+
+[[bindings]]
+agent = "personal"
+[bindings.match_rule]
+channel = "telegram"
+peer_id = "987654"
+
+# --- Broadcast ---
+[broadcast]
+strategy = "parallel"                # parallel | sequential
+[broadcast.routes]
+"user-123" = ["agent-a", "agent-b"]
+
+# --- Auto-Reply ---
+[auto_reply]
+enabled = false
+max_concurrent = 3
+timeout_secs = 120
+suppress_patterns = ["/stop", "/pause"]
+
+# --- Canvas (A2UI) ---
+[canvas]
+enabled = false
+max_html_bytes = 524288              # 512 KB
+allowed_tags = []
+
+# --- Docker Sandbox ---
+[docker]
+enabled = false
+image = "python:3.12-slim"
+container_prefix = "librefang-sandbox"
+workdir = "/workspace"
+network = "none"                     # none | bridge | custom
+memory_limit = "512m"
+cpu_limit = 1.0
+timeout_secs = 60
+read_only_root = true
+pids_limit = 100
+mode = "off"                         # off | non_main | all
+scope = "session"                    # session | agent | shared
+reuse_cool_secs = 300
+idle_timeout_secs = 86400            # 24h
+max_age_secs = 604800                # 7 days
+
+# --- Device Pairing ---
+[pairing]
+enabled = false
+max_devices = 10
+token_expiry_secs = 300
+push_provider = "none"               # none | ntfy | gotify
+
+# --- Auth Profiles (key rotation) ---
+[auth_profiles]
+anthropic = [
+  { name = "primary",   api_key_env = "ANTHROPIC_API_KEY",   priority = 0 },
+  { name = "secondary", api_key_env = "ANTHROPIC_API_KEY_2", priority = 1 },
+]
+
+# --- OAuth ---
+[oauth]
+# google_client_id = "your-google-client-id"
+# github_client_id = "your-github-client-id"
+# microsoft_client_id = "your-microsoft-client-id"
+# slack_client_id = "your-slack-client-id"
+
+# --- Browser Automation ---
+[browser]
+headless = true
+viewport_width = 1280
+viewport_height = 720
+timeout_secs = 30
+idle_timeout_secs = 300
+max_sessions = 5
+# chromium_path = "/usr/bin/chromium"  # auto-detected if omitted
+
+# --- Extensions / MCP ---
+[extensions]
+auto_reconnect = true
+reconnect_max_attempts = 10
+reconnect_max_backoff_secs = 300
+health_check_interval_secs = 60
+
+# --- Config Reload ---
+[reload]
+mode = "hybrid"                      # off | restart | hot | hybrid
+debounce_ms = 500
+
+# --- Provider URL / API Key Overrides ---
+[provider_urls]
+# ollama = "http://192.168.1.100:11434/v1"
+# openai = "https://my-proxy.example.com/v1"
+
+[provider_api_keys]
+# nvidia = "NVIDIA_API_KEY"
+
+# --- Config Include ---
+include = [
+  # "channels.toml",
+  # "secrets.toml",
+]
+
+# --- Sidecar Channel Adapters ---
+[[sidecar_channels]]
+name = "my-adapter"
+command = "python3"
+args = ["adapters/my_adapter.py"]
+# channel_type = "custom"
+[sidecar_channels.env]
+# MY_TOKEN = "xxx"
 ```
 
 ---
@@ -284,6 +484,9 @@ Configures the SQLite-backed memory substrate, including vector embeddings and m
 embedding_model = "all-MiniLM-L6-v2"
 consolidation_threshold = 10000
 decay_rate = 0.1
+embedding_provider = "openai"
+embedding_api_key_env = "OPENAI_API_KEY"
+consolidation_interval_hours = 24
 ```
 
 | Field | Type | Default | Description |
@@ -292,6 +495,9 @@ decay_rate = 0.1
 | `embedding_model` | string | `"all-MiniLM-L6-v2"` | Model name used for generating vector embeddings for semantic memory search. |
 | `consolidation_threshold` | u64 | `10000` | Number of stored memories before automatic consolidation is triggered to merge and prune old entries. |
 | `decay_rate` | f32 | `0.1` | Memory confidence decay rate. `0.0` = no decay (memories never fade), `1.0` = aggressive decay. Values between 0.0 and 1.0. |
+| `embedding_provider` | string or null | `null` | Embedding provider (e.g., `"openai"`, `"ollama"`). `null` = auto-detect from available keys. |
+| `embedding_api_key_env` | string or null | `null` | Environment variable name for the embedding API key. |
+| `consolidation_interval_hours` | u64 | `24` | How often to run memory consolidation in hours. `0` = disabled. |
 
 ---
 
@@ -1277,6 +1483,554 @@ usage_footer = "tokens"
 
 ---
 
+### `[budget]`
+
+Global spending budget limits. Set any limit to `0.0` to make it unlimited.
+
+```toml
+[budget]
+max_hourly_usd = 1.0
+max_daily_usd = 10.0
+max_monthly_usd = 100.0
+alert_threshold = 0.8
+default_max_llm_tokens_per_hour = 0
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `max_hourly_usd` | f64 | `0.0` | Maximum total cost in USD per hour. `0.0` = unlimited. |
+| `max_daily_usd` | f64 | `0.0` | Maximum total cost in USD per day. `0.0` = unlimited. |
+| `max_monthly_usd` | f64 | `0.0` | Maximum total cost in USD per month. `0.0` = unlimited. |
+| `alert_threshold` | f64 | `0.8` | Fraction (0.0--1.0) at which to trigger budget warnings. `0.8` = warn at 80% of any limit. |
+| `default_max_llm_tokens_per_hour` | u64 | `0` | Override every agent's per-hour token budget. `0` = keep each agent's own limit. |
+
+---
+
+### `[vault]`
+
+Credential vault for encrypted secret storage.
+
+```toml
+[vault]
+enabled = true
+# path = "~/.librefang/vault.enc"
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | `true` | Whether the vault is enabled. Auto-detected if `vault.enc` exists. |
+| `path` | string or null | `null` | Custom vault file path. Default: `~/.librefang/vault.enc`. |
+
+---
+
+### `[exec_policy]`
+
+Shell/exec security policy controlling what commands agents can execute.
+
+```toml
+[exec_policy]
+mode = "allowlist"
+safe_bins = ["cat", "sort", "head", "tail", "wc", "date", "echo", "printf", "pwd"]
+allowed_commands = ["git status", "git diff"]
+timeout_secs = 30
+max_output_bytes = 102400
+no_output_timeout_secs = 30
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mode` | string | `"allowlist"` | Security mode. See values below. |
+| `safe_bins` | string[] | `["sleep","true","false","cat","sort","uniq","cut","tr","head","tail","wc","date","echo","printf","basename","dirname","pwd","env"]` | Stdin-only utilities that bypass the allowlist. |
+| `allowed_commands` | string[] | `[]` | Additional commands allowed when `mode = "allowlist"`. |
+| `timeout_secs` | u64 | `30` | Maximum execution time in seconds. |
+| `max_output_bytes` | usize | `102400` | Maximum stdout/stderr output size (100 KB). |
+| `no_output_timeout_secs` | u64 | `30` | Kill processes producing no output for this many seconds. |
+
+**`mode` values:**
+
+| Value | Aliases | Description |
+|-------|---------|-------------|
+| `deny` | `none`, `disabled` | Block all shell execution. |
+| `allowlist` | `restricted` | Only allow commands in `safe_bins` or `allowed_commands` (default). |
+| `full` | `allow`, `all`, `unrestricted` | Allow all commands. Unsafe -- dev only. |
+
+---
+
+### `[thinking]`
+
+Extended thinking configuration for supported models (e.g., Claude with extended thinking).
+
+```toml
+[thinking]
+budget_tokens = 10000
+stream_thinking = false
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `budget_tokens` | u32 | `10000` | Maximum tokens allocated to the thinking budget. |
+| `stream_thinking` | bool | `false` | Whether to stream thinking tokens to the client in real time. |
+
+> This section is `Option<ThinkingConfig>` -- when omitted entirely, extended thinking is disabled. Including the section header enables it.
+
+---
+
+### `[tts]`
+
+Text-to-speech configuration with support for OpenAI and ElevenLabs providers.
+
+```toml
+[tts]
+enabled = true
+provider = "openai"
+max_text_length = 4096
+timeout_secs = 30
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | `false` | Enable TTS. |
+| `provider` | string or null | `null` | Default TTS provider: `"openai"` or `"elevenlabs"`. |
+| `max_text_length` | usize | `4096` | Maximum text length in characters for a single TTS request. |
+| `timeout_secs` | u64 | `30` | Timeout per TTS API request. |
+
+**`[tts.openai]`**
+
+```toml
+[tts.openai]
+voice = "alloy"
+model = "tts-1"
+format = "mp3"
+speed = 1.0
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `voice` | string | `"alloy"` | Voice selection: `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`. |
+| `model` | string | `"tts-1"` | Model: `"tts-1"` (fast) or `"tts-1-hd"` (high quality). |
+| `format` | string | `"mp3"` | Output audio format: `mp3`, `opus`, `aac`, `flac`. |
+| `speed` | f32 | `1.0` | Playback speed (0.25 to 4.0). |
+
+**`[tts.elevenlabs]`**
+
+```toml
+[tts.elevenlabs]
+voice_id = "21m00Tcm4TlvDq8ikWAM"
+model_id = "eleven_monolingual_v1"
+stability = 0.5
+similarity_boost = 0.75
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `voice_id` | string | `"21m00Tcm4TlvDq8ikWAM"` | ElevenLabs voice ID. Default is "Rachel". |
+| `model_id` | string | `"eleven_monolingual_v1"` | ElevenLabs model ID. |
+| `stability` | f32 | `0.5` | Voice stability (0.0--1.0). Lower = more expressive. |
+| `similarity_boost` | f32 | `0.75` | Similarity boost (0.0--1.0). Higher = closer to original voice. |
+
+---
+
+### `[webhook_triggers]`
+
+External webhook endpoints (`/hooks/wake`, `/hooks/agent`) for triggering agent actions from external systems.
+
+```toml
+[webhook_triggers]
+enabled = true
+token_env = "LIBREFANG_WEBHOOK_TOKEN"
+max_payload_bytes = 65536
+rate_limit_per_minute = 30
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | `false` | Enable webhook trigger endpoints. |
+| `token_env` | string | `"LIBREFANG_WEBHOOK_TOKEN"` | Env var holding the bearer token (NOT the token itself). Token must be >= 32 chars. |
+| `max_payload_bytes` | usize | `65536` | Maximum request payload size in bytes (64 KB). |
+| `rate_limit_per_minute` | u32 | `30` | Max requests per minute per source IP. |
+
+> This section is `Option<WebhookTriggerConfig>` -- when omitted, webhook endpoints are disabled.
+
+---
+
+### `[approval]`
+
+Execution approval policy controlling which tool calls require user confirmation before running.
+
+```toml
+[approval]
+require_approval = ["shell_exec", "file_write"]
+timeout_secs = 60
+auto_approve_autonomous = false
+auto_approve = false
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `require_approval` | string[] or bool | `["shell_exec"]` | Tools requiring approval. `false` = none, `true` = `["shell_exec"]`. |
+| `timeout_secs` | u64 | `60` | Seconds to wait for approval before timing out. Range: 10--300. |
+| `auto_approve_autonomous` | bool | `false` | Automatically approve in autonomous mode. |
+| `auto_approve` | bool | `false` | Alias: if `true`, clears the require list at boot. |
+
+---
+
+### `[[bindings]]`
+
+Agent bindings route incoming messages from specific channels, accounts, or peers to designated agents. Bindings are evaluated in specificity order (most specific match wins).
+
+```toml
+[[bindings]]
+agent = "support-bot"
+[bindings.match_rule]
+channel = "discord"
+guild_id = "123456789012345678"
+
+[[bindings]]
+agent = "personal"
+[bindings.match_rule]
+channel = "telegram"
+peer_id = "987654321"
+roles = ["owner"]
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `agent` | string | Target agent name or ID. |
+| `match_rule.channel` | string or null | Channel type (e.g., `"discord"`, `"telegram"`, `"slack"`). |
+| `match_rule.account_id` | string or null | Specific bot account ID within the channel. |
+| `match_rule.peer_id` | string or null | Peer/user ID for DM routing. |
+| `match_rule.guild_id` | string or null | Guild/server ID (Discord/Slack). |
+| `match_rule.roles` | string[] | Role-based routing (user must have at least one listed role). |
+
+**Specificity scoring** (higher = checked first):
+
+| Criterion | Score |
+|-----------|-------|
+| `peer_id` set | +8 |
+| `guild_id` set | +4 |
+| `roles` non-empty | +2 |
+| `account_id` set | +2 |
+| `channel` set | +1 |
+
+---
+
+### `[broadcast]`
+
+Broadcast routing sends the same incoming message to multiple agents simultaneously or sequentially.
+
+```toml
+[broadcast]
+strategy = "parallel"
+
+[broadcast.routes]
+"user-123" = ["agent-a", "agent-b"]
+"user-456" = ["agent-c"]
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `strategy` | string | `"parallel"` | Delivery strategy: `"parallel"` (all at once) or `"sequential"` (one at a time). |
+| `routes` | map | `{}` | Map of `peer_id` to list of agent names that receive the message. |
+
+---
+
+### `[auto_reply]`
+
+Background auto-reply engine that can process messages automatically.
+
+```toml
+[auto_reply]
+enabled = true
+max_concurrent = 3
+timeout_secs = 120
+suppress_patterns = ["/stop", "/pause"]
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | `false` | Enable the auto-reply engine. |
+| `max_concurrent` | usize | `3` | Maximum concurrent auto-reply tasks. |
+| `timeout_secs` | u64 | `120` | Default timeout per auto-reply in seconds. |
+| `suppress_patterns` | string[] | `["/stop", "/pause"]` | Message patterns that suppress auto-reply. |
+
+---
+
+### `[canvas]`
+
+Canvas (Agent-to-UI) allows agents to render rich HTML content in the dashboard.
+
+```toml
+[canvas]
+enabled = true
+max_html_bytes = 524288
+allowed_tags = ["div", "span", "p", "h1", "h2", "h3", "img", "a"]
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | `false` | Enable the canvas tool. |
+| `max_html_bytes` | usize | `524288` | Maximum HTML payload size in bytes (512 KB). |
+| `allowed_tags` | string[] | `[]` | Allowed HTML tags. Empty = all safe tags allowed. |
+
+---
+
+### `[docker]`
+
+Docker container sandbox for executing agent commands in isolated environments.
+
+```toml
+[docker]
+enabled = true
+image = "python:3.12-slim"
+container_prefix = "librefang-sandbox"
+workdir = "/workspace"
+network = "none"
+memory_limit = "512m"
+cpu_limit = 1.0
+timeout_secs = 60
+read_only_root = true
+pids_limit = 100
+mode = "non_main"
+scope = "agent"
+reuse_cool_secs = 300
+idle_timeout_secs = 86400
+max_age_secs = 604800
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | `false` | Enable Docker sandbox. |
+| `image` | string | `"python:3.12-slim"` | Docker image for the sandbox. |
+| `container_prefix` | string | `"librefang-sandbox"` | Container name prefix. |
+| `workdir` | string | `"/workspace"` | Working directory inside the container. |
+| `network` | string | `"none"` | Network mode: `"none"`, `"bridge"`, or custom network name. |
+| `memory_limit` | string | `"512m"` | Memory limit (e.g., `"256m"`, `"1g"`). |
+| `cpu_limit` | f64 | `1.0` | CPU limit (e.g., `0.5`, `1.0`, `2.0`). |
+| `timeout_secs` | u64 | `60` | Maximum execution time per command in seconds. |
+| `read_only_root` | bool | `true` | Mount root filesystem as read-only. |
+| `cap_add` | string[] | `[]` | Additional Linux capabilities to add (default: drop all). |
+| `tmpfs` | string[] | `["/tmp:size=64m"]` | tmpfs mount points. |
+| `pids_limit` | u32 | `100` | Maximum number of processes. |
+| `mode` | string | `"off"` | Sandbox activation: `"off"`, `"non_main"` (non-main agents only), `"all"`. |
+| `scope` | string | `"session"` | Container lifecycle: `"session"` (per session), `"agent"` (reused), `"shared"` (pool). |
+| `reuse_cool_secs` | u64 | `300` | Cooldown before reusing a released container. |
+| `idle_timeout_secs` | u64 | `86400` | Destroy containers after this many seconds of inactivity (24h). |
+| `max_age_secs` | u64 | `604800` | Forced destruction after this age (7 days). |
+| `blocked_mounts` | string[] | `[]` | Host paths blocked from bind mounting. |
+
+---
+
+### `[pairing]`
+
+Device pairing for mobile/desktop companion apps.
+
+```toml
+[pairing]
+enabled = true
+max_devices = 10
+token_expiry_secs = 300
+push_provider = "ntfy"
+ntfy_url = "https://ntfy.sh"
+ntfy_topic = "librefang-notifications"
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | `false` | Enable device pairing. |
+| `max_devices` | usize | `10` | Maximum number of paired devices. |
+| `token_expiry_secs` | u64 | `300` | Pairing token expiry in seconds (5 minutes). |
+| `push_provider` | string | `"none"` | Push notification provider: `"none"`, `"ntfy"`, `"gotify"`. |
+| `ntfy_url` | string or null | `null` | ntfy server URL (when `push_provider = "ntfy"`). |
+| `ntfy_topic` | string or null | `null` | ntfy topic name (when `push_provider = "ntfy"`). |
+
+---
+
+### `[auth_profiles]`
+
+Auth profiles enable key rotation per provider. When one key gets rate-limited or has billing issues, LibreFang automatically falls back to the next profile by priority.
+
+```toml
+[auth_profiles]
+anthropic = [
+  { name = "primary",   api_key_env = "ANTHROPIC_API_KEY",   priority = 0 },
+  { name = "secondary", api_key_env = "ANTHROPIC_API_KEY_2", priority = 1 },
+]
+openai = [
+  { name = "main", api_key_env = "OPENAI_API_KEY", priority = 0 },
+]
+```
+
+Each profile has:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | string | -- | Profile name (e.g., `"primary"`, `"secondary"`). |
+| `api_key_env` | string | -- | Environment variable holding the API key. |
+| `priority` | u32 | `0` | Priority ordering. Lower = preferred. |
+
+Key resolution order: `[provider_api_keys]` mapping > `[auth_profiles]` first-by-priority > convention `{PROVIDER_UPPER}_API_KEY`.
+
+---
+
+### `[oauth]`
+
+OAuth client ID overrides for PKCE authentication flows. Used when connecting to third-party services.
+
+```toml
+[oauth]
+google_client_id = "123456.apps.googleusercontent.com"
+github_client_id = "Iv1_abcdef123456"
+microsoft_client_id = "00000000-0000-0000-0000-000000000000"
+slack_client_id = "12345.67890"
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `google_client_id` | string or null | `null` | Google OAuth2 client ID for PKCE flow. |
+| `github_client_id` | string or null | `null` | GitHub OAuth client ID for PKCE flow. |
+| `microsoft_client_id` | string or null | `null` | Microsoft (Entra ID) OAuth client ID. |
+| `slack_client_id` | string or null | `null` | Slack OAuth client ID. |
+
+---
+
+### `[browser]`
+
+Browser automation configuration for headless web browsing.
+
+```toml
+[browser]
+headless = true
+viewport_width = 1280
+viewport_height = 720
+timeout_secs = 30
+idle_timeout_secs = 300
+max_sessions = 5
+chromium_path = "/usr/bin/chromium"
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `headless` | bool | `true` | Run browser in headless mode (no visible window). |
+| `viewport_width` | u32 | `1280` | Viewport width in pixels. |
+| `viewport_height` | u32 | `720` | Viewport height in pixels. |
+| `timeout_secs` | u64 | `30` | Per-action timeout in seconds. |
+| `idle_timeout_secs` | u64 | `300` | Auto-close session after this many seconds of inactivity (5 min). |
+| `max_sessions` | usize | `5` | Maximum concurrent browser sessions. |
+| `chromium_path` | string or null | `null` | Path to Chromium/Chrome binary. Auto-detected if omitted. |
+
+---
+
+### `[extensions]`
+
+Extensions and MCP integration resilience configuration.
+
+```toml
+[extensions]
+auto_reconnect = true
+reconnect_max_attempts = 10
+reconnect_max_backoff_secs = 300
+health_check_interval_secs = 60
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `auto_reconnect` | bool | `true` | Automatically reconnect to MCP servers on disconnect. |
+| `reconnect_max_attempts` | u32 | `10` | Maximum reconnect attempts before giving up. |
+| `reconnect_max_backoff_secs` | u64 | `300` | Maximum backoff duration between reconnect attempts (5 min). |
+| `health_check_interval_secs` | u64 | `60` | Interval between MCP server health checks in seconds. |
+
+---
+
+### `[reload]`
+
+Config file watching and hot-reload behavior.
+
+```toml
+[reload]
+mode = "hybrid"
+debounce_ms = 500
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mode` | string | `"hybrid"` | Reload mode. See values below. |
+| `debounce_ms` | u64 | `500` | Debounce window in milliseconds to avoid rapid reloads. |
+
+**`mode` values:**
+
+| Value | Description |
+|-------|-------------|
+| `off` | No automatic reloading. |
+| `restart` | Full restart on config change. |
+| `hot` | Hot-reload safe sections only (channels, skills, heartbeat). |
+| `hybrid` | Hot-reload where possible, flag restart-required otherwise (default). |
+
+---
+
+### `[provider_urls]` / `[provider_api_keys]`
+
+Override the default base URL or API key env var for any provider. Useful for self-hosted instances, proxies, or providers not in the built-in registry.
+
+```toml
+[provider_urls]
+ollama = "http://192.168.1.100:11434/v1"
+openai = "https://my-proxy.example.com/v1"
+
+[provider_api_keys]
+nvidia = "NVIDIA_API_KEY"
+custom_llm = "MY_CUSTOM_LLM_KEY"
+```
+
+**`[provider_urls]`** -- Map of provider ID to custom base URL. Overrides the catalog default.
+
+**`[provider_api_keys]`** -- Map of provider ID to the environment variable name holding the API key. When not set, the convention `{PROVIDER_UPPER}_API_KEY` is used (e.g., `nvidia` resolves to `NVIDIA_API_KEY`).
+
+---
+
+### Config Include
+
+Split your configuration into multiple files using the `include` top-level field. Included files are loaded and deep-merged before the root config.
+
+```toml
+include = [
+  "channels.toml",
+  "secrets.toml",
+]
+```
+
+**Rules:**
+- Paths are relative to the root config file's directory (`~/.librefang/`).
+- Absolute paths and `..` path components are **rejected** for security.
+- Included files are merged in order; later values override earlier ones.
+- The root config file's values override all included files.
+
+---
+
+### `[[sidecar_channels]]`
+
+Sidecar channel adapters allow external processes (written in any language) to act as channel adapters. Communication uses newline-delimited JSON over stdin/stdout.
+
+```toml
+[[sidecar_channels]]
+name = "my-telegram"
+command = "python3"
+args = ["adapters/telegram_adapter.py"]
+channel_type = "custom"
+
+[sidecar_channels.env]
+TELEGRAM_BOT_TOKEN = "xxx"
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | string | -- | Display name for this adapter. |
+| `command` | string | -- | Command to execute (e.g., `"python3"`, `"/usr/local/bin/my-adapter"`). |
+| `args` | string[] | `[]` | Arguments to pass to the command. |
+| `env` | map | `{}` | Extra environment variables to pass to the subprocess. |
+| `channel_type` | string or null | `null` | Channel type identifier. Defaults to `Custom(name)`. |
+
+---
+
 ## Environment Variables
 
 Complete table of all environment variables referenced by the configuration. None of these are read by the config file itself -- they are read at runtime by the kernel and channel adapters.
@@ -1360,6 +2114,14 @@ Complete table of all environment variables referenced by the configuration. Non
 | `GOTIFY_CLIENT_TOKEN` | Gotify | Gotify client token (receiving). |
 | `WEBHOOK_SECRET` | Webhook | HMAC signing secret for webhook verification. |
 | `LINKEDIN_ACCESS_TOKEN` | LinkedIn | LinkedIn OAuth2 access token. |
+
+### Other Service Keys
+
+| Variable | Used By | Description |
+|----------|---------|-------------|
+| `LIBREFANG_WEBHOOK_TOKEN` | `[webhook_triggers]` | Bearer token for webhook trigger endpoints. Must be >= 32 chars. |
+| `ELEVENLABS_API_KEY` | `[tts.elevenlabs]` | ElevenLabs TTS API key. |
+| `LIBREFANG_HOME` | Core | Override the LibreFang home directory (default: `~/.librefang`). |
 
 ---
 

@@ -1,0 +1,1017 @@
+# Built-in Tools Reference
+
+LibreFang provides **60 built-in tools** that agents can use out of the box. Tools are granted to agents through the capability system in each agent's `agent.toml` manifest. This page documents every built-in tool with its parameters, description, and usage examples.
+
+## Table of Contents
+
+- [File System](#file-system) (4 tools)
+- [Web](#web) (2 tools)
+- [Shell](#shell) (1 tool)
+- [Agent Collaboration](#agent-collaboration) (4 tools)
+- [Memory](#memory) (2 tools)
+- [Discovery & Tasks](#discovery--tasks) (5 tools)
+- [Events](#events) (1 tool)
+- [Scheduling](#scheduling) (3 tools)
+- [Knowledge Graph](#knowledge-graph) (3 tools)
+- [Media & Images](#media--images) (5 tools)
+- [Browser Automation](#browser-automation) (10 tools)
+- [Cron Jobs](#cron-jobs) (3 tools)
+- [Channel Messaging](#channel-messaging) (1 tool)
+- [Hands](#hands) (4 tools)
+- [A2A (Agent-to-Agent)](#a2a-agent-to-agent) (2 tools)
+- [Speech](#speech) (2 tools)
+- [Process Management](#process-management) (5 tools)
+- [Sandbox](#sandbox) (1 tool)
+- [System](#system) (1 tool)
+- [Canvas](#canvas) (1 tool)
+
+---
+
+## File System
+
+Tools for reading, writing, and listing files within the agent's workspace sandbox. All paths are relative to the agent workspace root.
+
+### `file_read`
+
+Read the contents of a file.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | Yes | The file path to read |
+
+**Returns:** File contents as a string.
+
+```json
+{ "path": "data/config.json" }
+```
+
+### `file_write`
+
+Write content to a file. Creates parent directories automatically.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | Yes | The file path to write to |
+| `content` | string | Yes | The content to write |
+
+**Returns:** Confirmation with byte count written.
+
+```json
+{ "path": "output/report.txt", "content": "Analysis complete." }
+```
+
+### `file_list`
+
+List files in a directory.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | Yes | The directory path to list |
+
+**Returns:** Directory listing with file names, types, and sizes.
+
+```json
+{ "path": "data/" }
+```
+
+### `apply_patch`
+
+Apply a multi-hunk diff patch to add, update, move, or delete files. Use this for targeted edits instead of full file overwrites.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `patch` | string | Yes | Patch in `*** Begin Patch / *** End Patch` format. Uses `*** Add File:`, `*** Update File:`, `*** Delete File:` markers. Hunks use `@@` headers with space (context), `-` (remove), `+` (add) prefixed lines. |
+
+**Returns:** Summary of applied changes.
+
+```json
+{
+  "patch": "*** Begin Patch\n*** Update File: src/main.rs\n@@ -10,3 +10,3 @@\n-    println!(\"old\");\n+    println!(\"new\");\n*** End Patch"
+}
+```
+
+---
+
+## Web
+
+Tools for fetching URLs and searching the web.
+
+### `web_fetch`
+
+Fetch a URL with SSRF protection. For GET requests, HTML is automatically converted to Markdown. Supports GET, POST, PUT, PATCH, and DELETE methods.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `url` | string | Yes | The URL to fetch (http/https only) |
+| `method` | string | No | HTTP method: `GET`, `POST`, `PUT`, `PATCH`, `DELETE` (default: `GET`) |
+| `headers` | object | No | Custom HTTP headers as key-value pairs |
+| `body` | string | No | Request body for POST/PUT/PATCH |
+
+**Returns:** Response body (Markdown for GET HTML pages, raw for other methods).
+
+```json
+{ "url": "https://api.example.com/data", "method": "GET" }
+```
+
+### `web_search`
+
+Search the web using multiple providers (Tavily, Brave, Perplexity, DuckDuckGo) with automatic fallback. Returns structured results.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | string | Yes | The search query |
+| `max_results` | integer | No | Maximum number of results (default: 5, max: 20) |
+
+**Returns:** Array of results with titles, URLs, and snippets.
+
+```json
+{ "query": "rust async runtime comparison", "max_results": 5 }
+```
+
+---
+
+## Shell
+
+### `shell_exec`
+
+Execute a shell command and return its output. Protected by taint tracking to prevent command injection.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `command` | string | Yes | The command to execute |
+| `timeout_seconds` | integer | No | Timeout in seconds (default: 30) |
+
+**Returns:** Combined stdout/stderr output.
+
+```json
+{ "command": "ls -la /tmp", "timeout_seconds": 10 }
+```
+
+---
+
+## Agent Collaboration
+
+Tools for inter-agent communication: sending messages, spawning new agents, listing, and terminating agents.
+
+### `agent_send`
+
+Send a message to another agent and receive their response. Supports UUID or agent name lookup.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `agent_id` | string | Yes | The target agent's UUID or name |
+| `message` | string | Yes | The message to send |
+
+**Returns:** The target agent's response text.
+
+```json
+{ "agent_id": "coder", "message": "Write a function to parse CSV files" }
+```
+
+### `agent_spawn`
+
+Spawn a new agent from a TOML manifest.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `manifest_toml` | string | Yes | Agent manifest in TOML format (must include name, module, [model], and [capabilities]) |
+
+**Returns:** The new agent's ID and name.
+
+```json
+{
+  "manifest_toml": "name = \"helper\"\nmodule = \"default\"\n\n[model]\nprovider = \"groq\"\nmodel = \"llama-3.3-70b-versatile\"\n\n[capabilities]\ntools = [\"file_read\", \"file_write\"]"
+}
+```
+
+### `agent_list`
+
+List all currently running agents with their IDs, names, states, and models.
+
+*No parameters.*
+
+**Returns:** JSON array of running agents.
+
+### `agent_kill`
+
+Kill (terminate) another agent by its ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `agent_id` | string | Yes | The agent's UUID to kill |
+
+**Returns:** Confirmation of termination.
+
+```json
+{ "agent_id": "550e8400-e29b-41d4-a716-446655440000" }
+```
+
+---
+
+## Memory
+
+Shared key-value memory accessible by all agents for cross-agent coordination.
+
+### `memory_store`
+
+Store a value in shared memory.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `key` | string | Yes | The storage key |
+| `value` | string | Yes | The value to store (JSON-encode objects/arrays, or pass a plain string) |
+
+**Returns:** Confirmation of storage.
+
+```json
+{ "key": "analysis_results", "value": "{\"score\": 95, \"status\": \"pass\"}" }
+```
+
+### `memory_recall`
+
+Recall a value from shared memory by key.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `key` | string | Yes | The storage key to recall |
+
+**Returns:** The stored value, or null if not found.
+
+```json
+{ "key": "analysis_results" }
+```
+
+---
+
+## Discovery & Tasks
+
+Tools for finding agents and managing a shared task queue for asynchronous collaboration.
+
+### `agent_find`
+
+Discover agents by name, tag, tool, or description. Use to find specialists before delegating work.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | string | Yes | Search query (matches agent name, tags, tools, description) |
+
+**Returns:** List of matching agents with their metadata.
+
+```json
+{ "query": "code review" }
+```
+
+### `task_post`
+
+Post a task to the shared task queue for another agent to pick up.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `title` | string | Yes | Short task title |
+| `description` | string | Yes | Detailed task description |
+| `assigned_to` | string | No | Agent name or ID to assign the task to |
+
+**Returns:** The created task ID.
+
+```json
+{ "title": "Review PR #42", "description": "Check for security issues in auth module", "assigned_to": "security-auditor" }
+```
+
+### `task_claim`
+
+Claim the next available task from the task queue assigned to you or unassigned.
+
+*No parameters.*
+
+**Returns:** The claimed task details, or null if no tasks available.
+
+### `task_complete`
+
+Mark a previously claimed task as completed with a result.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `task_id` | string | Yes | The task ID to complete |
+| `result` | string | Yes | The result or outcome of the task |
+
+**Returns:** Confirmation of completion.
+
+```json
+{ "task_id": "task-001", "result": "No security vulnerabilities found. LGTM." }
+```
+
+### `task_list`
+
+List tasks in the shared queue, optionally filtered by status.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `status` | string | No | Filter by status: `pending`, `in_progress`, `completed` |
+
+**Returns:** Array of tasks with their metadata.
+
+```json
+{ "status": "pending" }
+```
+
+---
+
+## Events
+
+### `event_publish`
+
+Publish a custom event that can trigger proactive agents. Use to broadcast signals to the agent fleet.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `event_type` | string | Yes | Type identifier for the event (e.g., `code_review_requested`) |
+| `payload` | object | No | JSON payload data for the event |
+
+**Returns:** Confirmation of event publication.
+
+```json
+{ "event_type": "deployment_complete", "payload": { "version": "1.2.0", "env": "production" } }
+```
+
+---
+
+## Scheduling
+
+Natural-language and cron-based scheduling tools.
+
+### `schedule_create`
+
+Schedule a recurring task using natural language or cron syntax.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `description` | string | Yes | What this schedule does (e.g., "Check for new emails") |
+| `schedule` | string | Yes | Natural language or cron expression (e.g., `every 5 minutes`, `daily at 9am`, `0 */5 * * *`) |
+| `agent` | string | No | Agent name or ID to run this task (defaults to self) |
+
+**Returns:** The created schedule ID and next run time.
+
+```json
+{ "description": "Check for new emails", "schedule": "every 5 minutes" }
+```
+
+### `schedule_list`
+
+List all scheduled tasks with their IDs, descriptions, schedules, and next run times.
+
+*No parameters.*
+
+**Returns:** Array of scheduled tasks.
+
+### `schedule_delete`
+
+Remove a scheduled task by its ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `id` | string | Yes | The schedule ID to remove |
+
+**Returns:** Confirmation of deletion.
+
+```json
+{ "id": "sched-001" }
+```
+
+---
+
+## Knowledge Graph
+
+A persistent graph database for storing entities and relationships. Agents can build structured knowledge over time.
+
+### `knowledge_add_entity`
+
+Add an entity to the knowledge graph.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | string | Yes | Display name of the entity |
+| `entity_type` | string | Yes | Type: `person`, `organization`, `project`, `concept`, `event`, `location`, `document`, `tool`, or a custom type |
+| `properties` | object | No | Arbitrary key-value properties |
+
+**Returns:** The created entity ID.
+
+```json
+{ "name": "LibreFang", "entity_type": "project", "properties": { "language": "Rust", "license": "MIT" } }
+```
+
+### `knowledge_add_relation`
+
+Add a relation between two entities.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `source` | string | Yes | Source entity ID or name |
+| `relation` | string | Yes | Relation type: `works_at`, `knows_about`, `related_to`, `depends_on`, `owned_by`, `created_by`, `located_in`, `part_of`, `uses`, `produces`, or a custom type |
+| `target` | string | Yes | Target entity ID or name |
+| `confidence` | number | No | Confidence score 0.0-1.0 (default: 1.0) |
+| `properties` | object | No | Arbitrary key-value properties |
+
+**Returns:** The created relation ID.
+
+```json
+{ "source": "LibreFang", "relation": "uses", "target": "Rust", "confidence": 1.0 }
+```
+
+### `knowledge_query`
+
+Query the knowledge graph. Filter by source entity, relation type, and/or target entity.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `source` | string | No | Filter by source entity name or ID |
+| `relation` | string | No | Filter by relation type |
+| `target` | string | No | Filter by target entity name or ID |
+| `max_depth` | integer | No | Maximum traversal depth (default: 1) |
+
+**Returns:** Matching entity-relation-entity triples.
+
+```json
+{ "source": "LibreFang", "relation": "uses" }
+```
+
+---
+
+## Media & Images
+
+Tools for analyzing, generating, and understanding visual and audio content.
+
+### `image_analyze`
+
+Analyze an image file -- returns format, dimensions, file size, and a base64 preview. Optionally send a prompt for vision-model analysis.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | Yes | Path to the image file |
+| `prompt` | string | No | Optional prompt for vision analysis (e.g., "Describe what you see") |
+
+**Returns:** Image metadata (format, dimensions, size) and optional vision analysis.
+
+```json
+{ "path": "screenshots/dashboard.png", "prompt": "What UI elements are visible?" }
+```
+
+### `media_describe`
+
+Describe an image using a vision-capable LLM. Auto-selects the best available provider (Anthropic, OpenAI, or Gemini).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | Yes | Path to the image file (relative to workspace) |
+| `prompt` | string | No | Optional prompt to guide the description |
+
+**Returns:** Text description of the image content.
+
+```json
+{ "path": "charts/revenue.png", "prompt": "Extract all text and numbers from this chart" }
+```
+
+### `media_transcribe`
+
+Transcribe audio to text using speech-to-text. Auto-selects the best available provider (Groq Whisper or OpenAI Whisper).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | Yes | Path to the audio file. Supported: mp3, wav, ogg, flac, m4a, webm |
+| `language` | string | No | Optional ISO-639-1 language code (e.g., `en`, `es`, `ja`) |
+
+**Returns:** The transcript text.
+
+```json
+{ "path": "recordings/meeting.mp3", "language": "en" }
+```
+
+### `image_generate`
+
+Generate images from a text prompt using DALL-E 3, DALL-E 2, or GPT-Image-1. Requires `OPENAI_API_KEY`. Images are saved to the workspace `output/` directory.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `prompt` | string | Yes | Text description of the image to generate (max 4000 chars) |
+| `model` | string | No | Model: `dall-e-3` (default), `dall-e-2`, or `gpt-image-1` |
+| `size` | string | No | Image size: `1024x1024` (default), `1024x1792`, `1792x1024`, `256x256`, `512x512` |
+| `quality` | string | No | Quality: `hd` (default for dall-e-3) or `standard` |
+| `count` | integer | No | Number of images (1-4, default: 1). DALL-E 3 only supports 1. |
+
+**Returns:** File path(s) of generated images.
+
+```json
+{ "prompt": "A futuristic city skyline at sunset, digital art", "size": "1792x1024", "quality": "hd" }
+```
+
+### `location_get`
+
+Get approximate geographic location based on IP address.
+
+*No parameters.*
+
+**Returns:** City, country, coordinates, and timezone.
+
+---
+
+## Browser Automation
+
+A full suite of browser automation tools powered by headless Chromium. Opens a persistent browser session per agent.
+
+### `browser_navigate`
+
+Navigate a browser to a URL. Returns the page title and readable content as markdown.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `url` | string | Yes | The URL to navigate to (http/https only) |
+
+**Returns:** Page title and content as markdown.
+
+```json
+{ "url": "https://docs.rs/tokio/latest/tokio/" }
+```
+
+### `browser_click`
+
+Click an element on the current browser page by CSS selector or visible text.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `selector` | string | Yes | CSS selector (e.g., `#submit-btn`, `.add-to-cart`) or visible text to click |
+
+**Returns:** Updated page state after clicking.
+
+```json
+{ "selector": "#login-button" }
+```
+
+### `browser_type`
+
+Type text into an input field on the current browser page.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `selector` | string | Yes | CSS selector for the input field (e.g., `input[name="email"]`, `#search-box`) |
+| `text` | string | Yes | The text to type |
+
+**Returns:** Confirmation.
+
+```json
+{ "selector": "input[name=\"email\"]", "text": "user@example.com" }
+```
+
+### `browser_screenshot`
+
+Take a screenshot of the current browser page.
+
+*No parameters.*
+
+**Returns:** Base64-encoded PNG image.
+
+### `browser_read_page`
+
+Read the current browser page content as structured markdown. Use after clicking or navigating to see the updated page.
+
+*No parameters.*
+
+**Returns:** Page content as markdown.
+
+### `browser_close`
+
+Close the browser session. The browser also auto-closes when the agent loop ends.
+
+*No parameters.*
+
+**Returns:** Confirmation.
+
+### `browser_scroll`
+
+Scroll the browser page.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `direction` | string | No | Scroll direction: `up`, `down`, `left`, `right` (default: `down`) |
+| `amount` | integer | No | Pixels to scroll (default: 600) |
+
+**Returns:** Confirmation.
+
+```json
+{ "direction": "down", "amount": 1200 }
+```
+
+### `browser_wait`
+
+Wait for a CSS selector to appear on the page. Useful for dynamic content that loads asynchronously.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `selector` | string | Yes | CSS selector to wait for |
+| `timeout_ms` | integer | No | Max wait time in milliseconds (default: 5000, max: 30000) |
+
+**Returns:** Success or timeout error.
+
+```json
+{ "selector": ".results-loaded", "timeout_ms": 10000 }
+```
+
+### `browser_run_js`
+
+Run JavaScript on the current browser page and return the result.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `expression` | string | Yes | JavaScript expression to run in the page context |
+
+**Returns:** The evaluated result.
+
+```json
+{ "expression": "document.querySelectorAll('.item').length" }
+```
+
+### `browser_back`
+
+Go back to the previous page in browser history.
+
+*No parameters.*
+
+**Returns:** Updated page state.
+
+---
+
+## Cron Jobs
+
+Fine-grained cron job management with one-shot, interval, and cron expression scheduling.
+
+### `cron_create`
+
+Create a scheduled/cron job. Supports one-shot (`at`), recurring (`every N seconds`), and cron expressions. Max 50 jobs per agent.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | string | Yes | Job name (max 128 chars, alphanumeric + spaces/hyphens/underscores) |
+| `schedule` | object | Yes | Schedule object: `{"kind":"at","at":"2025-01-01T00:00:00Z"}` or `{"kind":"every","every_secs":300}` or `{"kind":"cron","expr":"0 */6 * * *"}` |
+| `action` | object | Yes | Action object: `{"kind":"system_event","text":"..."}` or `{"kind":"agent_turn","message":"...","timeout_secs":300}` |
+| `delivery` | object | No | Delivery target: `{"kind":"none"}` or `{"kind":"channel","channel":"telegram"}` or `{"kind":"last_channel"}` |
+| `one_shot` | boolean | No | If true, auto-delete after execution (default: false) |
+
+**Returns:** The created job ID.
+
+```json
+{
+  "name": "daily-report",
+  "schedule": { "kind": "cron", "expr": "0 9 * * *" },
+  "action": { "kind": "agent_turn", "message": "Generate the daily status report", "timeout_secs": 120 },
+  "delivery": { "kind": "channel", "channel": "slack" }
+}
+```
+
+### `cron_list`
+
+List all scheduled/cron jobs for the current agent.
+
+*No parameters.*
+
+**Returns:** Array of jobs with IDs, names, schedules, and next run times.
+
+### `cron_cancel`
+
+Cancel a scheduled/cron job by its ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `job_id` | string | Yes | The UUID of the cron job to cancel |
+
+**Returns:** Confirmation of cancellation.
+
+```json
+{ "job_id": "550e8400-e29b-41d4-a716-446655440000" }
+```
+
+---
+
+## Channel Messaging
+
+### `channel_send`
+
+Send a message or media to a user on a configured channel (email, Telegram, Slack, Discord, etc). Supports text, images, and file attachments.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `channel` | string | Yes | Channel adapter name (e.g., `email`, `telegram`, `slack`, `discord`) |
+| `recipient` | string | Yes | Platform-specific recipient identifier (email address, user ID, etc.) |
+| `subject` | string | No | Subject line (used for email; ignored for other channels) |
+| `message` | string | No | Message body (required for text; optional caption for media) |
+| `image_url` | string | No | URL of an image to send (Telegram, Discord, Slack) |
+| `file_url` | string | No | URL of a file to send as attachment |
+| `file_path` | string | No | Local file path to send as attachment |
+| `filename` | string | No | Filename for file attachments (defaults to basename of `file_path`) |
+| `thread_id` | string | No | Thread/topic ID to reply in (e.g., Telegram `message_thread_id`, Slack `thread_ts`) |
+
+**Returns:** Confirmation with message ID.
+
+```json
+{
+  "channel": "telegram",
+  "recipient": "123456789",
+  "message": "Build completed successfully!",
+  "image_url": "https://example.com/build-status.png"
+}
+```
+
+---
+
+## Hands
+
+Hands are curated autonomous capability packages -- pre-configured agents with specialized tool sets.
+
+### `hand_list`
+
+List available Hands and their activation status.
+
+*No parameters.*
+
+**Returns:** Array of available hands with metadata.
+
+### `hand_activate`
+
+Activate a Hand -- spawns a specialized autonomous agent with curated tools and skills.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `hand_id` | string | Yes | The ID of the hand to activate (e.g., `researcher`, `clip`, `browser`) |
+| `config` | object | No | Optional configuration overrides for the hand's settings |
+
+**Returns:** The activated hand instance ID and agent ID.
+
+```json
+{ "hand_id": "researcher", "config": { "max_depth": 3 } }
+```
+
+### `hand_status`
+
+Check the status and metrics of an active Hand.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `hand_id` | string | Yes | The ID of the hand to check status for |
+
+**Returns:** Status, uptime, and usage metrics.
+
+```json
+{ "hand_id": "researcher" }
+```
+
+### `hand_deactivate`
+
+Deactivate a running Hand and stop its agent.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `instance_id` | string | Yes | The UUID of the hand instance to deactivate |
+
+**Returns:** Confirmation of deactivation.
+
+```json
+{ "instance_id": "550e8400-e29b-41d4-a716-446655440000" }
+```
+
+---
+
+## A2A (Agent-to-Agent)
+
+Tools for communicating with external A2A-compatible agents over the network.
+
+### `a2a_discover`
+
+Discover an external A2A agent by fetching its agent card from a URL.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `url` | string | Yes | Base URL of the remote LibreFang/A2A-compatible agent (e.g., `https://agent.example.com`) |
+
+**Returns:** Agent card with name, description, skills, and supported protocols.
+
+```json
+{ "url": "https://agent.example.com" }
+```
+
+### `a2a_send`
+
+Send a task/message to an external A2A agent and get the response. Use `agent_name` for previously discovered agents or `agent_url` for direct addressing.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `message` | string | Yes | The task/message to send |
+| `agent_url` | string | No | Direct URL of the remote agent's A2A endpoint |
+| `agent_name` | string | No | Name of a previously discovered A2A agent |
+| `session_id` | string | No | Optional session ID for multi-turn conversations |
+
+**Returns:** The remote agent's response.
+
+```json
+{ "message": "Analyze this dataset for anomalies", "agent_name": "data-analyst" }
+```
+
+---
+
+## Speech
+
+Text-to-speech and speech-to-text conversion tools.
+
+### `text_to_speech`
+
+Convert text to speech audio. Auto-selects OpenAI or ElevenLabs. Saves audio to workspace `output/` directory.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `text` | string | Yes | The text to convert to speech (max 4096 chars) |
+| `voice` | string | No | Voice name: `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer` (default: `alloy`) |
+| `format` | string | No | Output format: `mp3`, `opus`, `aac`, `flac` (default: `mp3`) |
+
+**Returns:** File path of the generated audio.
+
+```json
+{ "text": "Hello, welcome to LibreFang!", "voice": "nova", "format": "mp3" }
+```
+
+### `speech_to_text`
+
+Transcribe audio to text using speech-to-text. Auto-selects Groq Whisper or OpenAI Whisper. Supported formats: mp3, wav, ogg, flac, m4a, webm.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | Yes | Path to the audio file (relative to workspace) |
+| `language` | string | No | Optional ISO-639-1 language code (e.g., `en`, `es`, `ja`) |
+
+**Returns:** The transcript text.
+
+```json
+{ "path": "recordings/interview.wav", "language": "en" }
+```
+
+---
+
+## Process Management
+
+Tools for managing long-running processes (REPLs, servers, watchers) within an agent session.
+
+### `process_start`
+
+Start a long-running process. Returns a process ID for subsequent operations. Max 5 processes per agent.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `command` | string | Yes | The executable to run (e.g., `python`, `node`, `npm`) |
+| `args` | array | No | Command-line arguments (e.g., `["-i"]` for interactive Python) |
+
+**Returns:** Process ID.
+
+```json
+{ "command": "python", "args": ["-i"] }
+```
+
+### `process_poll`
+
+Read accumulated stdout/stderr from a running process. Non-blocking: returns whatever output has buffered since the last poll.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `process_id` | string | Yes | The process ID returned by `process_start` |
+
+**Returns:** Buffered stdout and stderr output.
+
+```json
+{ "process_id": "proc-001" }
+```
+
+### `process_write`
+
+Write data to a running process's stdin. A newline is appended automatically if not present.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `process_id` | string | Yes | The process ID returned by `process_start` |
+| `data` | string | Yes | The data to write to stdin |
+
+**Returns:** Confirmation.
+
+```json
+{ "process_id": "proc-001", "data": "print('hello world')" }
+```
+
+### `process_kill`
+
+Terminate a running process and clean up its resources.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `process_id` | string | Yes | The process ID returned by `process_start` |
+
+**Returns:** Confirmation of termination.
+
+```json
+{ "process_id": "proc-001" }
+```
+
+### `process_list`
+
+List all running processes for the current agent, including their IDs, commands, uptime, and alive status.
+
+*No parameters.*
+
+**Returns:** Array of running processes.
+
+---
+
+## Sandbox
+
+### `docker_exec`
+
+Execute a command inside a Docker container sandbox. Provides OS-level isolation with resource limits, network isolation, and capability dropping. Requires Docker to be installed and `docker.enabled = true` in config.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `command` | string | Yes | The command to execute inside the container |
+
+**Returns:** Command output from the container.
+
+```json
+{ "command": "python3 -c \"print('sandboxed execution')\"" }
+```
+
+---
+
+## System
+
+### `system_time`
+
+Get the current date, time, and timezone.
+
+*No parameters.*
+
+**Returns:** ISO 8601 timestamp, Unix epoch seconds, and timezone info.
+
+---
+
+## Canvas
+
+### `canvas_present`
+
+Present an interactive HTML canvas to the user. The HTML is sanitized (no scripts, no event handlers) and rendered in the dashboard panel. Use for rich data visualizations, formatted reports, or interactive UI.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `html` | string | Yes | HTML content to present. Must not contain `<script>` tags, event handlers, or `javascript:` URLs. |
+| `title` | string | No | Optional title for the canvas panel |
+
+**Returns:** Confirmation with the saved file path.
+
+```json
+{
+  "html": "<div style=\"padding:20px\"><h2>Sales Report</h2><table><tr><th>Q1</th><td>$1.2M</td></tr></table></div>",
+  "title": "Q1 Sales Report"
+}
+```
+
+---
+
+## Capability Mapping
+
+Tools are granted to agents through the capability system. Here is the mapping from capability names to the tools they unlock:
+
+| Capability | Tools |
+|-----------|-------|
+| `file_read` | `file_read`, `file_list` |
+| `file_write` | `file_write`, `apply_patch` |
+| `web` | `web_fetch`, `web_search` |
+| `shell` | `shell_exec` |
+| `agent` | `agent_send`, `agent_spawn`, `agent_list`, `agent_kill`, `agent_find` |
+| `memory` | `memory_store`, `memory_recall` |
+| `task` | `task_post`, `task_claim`, `task_complete`, `task_list` |
+| `event` | `event_publish` |
+| `schedule` | `schedule_create`, `schedule_list`, `schedule_delete` |
+| `knowledge` | `knowledge_add_entity`, `knowledge_add_relation`, `knowledge_query` |
+| `image` | `image_analyze`, `image_generate` |
+| `media` | `media_describe`, `media_transcribe` |
+| `browser` | `browser_navigate`, `browser_click`, `browser_type`, `browser_screenshot`, `browser_read_page`, `browser_close`, `browser_scroll`, `browser_wait`, `browser_run_js`, `browser_back` |
+| `cron` | `cron_create`, `cron_list`, `cron_cancel` |
+| `channel` | `channel_send` |
+| `hand` | `hand_list`, `hand_activate`, `hand_status`, `hand_deactivate` |
+| `a2a` | `a2a_discover`, `a2a_send` |
+| `speech` | `text_to_speech`, `speech_to_text` |
+| `process` | `process_start`, `process_poll`, `process_write`, `process_kill`, `process_list` |
+| `docker` | `docker_exec` |
+| `system` | `system_time`, `location_get` |
+| `canvas` | `canvas_present` |
+
+Example agent manifest with capabilities:
+
+```toml
+[capabilities]
+tools = [
+  "file_read", "file_write", "web", "shell",
+  "browser", "knowledge", "memory"
+]
+```
+
+export const sections = [];

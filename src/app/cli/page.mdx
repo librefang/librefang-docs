@@ -58,7 +58,25 @@ These options apply to all commands.
 
 ---
 
-## Command Reference
+## Command Quick Reference
+
+| Category | Commands |
+|---|---|
+| **Core** | `init`, `start`, `stop`, `restart`, `status`, `health`, `doctor`, `dashboard`, `tui`, `chat`, `message`, `logs`, `sessions`, `completion`, `mcp` |
+| **Agent Management** | `agent new\|spawn\|list\|chat\|kill\|set`, `spawn`, `agents`, `kill` |
+| **Workflow & Automation** | `workflow list\|create\|run`, `trigger list\|create\|delete`, `cron list\|create\|delete\|enable\|disable`, `approvals list\|approve\|reject` |
+| **Skills & Tools** | `skill install\|list\|remove\|search\|test\|publish\|create`, `hand list\|active\|status\|install\|activate\|deactivate\|info\|check-deps\|install-deps\|pause\|resume` |
+| **Models** | `models list\|aliases\|providers\|set` |
+| **Channels** | `channel list\|setup\|test\|enable\|disable` |
+| **Integrations** | `integrations`, `add`, `remove` |
+| **Configuration** | `config show\|edit\|get\|set\|unset\|set-key\|delete-key\|test-key` |
+| **Security** | `security status\|audit\|verify`, `vault init\|set\|list\|remove`, `auth chatgpt` |
+| **Memory & Devices** | `memory list\|get\|set\|delete`, `devices list\|pair\|remove`, `qr`, `webhooks list\|create\|delete\|test` |
+| **System** | `system info\|version`, `update`, `migrate`, `onboard`, `setup`, `configure`, `new`, `reset`, `uninstall`, `gateway start\|restart\|stop\|status` |
+
+---
+
+## Core Commands
 
 ### librefang (no subcommand)
 
@@ -112,35 +130,38 @@ librefang init --quick
 Start the LibreFang daemon (kernel + API server).
 
 ```
-librefang start [--config <PATH>]
+librefang start [--config <PATH>] [--tail | --foreground]
 ```
 
 **Behavior:**
 
 - Checks if a daemon is already running; exits with an error if so.
 - Boots the LibreFang kernel (loads config, initializes SQLite database, loads agents, connects MCP servers, starts background tasks).
-- Starts the HTTP API server on the address specified in `config.toml` (default: `127.0.0.1:4200`).
-- Writes `daemon.json` to `~/.librefang/` so other CLI commands can discover the running daemon.
-- Blocks until interrupted with `Ctrl+C`.
+- Starts the HTTP API server on the address specified in `config.toml` (default: `127.0.0.1:4545`).
+- Writes `daemon.json` to the configured LibreFang home directory so other CLI commands can discover the running daemon.
+- Launches the daemon in the background by default and returns after the health endpoint responds.
+- Writes daemon startup output to `~/.librefang/logs/daemon.log`.
+- If `--tail` is passed, follows `~/.librefang/logs/daemon.log` after launch. `Ctrl+C` stops tailing only; the daemon keeps running.
+- If `--foreground` is passed, keeps the daemon attached to the current terminal and streams logs to stdout/stderr. Use this for Docker, systemd, or other process supervisors.
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--tail` | Follow `~/.librefang/logs/daemon.log` after the daemon is launched. |
+| `--foreground` | Keep the daemon attached to the current terminal instead of detaching. |
 
 **Output:**
 
 ```
-  LibreFang Agent OS v0.1.0
+  [ok] Daemon started in background
 
-  Starting daemon...
+  PID:        42431
+  API:        http://127.0.0.1:4545
+  Dashboard:  http://127.0.0.1:4545/
+  Log:        /Users/alice/.librefang/logs/daemon.log
 
-  [ok] Kernel booted (groq/llama-3.3-70b-versatile)
-  [ok] 50 models available
-  [ok] 3 agent(s) loaded
-
-  API:        http://127.0.0.1:4200
-  Dashboard:  http://127.0.0.1:4200/
-  Provider:   groq
-  Model:      llama-3.3-70b-versatile
-
-  hint: Open the dashboard in your browser, or run `librefang chat`
-  hint: Press Ctrl+C to stop the daemon
+  hint: Use `librefang stop` to stop the daemon
 ```
 
 **Example:**
@@ -151,6 +172,66 @@ librefang start
 
 # Start with custom config
 librefang start --config /path/to/config.toml
+
+# Start and follow daemon logs
+librefang start --tail
+
+# Start in the foreground for Docker/systemd
+librefang start --foreground
+```
+
+---
+
+### librefang stop
+
+Stop the running daemon.
+
+```
+librefang stop
+```
+
+**Behavior:**
+
+- Sends a shutdown request to the running daemon.
+- Exits with an error if no daemon is running.
+
+**Example:**
+
+```bash
+librefang stop
+```
+
+---
+
+### librefang restart
+
+Restart the LibreFang daemon.
+
+```
+librefang restart [--config <PATH>] [--tail | --foreground]
+```
+
+**Behavior:**
+
+- If a daemon is running, sends a shutdown request and waits for it to stop.
+- Starts the daemon again using the same startup flow as `librefang start`.
+- If no daemon is running, behaves like `librefang start` and prints a hint.
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--tail` | Follow `~/.librefang/logs/daemon.log` after the daemon is relaunched. |
+| `--foreground` | Keep the relaunched daemon attached to the current terminal instead of detaching. |
+
+**Example:**
+
+```bash
+librefang restart
+
+librefang restart --tail
+
+librefang restart --foreground
 ```
 
 ---
@@ -184,6 +265,35 @@ librefang status --json | jq '.agent_count'
 
 ---
 
+### librefang health
+
+Quick daemon health check.
+
+```
+librefang health [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+**Behavior:**
+
+- Checks if the daemon is running and responsive.
+- Returns health status information.
+
+**Example:**
+
+```bash
+librefang health
+
+librefang health --json
+```
+
+---
+
 ### librefang doctor
 
 Run diagnostic checks on the LibreFang installation.
@@ -205,7 +315,7 @@ librefang doctor [--json] [--repair]
 2. **.env file** -- exists and has correct permissions (0600 on Unix)
 3. **Config TOML syntax** -- `config.toml` parses without errors
 4. **Daemon status** -- whether a daemon is running
-5. **Port 4200 availability** -- if daemon is not running, checks if the port is free
+5. **Port 4545 availability** -- if daemon is not running, checks if the port is free
 6. **Stale daemon.json** -- leftover `daemon.json` from a crashed daemon
 7. **Database file** -- SQLite magic bytes validation
 8. **Disk space** -- warns if less than 100MB available (Unix only)
@@ -238,13 +348,158 @@ librefang dashboard
 **Behavior:**
 
 - Requires a running daemon.
-- Opens the daemon URL (e.g. `http://127.0.0.1:4200/`) in the system browser.
+- Opens the daemon URL (e.g. `http://127.0.0.1:4545/`) in the system browser.
 - Copies the URL to the system clipboard (uses PowerShell on Windows, `pbcopy` on macOS, `xclip`/`xsel` on Linux).
 
 **Example:**
 
 ```bash
 librefang dashboard
+```
+
+---
+
+### librefang tui
+
+Launch the interactive terminal dashboard.
+
+```
+librefang tui
+```
+
+**Behavior:**
+
+- Opens the same ratatui-based TUI as running `librefang` with no subcommand.
+- Provides a full-screen terminal interface with panels for agents, chat, workflows, channels, skills, and settings.
+
+**Example:**
+
+```bash
+librefang tui
+```
+
+---
+
+### librefang chat
+
+Quick alias for starting a chat session.
+
+```
+librefang chat [<AGENT>]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<AGENT>` | Optional agent name or UUID. |
+
+**Behavior:**
+
+- **Daemon mode:** Finds the agent by name or ID among running agents. If no agent name is given, uses the first available agent. If no agents exist, suggests `librefang agent new`.
+- **Standalone mode (no daemon):** Boots an in-process kernel and auto-spawns an agent from templates. Searches for an agent matching the given name, then falls back to `assistant`, then to the first available template.
+
+This is the simplest way to start chatting -- it works with or without a daemon.
+
+**Example:**
+
+```bash
+# Chat with the default agent
+librefang chat
+
+# Chat with a specific agent by name
+librefang chat coder
+
+# Chat with a specific agent by UUID
+librefang chat a1b2c3d4-e5f6-7890-abcd-ef1234567890
+```
+
+---
+
+### librefang message
+
+Send a one-shot message to an agent and print the response.
+
+```
+librefang message <AGENT> <TEXT> [--json]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<AGENT>` | Agent name or ID. |
+| `<TEXT>` | Message text to send. |
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+**Example:**
+
+```bash
+librefang message coder "Explain this error: cannot borrow as mutable"
+
+librefang message assistant "Summarize today's news" --json
+```
+
+---
+
+### librefang logs
+
+Tail the LibreFang daemon log file.
+
+```
+librefang logs [--lines <N>] [--follow]
+```
+
+**Options:**
+
+| Option | Default | Description |
+|---|---|---|
+| `--lines <N>` | `50` | Number of lines to show. |
+| `--follow`, `-f` | -- | Follow log output in real time. |
+
+**Example:**
+
+```bash
+# Show last 50 lines
+librefang logs
+
+# Show last 200 lines and follow
+librefang logs --lines 200 --follow
+```
+
+---
+
+### librefang sessions
+
+List conversation sessions.
+
+```
+librefang sessions [<AGENT>] [--json]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<AGENT>` | Optional agent name or ID to filter by. |
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+**Example:**
+
+```bash
+librefang sessions
+
+librefang sessions coder --json
 ```
 
 ---
@@ -281,7 +536,52 @@ librefang completion powershell > librefang.ps1
 
 ---
 
-## Agent Commands
+### librefang mcp
+
+Start an MCP (Model Context Protocol) server over stdio.
+
+```
+librefang mcp
+```
+
+**Behavior:**
+
+- Exposes running LibreFang agents as MCP tools via JSON-RPC 2.0 over stdin/stdout with Content-Length framing.
+- Each agent becomes a callable tool named `librefang_agent_<name>` (hyphens replaced with underscores).
+- Connects to a running daemon via HTTP if available; otherwise boots an in-process kernel.
+- Protocol version: `2024-11-05`.
+- Maximum message size: 10MB (security limit).
+
+**Supported MCP methods:**
+
+| Method | Description |
+|---|---|
+| `initialize` | Returns server capabilities and info. |
+| `tools/list` | Lists all available agent tools. |
+| `tools/call` | Sends a message to an agent and returns the response. |
+
+**Tool input schema:**
+
+Each agent tool accepts a single `message` (string) argument.
+
+**Integration with Claude Desktop / other MCP clients:**
+
+Add to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "librefang": {
+      "command": "librefang",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+---
+
+## Agent Management
 
 ### librefang agent new
 
@@ -324,7 +624,7 @@ librefang agent new assistant
 Spawn an agent from a custom manifest file.
 
 ```
-librefang agent spawn <MANIFEST>
+librefang agent spawn <MANIFEST> [--name <NAME>] [--dry-run]
 ```
 
 **Arguments:**
@@ -333,16 +633,19 @@ librefang agent spawn <MANIFEST>
 |---|---|
 | `<MANIFEST>` | Path to an agent manifest TOML file. |
 
-**Behavior:**
+**Options:**
 
-- Reads and parses the TOML manifest file.
-- In daemon mode: sends the raw TOML to `POST /api/agents`.
-- In standalone mode: boots an in-process kernel and spawns the agent locally.
+| Option | Description |
+|---|---|
+| `--name <NAME>` | Override the agent name before spawning. |
+| `--dry-run` | Parse and preview the manifest without spawning an agent. |
 
 **Example:**
 
 ```bash
 librefang agent spawn ./my-agent/agent.toml
+
+librefang agent spawn ./my-agent/agent.toml --name my-custom-agent --dry-run
 ```
 
 ---
@@ -424,13 +727,52 @@ librefang agent kill a1b2c3d4-e5f6-7890-abcd-ef1234567890
 
 ---
 
-## Workflow Commands
+### librefang agent set
 
-All workflow commands require a running daemon.
+Set an agent property (e.g., model).
+
+```
+librefang agent set <AGENT_ID> <FIELD> <VALUE>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<AGENT_ID>` | Agent UUID. |
+| `<FIELD>` | Field to set (e.g. `model`). |
+| `<VALUE>` | New value. |
+
+**Example:**
+
+```bash
+librefang agent set a1b2c3d4 model gpt-4o
+```
+
+---
+
+### Top-level agent aliases
+
+These are convenience aliases for common agent commands:
+
+```bash
+# Spawn an agent (alias for `agent new`)
+librefang spawn [<TARGET>] [--template <PATH>] [--name <NAME>] [--dry-run]
+
+# List running agents (alias for `agent list`)
+librefang agents [--json]
+
+# Kill an agent (alias for `agent kill`)
+librefang kill <AGENT_ID>
+```
+
+---
+
+## Workflow & Automation
 
 ### librefang workflow list
 
-List all registered workflows.
+List all registered workflows. Requires a running daemon.
 
 ```
 librefang workflow list
@@ -442,7 +784,7 @@ librefang workflow list
 
 ### librefang workflow create
 
-Create a workflow from a JSON definition file.
+Create a workflow from a JSON definition file. Requires a running daemon.
 
 ```
 librefang workflow create <FILE>
@@ -464,7 +806,7 @@ librefang workflow create ./my-workflow.json
 
 ### librefang workflow run
 
-Execute a workflow by ID.
+Execute a workflow by ID. Requires a running daemon.
 
 ```
 librefang workflow run <WORKFLOW_ID> <INPUT>
@@ -485,13 +827,9 @@ librefang workflow run abc123 "Analyze this code for security issues"
 
 ---
 
-## Trigger Commands
-
-All trigger commands require a running daemon.
-
 ### librefang trigger list
 
-List all event triggers.
+List all event triggers. Requires a running daemon.
 
 ```
 librefang trigger list [--agent-id <ID>]
@@ -509,7 +847,7 @@ librefang trigger list [--agent-id <ID>]
 
 ### librefang trigger create
 
-Create an event trigger for an agent.
+Create an event trigger for an agent. Requires a running daemon.
 
 ```
 librefang trigger create <AGENT_ID> <PATTERN_JSON> [--prompt <TEMPLATE>] [--max-fires <N>]
@@ -549,7 +887,7 @@ librefang trigger create <AGENT_ID> '{"all":{}}' --max-fires 10
 
 ### librefang trigger delete
 
-Delete a trigger by ID.
+Delete a trigger by ID. Requires a running daemon.
 
 ```
 librefang trigger delete <TRIGGER_ID>
@@ -563,7 +901,137 @@ librefang trigger delete <TRIGGER_ID>
 
 ---
 
-## Skill Commands
+### librefang cron list
+
+List scheduled jobs.
+
+```
+librefang cron list [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+---
+
+### librefang cron create
+
+Create a new scheduled job.
+
+```
+librefang cron create <AGENT> <SPEC> <PROMPT> [--name <NAME>]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<AGENT>` | Agent name or ID to run. |
+| `<SPEC>` | Cron expression (e.g. `"0 */6 * * *"`). |
+| `<PROMPT>` | Prompt to send when the job fires. |
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--name <NAME>` | Optional job name (auto-generated if omitted). |
+
+**Example:**
+
+```bash
+librefang cron create researcher "0 9 * * *" "Summarize today's AI news" --name daily-news
+```
+
+---
+
+### librefang cron delete
+
+Delete a scheduled job.
+
+```
+librefang cron delete <ID>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<ID>` | Job ID. |
+
+---
+
+### librefang cron enable
+
+Enable a disabled job.
+
+```
+librefang cron enable <ID>
+```
+
+---
+
+### librefang cron disable
+
+Disable a job without deleting it.
+
+```
+librefang cron disable <ID>
+```
+
+---
+
+### librefang approvals list
+
+List pending execution approvals.
+
+```
+librefang approvals list [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+---
+
+### librefang approvals approve
+
+Approve a pending execution request.
+
+```
+librefang approvals approve <ID>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<ID>` | Approval ID. |
+
+---
+
+### librefang approvals reject
+
+Reject a pending execution request.
+
+```
+librefang approvals reject <ID>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<ID>` | Approval ID. |
+
+---
+
+## Skills & Tools
 
 ### librefang skill list
 
@@ -657,6 +1125,79 @@ librefang skill search "docker kubernetes"
 
 ---
 
+### librefang skill test
+
+Validate a local skill and optionally execute one tool.
+
+```
+librefang skill test [<PATH>] [--tool <NAME>] [--input <JSON>]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<PATH>` | Skill directory, `skill.toml`, `SKILL.md`, or `package.json`. Defaults to the current directory. |
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--tool <NAME>` | Tool to execute after validation. Defaults to the first declared tool. |
+| `--input <JSON>` | JSON payload passed to the selected tool. Defaults to `{}`. |
+
+**Behavior:**
+
+- Validates the manifest and runtime entrypoint.
+- Runs security and prompt-injection scans.
+- Executes the selected tool for Python, Node.js, and prompt-only skills when possible.
+
+**Example:**
+
+```bash
+librefang skill test ./my-skill --tool summarize_url --input '{"url":"https://example.com"}'
+```
+
+---
+
+### librefang skill publish
+
+Package a local skill and publish it to a FangHub GitHub release.
+
+```
+librefang skill publish [<PATH>] [--repo <OWNER/NAME>] [--tag <TAG>] [--output <DIR>] [--dry-run]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<PATH>` | Skill directory, `skill.toml`, `SKILL.md`, or `package.json`. Defaults to the current directory. |
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--repo <OWNER/NAME>` | Target GitHub repo. Defaults to `librefang-skills/<skill-name>`. |
+| `--tag <TAG>` | Release tag to create or update. Defaults to `v<skill-version>`. |
+| `--output <DIR>` | Output directory for the generated zip bundle. Defaults to `<skill-dir>/dist`. |
+| `--dry-run` | Validate and package locally without uploading to GitHub. |
+
+**Behavior:**
+
+- Validates the skill locally before packaging.
+- Builds a zip bundle suitable for FangHub distribution.
+- Uploads the bundle to the selected GitHub release when `GITHUB_TOKEN` or `GH_TOKEN` is configured.
+
+**Example:**
+
+```bash
+librefang skill publish ./my-skill --dry-run
+librefang skill publish ./my-skill --repo librefang-skills/my-skill
+```
+
+---
+
 ### librefang skill create
 
 Interactively scaffold a new skill project.
@@ -687,7 +1228,233 @@ librefang skill create
 
 ---
 
-## Channel Commands
+### librefang hand list
+
+List all available hands.
+
+```
+librefang hand list
+```
+
+---
+
+### librefang hand active
+
+Show currently active hand instances.
+
+```
+librefang hand active
+```
+
+---
+
+### librefang hand status
+
+Show active status for a hand or hand instance.
+
+```
+librefang hand status [<ID>]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<ID>` | Optional hand ID or instance ID. Shows all active hands if omitted. |
+
+---
+
+### librefang hand install
+
+Install a hand from a local directory containing `HAND.toml`.
+
+```
+librefang hand install <PATH>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<PATH>` | Path to the hand directory (must contain `HAND.toml`). |
+
+---
+
+### librefang hand activate
+
+Activate a hand by ID.
+
+```
+librefang hand activate <ID>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<ID>` | Hand ID (e.g. `clip`, `lead`, `researcher`). |
+
+---
+
+### librefang hand deactivate
+
+Deactivate an active hand by hand ID.
+
+```
+librefang hand deactivate <ID>
+```
+
+---
+
+### librefang hand info
+
+Show detailed info about a hand.
+
+```
+librefang hand info <ID>
+```
+
+---
+
+### librefang hand check-deps
+
+Check dependency status for a hand.
+
+```
+librefang hand check-deps <ID>
+```
+
+---
+
+### librefang hand install-deps
+
+Install missing dependencies for a hand.
+
+```
+librefang hand install-deps <ID>
+```
+
+---
+
+### librefang hand pause
+
+Pause a running hand by hand ID or instance ID.
+
+```
+librefang hand pause <ID>
+```
+
+---
+
+### librefang hand resume
+
+Resume a paused hand by hand ID or instance ID.
+
+```
+librefang hand resume <ID>
+```
+
+---
+
+## Models
+
+### librefang models list
+
+List available models, optionally filtered by provider.
+
+```
+librefang models list [--provider <NAME>] [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--provider <NAME>` | Filter by provider name. |
+| `--json` | Output as JSON for scripting. |
+
+**Example:**
+
+```bash
+librefang models list
+
+librefang models list --provider groq
+
+librefang models list --json
+```
+
+---
+
+### librefang models aliases
+
+Show model aliases (shorthand names).
+
+```
+librefang models aliases [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+**Example:**
+
+```bash
+librefang models aliases
+```
+
+---
+
+### librefang models providers
+
+List known LLM providers and their auth status.
+
+```
+librefang models providers [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+**Example:**
+
+```bash
+librefang models providers
+```
+
+---
+
+### librefang models set
+
+Set the default model for the daemon.
+
+```
+librefang models set [<MODEL>]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<MODEL>` | Model ID or alias (e.g. `gpt-4o`, `claude-sonnet`). Interactive picker if omitted. |
+
+**Example:**
+
+```bash
+librefang models set gpt-4o
+
+# Interactive picker
+librefang models set
+```
+
+---
+
+## Channels
 
 ### librefang channel list
 
@@ -744,7 +1511,7 @@ librefang channel setup slack
 
 ### librefang channel test
 
-Send a test message through a configured channel.
+Send a test message through a configured channel. Requires a running daemon.
 
 ```
 librefang channel test <CHANNEL>
@@ -755,8 +1522,6 @@ librefang channel test <CHANNEL>
 | Argument | Description |
 |---|---|
 | `<CHANNEL>` | Channel name to test. |
-
-Requires a running daemon. Sends `POST /api/channels/<channel>/test`.
 
 **Example:**
 
@@ -774,12 +1539,6 @@ Enable a channel integration.
 librefang channel enable <CHANNEL>
 ```
 
-**Arguments:**
-
-| Argument | Description |
-|---|---|
-| `<CHANNEL>` | Channel name to enable. |
-
 In daemon mode: sends `POST /api/channels/<channel>/enable`. Without a daemon: prints a note that the change will take effect on next start.
 
 ---
@@ -792,17 +1551,89 @@ Disable a channel without removing its configuration.
 librefang channel disable <CHANNEL>
 ```
 
-**Arguments:**
-
-| Argument | Description |
-|---|---|
-| `<CHANNEL>` | Channel name to disable. |
-
 In daemon mode: sends `POST /api/channels/<channel>/disable`. Without a daemon: prints a note to edit `config.toml`.
 
 ---
 
-## Config Commands
+## Integrations
+
+### librefang integrations
+
+List or search available integrations.
+
+```
+librefang integrations [<QUERY>]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<QUERY>` | Optional search query. Lists all integrations if omitted. |
+
+**Example:**
+
+```bash
+librefang integrations
+
+librefang integrations github
+```
+
+---
+
+### librefang add
+
+Add an integration (one-click MCP server setup).
+
+```
+librefang add <NAME> [--key <TOKEN>]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<NAME>` | Integration name (e.g. `github`, `slack`, `notion`). |
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--key <TOKEN>` | API key or token to store in the vault. |
+
+**Example:**
+
+```bash
+librefang add github
+
+librefang add slack --key xoxb-...
+```
+
+---
+
+### librefang remove
+
+Remove an installed integration.
+
+```
+librefang remove <NAME>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<NAME>` | Integration name. |
+
+**Example:**
+
+```bash
+librefang remove github
+```
+
+---
+
+## Configuration
 
 ### librefang config show
 
@@ -849,7 +1680,7 @@ librefang config get default_model.provider
 # groq
 
 librefang config get api_listen
-# 127.0.0.1:4200
+# 127.0.0.1:4545
 
 librefang config get memory.decay_rate
 # 0.05
@@ -879,7 +1710,31 @@ librefang config set <KEY> <VALUE>
 ```bash
 librefang config set default_model.provider anthropic
 librefang config set default_model.model claude-sonnet-4-20250514
-librefang config set api_listen "0.0.0.0:4200"
+librefang config set api_listen "0.0.0.0:4545"
+```
+
+---
+
+### librefang config unset
+
+Remove a config key from the configuration file.
+
+```
+librefang config unset <KEY>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<KEY>` | Dotted key path to remove (e.g. `api.cors_origin`). |
+
+**Warning:** This command re-serializes the TOML file, which strips all comments.
+
+**Example:**
+
+```bash
+librefang config unset api.cors_origin
 ```
 
 ---
@@ -968,45 +1823,343 @@ librefang config test-key groq
 
 ---
 
-## Quick Chat
+## Security
 
-### librefang chat
+### librefang security status
 
-Quick alias for starting a chat session.
+Show security status summary.
 
 ```
-librefang chat [<AGENT>]
+librefang security status [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+---
+
+### librefang security audit
+
+Show recent audit trail entries.
+
+```
+librefang security audit [--limit <N>] [--json]
+```
+
+**Options:**
+
+| Option | Default | Description |
+|---|---|---|
+| `--limit <N>` | `20` | Maximum number of entries to show. |
+| `--json` | -- | Output as JSON for scripting. |
+
+---
+
+### librefang security verify
+
+Verify audit trail integrity (Merkle chain).
+
+```
+librefang security verify
+```
+
+---
+
+### librefang vault init
+
+Initialize the credential vault.
+
+```
+librefang vault init
+```
+
+---
+
+### librefang vault set
+
+Store a credential in the vault.
+
+```
+librefang vault set <KEY>
 ```
 
 **Arguments:**
 
 | Argument | Description |
 |---|---|
-| `<AGENT>` | Optional agent name or UUID. |
+| `<KEY>` | Credential key (env var name). Prompts interactively for the value. |
 
-**Behavior:**
+---
 
-- **Daemon mode:** Finds the agent by name or ID among running agents. If no agent name is given, uses the first available agent. If no agents exist, suggests `librefang agent new`.
-- **Standalone mode (no daemon):** Boots an in-process kernel and auto-spawns an agent from templates. Searches for an agent matching the given name, then falls back to `assistant`, then to the first available template.
+### librefang vault list
 
-This is the simplest way to start chatting -- it works with or without a daemon.
+List all keys in the vault (values are hidden).
 
-**Example:**
-
-```bash
-# Chat with the default agent
-librefang chat
-
-# Chat with a specific agent by name
-librefang chat coder
-
-# Chat with a specific agent by UUID
-librefang chat a1b2c3d4-e5f6-7890-abcd-ef1234567890
+```
+librefang vault list
 ```
 
 ---
 
-## Migration
+### librefang vault remove
+
+Remove a credential from the vault.
+
+```
+librefang vault remove <KEY>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<KEY>` | Credential key to remove. |
+
+---
+
+### librefang auth chatgpt
+
+Authenticate with ChatGPT (browser-based session token flow).
+
+```
+librefang auth chatgpt
+```
+
+---
+
+## Memory & Devices
+
+### librefang memory list
+
+List KV pairs for an agent.
+
+```
+librefang memory list <AGENT> [--json]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<AGENT>` | Agent name or ID. |
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+---
+
+### librefang memory get
+
+Get a specific KV value.
+
+```
+librefang memory get <AGENT> <KEY> [--json]
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<AGENT>` | Agent name or ID. |
+| `<KEY>` | Key name. |
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+---
+
+### librefang memory set
+
+Set a KV value.
+
+```
+librefang memory set <AGENT> <KEY> <VALUE>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<AGENT>` | Agent name or ID. |
+| `<KEY>` | Key name. |
+| `<VALUE>` | Value to store. |
+
+---
+
+### librefang memory delete
+
+Delete a KV pair.
+
+```
+librefang memory delete <AGENT> <KEY>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<AGENT>` | Agent name or ID. |
+| `<KEY>` | Key name. |
+
+---
+
+### librefang devices list
+
+List paired devices.
+
+```
+librefang devices list [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+---
+
+### librefang devices pair
+
+Start a new device pairing flow.
+
+```
+librefang devices pair
+```
+
+---
+
+### librefang devices remove
+
+Remove a paired device.
+
+```
+librefang devices remove <ID>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<ID>` | Device ID. |
+
+---
+
+### librefang qr
+
+Generate a QR code for device pairing.
+
+```
+librefang qr
+```
+
+---
+
+### librefang webhooks list
+
+List configured webhooks.
+
+```
+librefang webhooks list [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+---
+
+### librefang webhooks create
+
+Create a new webhook trigger.
+
+```
+librefang webhooks create <AGENT> <URL>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<AGENT>` | Agent name or ID. |
+| `<URL>` | Webhook callback URL. |
+
+---
+
+### librefang webhooks delete
+
+Delete a webhook.
+
+```
+librefang webhooks delete <ID>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<ID>` | Webhook ID. |
+
+---
+
+### librefang webhooks test
+
+Send a test payload to a webhook.
+
+```
+librefang webhooks test <ID>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<ID>` | Webhook ID. |
+
+---
+
+## Advanced
+
+### librefang update
+
+Update the CLI to the latest published release.
+
+```
+librefang update [--check] [--version <TAG>]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--check` | Check whether a newer release exists without installing it. |
+| `--version <TAG>` | Install a specific GitHub release tag instead of the latest release. |
+
+**Example:**
+
+```bash
+# Update to latest
+librefang update
+
+# Check for updates
+librefang update --check
+
+# Install specific version
+librefang update --version v0.5.0
+```
+
+---
 
 ### librefang migrate
 
@@ -1048,49 +2201,156 @@ librefang migrate --from autogpt
 
 ---
 
-## MCP Server
+### librefang onboard
 
-### librefang mcp
-
-Start an MCP (Model Context Protocol) server over stdio.
+Interactive onboarding wizard.
 
 ```
-librefang mcp
+librefang onboard [--quick]
 ```
 
-**Behavior:**
+**Options:**
 
-- Exposes running LibreFang agents as MCP tools via JSON-RPC 2.0 over stdin/stdout with Content-Length framing.
-- Each agent becomes a callable tool named `librefang_agent_<name>` (hyphens replaced with underscores).
-- Connects to a running daemon via HTTP if available; otherwise boots an in-process kernel.
-- Protocol version: `2024-11-05`.
-- Maximum message size: 10MB (security limit).
-
-**Supported MCP methods:**
-
-| Method | Description |
+| Option | Description |
 |---|---|
-| `initialize` | Returns server capabilities and info. |
-| `tools/list` | Lists all available agent tools. |
-| `tools/call` | Sends a message to an agent and returns the response. |
+| `--quick` | Quick non-interactive mode. |
 
-**Tool input schema:**
+---
 
-Each agent tool accepts a single `message` (string) argument.
+### librefang setup
 
-**Integration with Claude Desktop / other MCP clients:**
+Quick non-interactive initialization.
 
-Add to your MCP client configuration:
+```
+librefang setup [--quick]
+```
 
-```json
-{
-  "mcpServers": {
-    "librefang": {
-      "command": "librefang",
-      "args": ["mcp"]
-    }
-  }
-}
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--quick` | Quick mode (same as `init --quick`). |
+
+---
+
+### librefang configure
+
+Interactive setup wizard for credentials and channels.
+
+```
+librefang configure
+```
+
+---
+
+### librefang new
+
+Scaffold a new skill or integration template.
+
+```
+librefang new <KIND>
+```
+
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `<KIND>` | What to scaffold. One of: `skill`, `integration`. |
+
+**Example:**
+
+```bash
+librefang new skill
+
+librefang new integration
+```
+
+---
+
+### librefang system info
+
+Show detailed system info.
+
+```
+librefang system info [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+---
+
+### librefang system version
+
+Show version information.
+
+```
+librefang system version [--json]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--json` | Output as JSON for scripting. |
+
+---
+
+### librefang gateway
+
+Daemon control (alias for start/stop/restart/status).
+
+```
+librefang gateway start [--tail] [--foreground]
+librefang gateway restart [--tail] [--foreground]
+librefang gateway stop
+librefang gateway status [--json]
+```
+
+The `gateway` subcommand provides an alternate interface for daemon lifecycle management, equivalent to the top-level `start`, `stop`, `restart`, and `status` commands.
+
+---
+
+### librefang reset
+
+Reset local config and state.
+
+```
+librefang reset [--confirm]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--confirm` | Skip confirmation prompt. |
+
+---
+
+### librefang uninstall
+
+Completely remove LibreFang from your system.
+
+```
+librefang uninstall [--confirm] [--keep-config]
+```
+
+**Options:**
+
+| Option | Description |
+|---|---|
+| `--confirm` (or `--yes`) | Skip confirmation prompt. |
+| `--keep-config` | Keep config files (`config.toml`, `.env`, `secrets.env`). |
+
+**Example:**
+
+```bash
+librefang uninstall
+
+librefang uninstall --confirm --keep-config
 ```
 
 ---
@@ -1099,7 +2359,7 @@ Add to your MCP client configuration:
 
 The CLI uses a two-step mechanism to detect a running daemon:
 
-1. **Read `daemon.json`:** On startup, the daemon writes `~/.librefang/daemon.json` containing the listen address (e.g. `127.0.0.1:4200`). The CLI reads this file to learn where the daemon is.
+1. **Read `daemon.json`:** On startup, the daemon writes `~/.librefang/daemon.json` containing the listen address (e.g. `127.0.0.1:4545`). The CLI reads this file to learn where the daemon is.
 
 2. **Health check:** The CLI sends `GET http://<listen_addr>/api/health` with a 2-second timeout. If the health check succeeds, the daemon is considered running and the CLI uses HTTP to communicate with it.
 
@@ -1169,11 +2429,17 @@ librefang chat
 # Chat with a specific agent
 librefang chat coder
 
+# Send a one-shot message
+librefang message assistant "Summarize this paragraph"
+
 # Check what's running
 librefang status
 
 # Open the web dashboard
 librefang dashboard
+
+# Launch the TUI
+librefang tui
 ```
 
 ### Agent management
@@ -1191,8 +2457,30 @@ librefang agent list
 # Chat with an agent by UUID
 librefang agent chat <UUID>
 
+# Change an agent's model
+librefang agent set <UUID> model gpt-4o
+
 # Kill an agent
 librefang agent kill <UUID>
+```
+
+### Model management
+
+```bash
+# List all available models
+librefang models list
+
+# List models from a specific provider
+librefang models list --provider anthropic
+
+# Show model aliases
+librefang models aliases
+
+# Check provider status
+librefang models providers
+
+# Set default model
+librefang models set claude-sonnet
 ```
 
 ### Workflow automation
@@ -1206,6 +2494,25 @@ librefang workflow list
 
 # Run a workflow
 librefang workflow run <WORKFLOW_ID> "Review the latest PR"
+```
+
+### Cron jobs
+
+```bash
+# Schedule a daily news summary
+librefang cron create researcher "0 9 * * *" "Summarize AI news" --name daily-news
+
+# List jobs
+librefang cron list
+
+# Disable a job
+librefang cron disable <JOB_ID>
+
+# Re-enable a job
+librefang cron enable <JOB_ID>
+
+# Delete a job
+librefang cron delete <JOB_ID>
 ```
 
 ### Event triggers
@@ -1241,8 +2548,37 @@ librefang skill list
 # Create a new skill
 librefang skill create
 
+# Publish a skill
+librefang skill publish ./my-skill --dry-run
+
 # Remove a skill
 librefang skill remove code-reviewer
+```
+
+### Hand management
+
+```bash
+# List available hands
+librefang hand list
+
+# Show active hands
+librefang hand active
+
+# Activate a hand
+librefang hand activate researcher
+
+# Check hand dependencies
+librefang hand check-deps researcher
+
+# Install missing deps
+librefang hand install-deps researcher
+
+# Pause/resume a hand
+librefang hand pause researcher
+librefang hand resume researcher
+
+# Deactivate a hand
+librefang hand deactivate researcher
 ```
 
 ### Channel setup
@@ -1265,6 +2601,22 @@ librefang channel enable discord
 librefang channel disable slack
 ```
 
+### Integrations
+
+```bash
+# Browse integrations
+librefang integrations
+
+# Search for an integration
+librefang integrations github
+
+# Install an integration
+librefang add github --key ghp_...
+
+# Remove an integration
+librefang remove github
+```
+
 ### Configuration
 
 ```bash
@@ -1279,6 +2631,9 @@ librefang config set default_model.provider anthropic
 librefang config set default_model.model claude-sonnet-4-20250514
 librefang config set default_model.api_key_env ANTHROPIC_API_KEY
 
+# Remove a config key
+librefang config unset api.cors_origin
+
 # Manage API keys
 librefang config set-key anthropic
 librefang config test-key anthropic
@@ -1286,6 +2641,69 @@ librefang config delete-key openai
 
 # Open in editor
 librefang config edit
+```
+
+### Security & vault
+
+```bash
+# Security overview
+librefang security status
+
+# View audit trail
+librefang security audit --limit 50
+
+# Verify audit integrity
+librefang security verify
+
+# Initialize vault
+librefang vault init
+
+# Store a credential
+librefang vault set GITHUB_TOKEN
+
+# List vault keys
+librefang vault list
+
+# Remove a credential
+librefang vault remove GITHUB_TOKEN
+```
+
+### Memory
+
+```bash
+# List agent memory
+librefang memory list coder
+
+# Get a specific value
+librefang memory get coder preferred_language
+
+# Set a value
+librefang memory set coder preferred_language rust
+
+# Delete a value
+librefang memory delete coder preferred_language
+```
+
+### Devices & webhooks
+
+```bash
+# List paired devices
+librefang devices list
+
+# Pair a new device
+librefang devices pair
+
+# Generate QR code for pairing
+librefang qr
+
+# Create a webhook
+librefang webhooks create coder https://example.com/hook
+
+# Test a webhook
+librefang webhooks test <WEBHOOK_ID>
+
+# Delete a webhook
+librefang webhooks delete <WEBHOOK_ID>
 ```
 
 ### Migration from other frameworks
@@ -1301,11 +2719,20 @@ librefang migrate --from openclaw
 librefang migrate --from langchain --source-dir ~/.langchain
 ```
 
-### MCP integration
+### Self-update & system
 
 ```bash
-# Start MCP server for Claude Desktop or other MCP clients
-librefang mcp
+# Check for updates
+librefang update --check
+
+# Update to latest
+librefang update
+
+# System info
+librefang system info
+
+# Version
+librefang system version
 ```
 
 ### Diagnostics
@@ -1352,8 +2779,6 @@ The following providers are recognized by `librefang config set-key` and `libref
 | xAI | `XAI_API_KEY` | -- |
 
 Additional search/fetch provider keys: `BRAVE_API_KEY`, `TAVILY_API_KEY`.
-
-
 
 
 
