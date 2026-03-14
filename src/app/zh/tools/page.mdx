@@ -1,0 +1,1017 @@
+# 内置工具参考手册
+
+LibreFang 提供 **60 个内置工具**，Agent 可以开箱即用。工具通过每个 Agent 的 `agent.toml` 清单中的能力系统授予。本页面记录了每个内置工具的参数、描述和使用示例。
+
+## 目录
+
+- [文件系统](#文件系统) (4 个工具)
+- [网络](#网络) (2 个工具)
+- [Shell](#shell) (1 个工具)
+- [Agent 协作](#agent-协作) (4 个工具)
+- [共享内存](#共享内存) (2 个工具)
+- [发现与任务](#发现与任务) (5 个工具)
+- [事件](#事件) (1 个工具)
+- [调度](#调度) (3 个工具)
+- [知识图谱](#知识图谱) (3 个工具)
+- [媒体与图像](#媒体与图像) (5 个工具)
+- [浏览器自动化](#浏览器自动化) (10 个工具)
+- [定时任务](#定时任务) (3 个工具)
+- [频道消息](#频道消息) (1 个工具)
+- [Hand 能力包](#hand-能力包) (4 个工具)
+- [A2A（Agent 间通信）](#a2aagent-间通信) (2 个工具)
+- [语音](#语音) (2 个工具)
+- [进程管理](#进程管理) (5 个工具)
+- [沙箱](#沙箱) (1 个工具)
+- [系统](#系统) (1 个工具)
+- [画布](#画布) (1 个工具)
+
+---
+
+## 文件系统
+
+用于在 Agent 工作区沙箱中读取、写入和列出文件的工具。所有路径相对于 Agent 工作区根目录。
+
+### `file_read`
+
+读取文件内容。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | string | 是 | 要读取的文件路径 |
+
+**返回值：** 文件内容字符串。
+
+```json
+{ "path": "data/config.json" }
+```
+
+### `file_write`
+
+将内容写入文件。自动创建父目录。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | string | 是 | 要写入的文件路径 |
+| `content` | string | 是 | 要写入的内容 |
+
+**返回值：** 写入确认及字节数。
+
+```json
+{ "path": "output/report.txt", "content": "分析完成。" }
+```
+
+### `file_list`
+
+列出目录中的文件。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | string | 是 | 要列出的目录路径 |
+
+**返回值：** 目录列表，包含文件名、类型和大小。
+
+```json
+{ "path": "data/" }
+```
+
+### `apply_patch`
+
+应用多段差异补丁来添加、更新、移动或删除文件。适用于精确编辑而非全文件覆写。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `patch` | string | 是 | `*** Begin Patch / *** End Patch` 格式的补丁。使用 `*** Add File:`、`*** Update File:`、`*** Delete File:` 标记。代码块使用 `@@` 头部，空格（上下文）、`-`（删除）、`+`（添加）前缀行。 |
+
+**返回值：** 变更摘要。
+
+```json
+{
+  "patch": "*** Begin Patch\n*** Update File: src/main.rs\n@@ -10,3 +10,3 @@\n-    println!(\"old\");\n+    println!(\"new\");\n*** End Patch"
+}
+```
+
+---
+
+## 网络
+
+用于获取 URL 和搜索网页的工具。
+
+### `web_fetch`
+
+带 SSRF 保护地获取 URL。GET 请求会自动将 HTML 转换为 Markdown。支持 GET、POST、PUT、PATCH 和 DELETE 方法。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `url` | string | 是 | 要获取的 URL（仅 http/https） |
+| `method` | string | 否 | HTTP 方法：`GET`、`POST`、`PUT`、`PATCH`、`DELETE`（默认：`GET`） |
+| `headers` | object | 否 | 自定义 HTTP 头部键值对 |
+| `body` | string | 否 | POST/PUT/PATCH 的请求体 |
+
+**返回值：** 响应体（GET HTML 页面返回 Markdown，其他方法返回原始内容）。
+
+```json
+{ "url": "https://api.example.com/data", "method": "GET" }
+```
+
+### `web_search`
+
+使用多个提供商（Tavily、Brave、Perplexity、DuckDuckGo）搜索网页，支持自动回退。返回结构化结果。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `query` | string | 是 | 搜索查询 |
+| `max_results` | integer | 否 | 最大结果数（默认：5，最大：20） |
+
+**返回值：** 包含标题、URL 和摘要的结果数组。
+
+```json
+{ "query": "rust async 运行时比较", "max_results": 5 }
+```
+
+---
+
+## Shell
+
+### `shell_exec`
+
+执行 Shell 命令并返回输出。受污点追踪保护以防止命令注入。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `command` | string | 是 | 要执行的命令 |
+| `timeout_seconds` | integer | 否 | 超时秒数（默认：30） |
+
+**返回值：** 合并的 stdout/stderr 输出。
+
+```json
+{ "command": "ls -la /tmp", "timeout_seconds": 10 }
+```
+
+---
+
+## Agent 协作
+
+Agent 间通信工具：发送消息、生成新 Agent、列出和终止 Agent。
+
+### `agent_send`
+
+向另一个 Agent 发送消息并接收其响应。支持 UUID 或 Agent 名称查找。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `agent_id` | string | 是 | 目标 Agent 的 UUID 或名称 |
+| `message` | string | 是 | 要发送的消息 |
+
+**返回值：** 目标 Agent 的响应文本。
+
+```json
+{ "agent_id": "coder", "message": "编写一个 CSV 解析函数" }
+```
+
+### `agent_spawn`
+
+从 TOML 清单生成新的 Agent。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `manifest_toml` | string | 是 | TOML 格式的 Agent 清单（必须包含 name、module、[model] 和 [capabilities]） |
+
+**返回值：** 新 Agent 的 ID 和名称。
+
+```json
+{
+  "manifest_toml": "name = \"helper\"\nmodule = \"default\"\n\n[model]\nprovider = \"groq\"\nmodel = \"llama-3.3-70b-versatile\"\n\n[capabilities]\ntools = [\"file_read\", \"file_write\"]"
+}
+```
+
+### `agent_list`
+
+列出所有正在运行的 Agent 及其 ID、名称、状态和模型。
+
+*无参数。*
+
+**返回值：** 运行中 Agent 的 JSON 数组。
+
+### `agent_kill`
+
+通过 ID 终止另一个 Agent。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `agent_id` | string | 是 | 要终止的 Agent UUID |
+
+**返回值：** 终止确认。
+
+```json
+{ "agent_id": "550e8400-e29b-41d4-a716-446655440000" }
+```
+
+---
+
+## 共享内存
+
+所有 Agent 可访问的共享键值内存，用于跨 Agent 协调。
+
+### `memory_store`
+
+在共享内存中存储值。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `key` | string | 是 | 存储键 |
+| `value` | string | 是 | 要存储的值（对象/数组请 JSON 编码，或传入纯字符串） |
+
+**返回值：** 存储确认。
+
+```json
+{ "key": "analysis_results", "value": "{\"score\": 95, \"status\": \"pass\"}" }
+```
+
+### `memory_recall`
+
+按键从共享内存中召回值。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `key` | string | 是 | 要召回的存储键 |
+
+**返回值：** 存储的值，如果不存在则返回 null。
+
+```json
+{ "key": "analysis_results" }
+```
+
+---
+
+## 发现与任务
+
+用于查找 Agent 和管理共享任务队列以进行异步协作的工具。
+
+### `agent_find`
+
+通过名称、标签、工具或描述发现 Agent。在委派工作前使用此工具查找专家。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `query` | string | 是 | 搜索查询（匹配 Agent 名称、标签、工具、描述） |
+
+**返回值：** 匹配的 Agent 列表及其元数据。
+
+```json
+{ "query": "代码审查" }
+```
+
+### `task_post`
+
+向共享任务队列发布任务，供其他 Agent 领取。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `title` | string | 是 | 简短的任务标题 |
+| `description` | string | 是 | 详细的任务描述 |
+| `assigned_to` | string | 否 | 分配给的 Agent 名称或 ID |
+
+**返回值：** 创建的任务 ID。
+
+```json
+{ "title": "审查 PR #42", "description": "检查 auth 模块的安全问题", "assigned_to": "security-auditor" }
+```
+
+### `task_claim`
+
+从任务队列中领取分配给自己或未分配的下一个可用任务。
+
+*无参数。*
+
+**返回值：** 领取的任务详情，如无可用任务则返回 null。
+
+### `task_complete`
+
+将之前领取的任务标记为已完成并附上结果。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `task_id` | string | 是 | 要完成的任务 ID |
+| `result` | string | 是 | 任务的结果或成果 |
+
+**返回值：** 完成确认。
+
+```json
+{ "task_id": "task-001", "result": "未发现安全漏洞。审查通过。" }
+```
+
+### `task_list`
+
+列出共享队列中的任务，可按状态筛选。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `status` | string | 否 | 按状态筛选：`pending`、`in_progress`、`completed` |
+
+**返回值：** 带有元数据的任务数组。
+
+```json
+{ "status": "pending" }
+```
+
+---
+
+## 事件
+
+### `event_publish`
+
+发布自定义事件，可触发主动型 Agent。用于向 Agent 集群广播信号。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `event_type` | string | 是 | 事件类型标识符（例如 `code_review_requested`） |
+| `payload` | object | 否 | 事件的 JSON 载荷数据 |
+
+**返回值：** 事件发布确认。
+
+```json
+{ "event_type": "deployment_complete", "payload": { "version": "1.2.0", "env": "production" } }
+```
+
+---
+
+## 调度
+
+自然语言和 cron 调度工具。
+
+### `schedule_create`
+
+使用自然语言或 cron 语法创建定期任务。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `description` | string | 是 | 任务描述（例如"检查新邮件"） |
+| `schedule` | string | 是 | 自然语言或 cron 表达式（例如 `every 5 minutes`、`daily at 9am`、`0 */5 * * *`） |
+| `agent` | string | 否 | 执行此任务的 Agent 名称或 ID（默认为自身） |
+
+**返回值：** 创建的调度 ID 和下次运行时间。
+
+```json
+{ "description": "检查新邮件", "schedule": "every 5 minutes" }
+```
+
+### `schedule_list`
+
+列出所有调度任务及其 ID、描述、调度和下次运行时间。
+
+*无参数。*
+
+**返回值：** 调度任务数组。
+
+### `schedule_delete`
+
+按 ID 删除调度任务。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `id` | string | 是 | 要删除的调度 ID |
+
+**返回值：** 删除确认。
+
+```json
+{ "id": "sched-001" }
+```
+
+---
+
+## 知识图谱
+
+持久化的图数据库，用于存储实体和关系。Agent 可以随时间构建结构化知识。
+
+### `knowledge_add_entity`
+
+向知识图谱添加实体。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `name` | string | 是 | 实体的显示名称 |
+| `entity_type` | string | 是 | 类型：`person`、`organization`、`project`、`concept`、`event`、`location`、`document`、`tool`，或自定义类型 |
+| `properties` | object | 否 | 任意键值属性 |
+
+**返回值：** 创建的实体 ID。
+
+```json
+{ "name": "LibreFang", "entity_type": "project", "properties": { "language": "Rust", "license": "MIT" } }
+```
+
+### `knowledge_add_relation`
+
+在两个实体间添加关系。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `source` | string | 是 | 源实体 ID 或名称 |
+| `relation` | string | 是 | 关系类型：`works_at`、`knows_about`、`related_to`、`depends_on`、`owned_by`、`created_by`、`located_in`、`part_of`、`uses`、`produces`，或自定义类型 |
+| `target` | string | 是 | 目标实体 ID 或名称 |
+| `confidence` | number | 否 | 置信度分数 0.0-1.0（默认：1.0） |
+| `properties` | object | 否 | 任意键值属性 |
+
+**返回值：** 创建的关系 ID。
+
+```json
+{ "source": "LibreFang", "relation": "uses", "target": "Rust", "confidence": 1.0 }
+```
+
+### `knowledge_query`
+
+查询知识图谱。可按源实体、关系类型和/或目标实体筛选。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `source` | string | 否 | 按源实体名称或 ID 筛选 |
+| `relation` | string | 否 | 按关系类型筛选 |
+| `target` | string | 否 | 按目标实体名称或 ID 筛选 |
+| `max_depth` | integer | 否 | 最大遍历深度（默认：1） |
+
+**返回值：** 匹配的实体-关系-实体三元组。
+
+```json
+{ "source": "LibreFang", "relation": "uses" }
+```
+
+---
+
+## 媒体与图像
+
+用于分析、生成和理解视觉及音频内容的工具。
+
+### `image_analyze`
+
+分析图像文件——返回格式、尺寸、文件大小和 base64 预览。可选择发送提示词进行视觉模型分析。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | string | 是 | 图像文件路径 |
+| `prompt` | string | 否 | 用于视觉分析的可选提示词（例如"描述你看到的内容"） |
+
+**返回值：** 图像元数据（格式、尺寸、大小）和可选的视觉分析。
+
+```json
+{ "path": "screenshots/dashboard.png", "prompt": "有哪些 UI 元素？" }
+```
+
+### `media_describe`
+
+使用具有视觉能力的 LLM 描述图像。自动选择最佳可用提供商（Anthropic、OpenAI 或 Gemini）。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | string | 是 | 图像文件路径（相对于工作区） |
+| `prompt` | string | 否 | 用于引导描述的可选提示词 |
+
+**返回值：** 图像内容的文本描述。
+
+```json
+{ "path": "charts/revenue.png", "prompt": "提取此图表中的所有文字和数字" }
+```
+
+### `media_transcribe`
+
+使用语音转文字转录音频。自动选择最佳可用提供商（Groq Whisper 或 OpenAI Whisper）。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | string | 是 | 音频文件路径。支持格式：mp3、wav、ogg、flac、m4a、webm |
+| `language` | string | 否 | 可选 ISO-639-1 语言代码（例如 `en`、`es`、`ja`） |
+
+**返回值：** 转录文本。
+
+```json
+{ "path": "recordings/meeting.mp3", "language": "zh" }
+```
+
+### `image_generate`
+
+通过文本提示词使用 DALL-E 3、DALL-E 2 或 GPT-Image-1 生成图像。需要 `OPENAI_API_KEY`。图像保存到工作区 `output/` 目录。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `prompt` | string | 是 | 图像描述文本（最多 4000 字符） |
+| `model` | string | 否 | 模型：`dall-e-3`（默认）、`dall-e-2` 或 `gpt-image-1` |
+| `size` | string | 否 | 图像尺寸：`1024x1024`（默认）、`1024x1792`、`1792x1024`、`256x256`、`512x512` |
+| `quality` | string | 否 | 质量：`hd`（dall-e-3 默认）或 `standard` |
+| `count` | integer | 否 | 生成图像数量（1-4，默认：1）。DALL-E 3 仅支持 1 张。 |
+
+**返回值：** 生成图像的文件路径。
+
+```json
+{ "prompt": "未来主义城市天际线日落，数字艺术", "size": "1792x1024", "quality": "hd" }
+```
+
+### `location_get`
+
+基于 IP 地址获取近似地理位置。
+
+*无参数。*
+
+**返回值：** 城市、国家、坐标和时区。
+
+---
+
+## 浏览器自动化
+
+基于无头 Chromium 的完整浏览器自动化工具套件。每个 Agent 打开一个持久浏览器会话。
+
+### `browser_navigate`
+
+将浏览器导航到 URL。返回页面标题和可读内容（Markdown 格式）。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `url` | string | 是 | 要导航的 URL（仅 http/https） |
+
+**返回值：** 页面标题和 Markdown 内容。
+
+```json
+{ "url": "https://docs.rs/tokio/latest/tokio/" }
+```
+
+### `browser_click`
+
+通过 CSS 选择器或可见文本点击当前浏览器页面上的元素。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `selector` | string | 是 | CSS 选择器（例如 `#submit-btn`、`.add-to-cart`）或要点击的可见文本 |
+
+**返回值：** 点击后更新的页面状态。
+
+```json
+{ "selector": "#login-button" }
+```
+
+### `browser_type`
+
+在当前浏览器页面的输入框中输入文本。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `selector` | string | 是 | 输入框的 CSS 选择器（例如 `input[name="email"]`、`#search-box`） |
+| `text` | string | 是 | 要输入的文本 |
+
+**返回值：** 确认。
+
+```json
+{ "selector": "input[name=\"email\"]", "text": "user@example.com" }
+```
+
+### `browser_screenshot`
+
+截取当前浏览器页面的屏幕截图。
+
+*无参数。*
+
+**返回值：** Base64 编码的 PNG 图像。
+
+### `browser_read_page`
+
+将当前浏览器页面内容读取为结构化 Markdown。在点击或导航后使用此工具查看更新的页面。
+
+*无参数。*
+
+**返回值：** Markdown 格式的页面内容。
+
+### `browser_close`
+
+关闭浏览器会话。Agent 循环结束时浏览器也会自动关闭。
+
+*无参数。*
+
+**返回值：** 确认。
+
+### `browser_scroll`
+
+滚动浏览器页面。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `direction` | string | 否 | 滚动方向：`up`、`down`、`left`、`right`（默认：`down`） |
+| `amount` | integer | 否 | 滚动像素数（默认：600） |
+
+**返回值：** 确认。
+
+```json
+{ "direction": "down", "amount": 1200 }
+```
+
+### `browser_wait`
+
+等待 CSS 选择器出现在页面上。适用于异步加载的动态内容。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `selector` | string | 是 | 要等待的 CSS 选择器 |
+| `timeout_ms` | integer | 否 | 最大等待时间（毫秒）（默认：5000，最大：30000） |
+
+**返回值：** 成功或超时错误。
+
+```json
+{ "selector": ".results-loaded", "timeout_ms": 10000 }
+```
+
+### `browser_run_js`
+
+在当前浏览器页面上运行 JavaScript 并返回结果。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `expression` | string | 是 | 在页面上下文中运行的 JavaScript 表达式 |
+
+**返回值：** 求值结果。
+
+```json
+{ "expression": "document.querySelectorAll('.item').length" }
+```
+
+### `browser_back`
+
+返回浏览器历史中的上一页。
+
+*无参数。*
+
+**返回值：** 更新后的页面状态。
+
+---
+
+## 定时任务
+
+细粒度的 cron 任务管理，支持一次性、间隔和 cron 表达式调度。
+
+### `cron_create`
+
+创建定时/cron 任务。支持一次性（`at`）、循环（`every N seconds`）和 cron 表达式。每个 Agent 最多 50 个任务。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `name` | string | 是 | 任务名称（最多 128 字符，字母数字 + 空格/连字符/下划线） |
+| `schedule` | object | 是 | 调度对象：`{"kind":"at","at":"2025-01-01T00:00:00Z"}` 或 `{"kind":"every","every_secs":300}` 或 `{"kind":"cron","expr":"0 */6 * * *"}` |
+| `action` | object | 是 | 动作对象：`{"kind":"system_event","text":"..."}` 或 `{"kind":"agent_turn","message":"...","timeout_secs":300}` |
+| `delivery` | object | 否 | 投递目标：`{"kind":"none"}` 或 `{"kind":"channel","channel":"telegram"}` 或 `{"kind":"last_channel"}` |
+| `one_shot` | boolean | 否 | 如为 true，执行后自动删除（默认：false） |
+
+**返回值：** 创建的任务 ID。
+
+```json
+{
+  "name": "daily-report",
+  "schedule": { "kind": "cron", "expr": "0 9 * * *" },
+  "action": { "kind": "agent_turn", "message": "生成每日状态报告", "timeout_secs": 120 },
+  "delivery": { "kind": "channel", "channel": "slack" }
+}
+```
+
+### `cron_list`
+
+列出当前 Agent 的所有定时/cron 任务。
+
+*无参数。*
+
+**返回值：** 包含 ID、名称、调度和下次运行时间的任务数组。
+
+### `cron_cancel`
+
+按 ID 取消定时/cron 任务。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `job_id` | string | 是 | 要取消的 cron 任务 UUID |
+
+**返回值：** 取消确认。
+
+```json
+{ "job_id": "550e8400-e29b-41d4-a716-446655440000" }
+```
+
+---
+
+## 频道消息
+
+### `channel_send`
+
+向配置的频道（邮件、Telegram、Slack、Discord 等）上的用户发送消息或媒体。支持文本、图片和文件附件。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `channel` | string | 是 | 频道适配器名称（例如 `email`、`telegram`、`slack`、`discord`） |
+| `recipient` | string | 是 | 平台特定的接收者标识（邮箱地址、用户 ID 等） |
+| `subject` | string | 否 | 主题行（用于邮件；其他频道忽略） |
+| `message` | string | 否 | 消息正文（文本必需；媒体可选说明文字） |
+| `image_url` | string | 否 | 要发送的图片 URL（Telegram、Discord、Slack） |
+| `file_url` | string | 否 | 要发送为附件的文件 URL |
+| `file_path` | string | 否 | 要发送为附件的本地文件路径 |
+| `filename` | string | 否 | 文件附件的文件名（默认为 `file_path` 的基本名） |
+| `thread_id` | string | 否 | 要回复的主题/话题 ID（例如 Telegram `message_thread_id`、Slack `thread_ts`） |
+
+**返回值：** 确认及消息 ID。
+
+```json
+{
+  "channel": "telegram",
+  "recipient": "123456789",
+  "message": "构建成功完成！",
+  "image_url": "https://example.com/build-status.png"
+}
+```
+
+---
+
+## Hand 能力包
+
+Hand 是策划好的自主能力包——预配置的 Agent，拥有专业的工具集。
+
+### `hand_list`
+
+列出可用的 Hand 及其激活状态。
+
+*无参数。*
+
+**返回值：** 带有元数据的可用 Hand 数组。
+
+### `hand_activate`
+
+激活 Hand——生成具有策划工具和技能的专业自主 Agent。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `hand_id` | string | 是 | 要激活的 Hand ID（例如 `researcher`、`clip`、`browser`） |
+| `config` | object | 否 | Hand 设置的可选配置覆盖 |
+
+**返回值：** 激活的 Hand 实例 ID 和 Agent ID。
+
+```json
+{ "hand_id": "researcher", "config": { "max_depth": 3 } }
+```
+
+### `hand_status`
+
+检查活动 Hand 的状态和指标。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `hand_id` | string | 是 | 要检查状态的 Hand ID |
+
+**返回值：** 状态、运行时间和使用指标。
+
+```json
+{ "hand_id": "researcher" }
+```
+
+### `hand_deactivate`
+
+停用正在运行的 Hand 并停止其 Agent。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `instance_id` | string | 是 | 要停用的 Hand 实例 UUID |
+
+**返回值：** 停用确认。
+
+```json
+{ "instance_id": "550e8400-e29b-41d4-a716-446655440000" }
+```
+
+---
+
+## A2A（Agent 间通信）
+
+用于通过网络与外部 A2A 兼容 Agent 通信的工具。
+
+### `a2a_discover`
+
+通过从 URL 获取 Agent 卡片来发现外部 A2A Agent。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `url` | string | 是 | 远程 LibreFang/A2A 兼容 Agent 的基础 URL（例如 `https://agent.example.com`） |
+
+**返回值：** Agent 卡片，包含名称、描述、技能和支持的协议。
+
+```json
+{ "url": "https://agent.example.com" }
+```
+
+### `a2a_send`
+
+向外部 A2A Agent 发送任务/消息并获取响应。使用 `agent_name` 发送到之前发现的 Agent，或使用 `agent_url` 直接寻址。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `message` | string | 是 | 要发送的任务/消息 |
+| `agent_url` | string | 否 | 远程 Agent 的 A2A 端点直接 URL |
+| `agent_name` | string | 否 | 之前发现的 A2A Agent 名称 |
+| `session_id` | string | 否 | 用于多轮对话的可选会话 ID |
+
+**返回值：** 远程 Agent 的响应。
+
+```json
+{ "message": "分析此数据集中的异常", "agent_name": "data-analyst" }
+```
+
+---
+
+## 语音
+
+文本转语音和语音转文本工具。
+
+### `text_to_speech`
+
+将文本转换为语音音频。自动选择 OpenAI 或 ElevenLabs。音频保存到工作区 `output/` 目录。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `text` | string | 是 | 要转换为语音的文本（最多 4096 字符） |
+| `voice` | string | 否 | 语音名称：`alloy`、`echo`、`fable`、`onyx`、`nova`、`shimmer`（默认：`alloy`） |
+| `format` | string | 否 | 输出格式：`mp3`、`opus`、`aac`、`flac`（默认：`mp3`） |
+
+**返回值：** 生成的音频文件路径。
+
+```json
+{ "text": "你好，欢迎使用 LibreFang！", "voice": "nova", "format": "mp3" }
+```
+
+### `speech_to_text`
+
+使用语音转文本转录音频。自动选择 Groq Whisper 或 OpenAI Whisper。支持格式：mp3、wav、ogg、flac、m4a、webm。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `path` | string | 是 | 音频文件路径（相对于工作区） |
+| `language` | string | 否 | 可选 ISO-639-1 语言代码（例如 `en`、`es`、`ja`） |
+
+**返回值：** 转录文本。
+
+```json
+{ "path": "recordings/interview.wav", "language": "zh" }
+```
+
+---
+
+## 进程管理
+
+用于在 Agent 会话中管理长时间运行进程（REPL、服务器、监视器）的工具。
+
+### `process_start`
+
+启动长时间运行的进程。返回进程 ID 用于后续操作。每个 Agent 最多 5 个进程。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `command` | string | 是 | 要运行的可执行文件（例如 `python`、`node`、`npm`） |
+| `args` | array | 否 | 命令行参数（例如 `["-i"]` 用于交互式 Python） |
+
+**返回值：** 进程 ID。
+
+```json
+{ "command": "python", "args": ["-i"] }
+```
+
+### `process_poll`
+
+从运行中的进程读取累积的 stdout/stderr。非阻塞：返回自上次轮询以来缓冲的所有输出。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `process_id` | string | 是 | `process_start` 返回的进程 ID |
+
+**返回值：** 缓冲的 stdout 和 stderr 输出。
+
+```json
+{ "process_id": "proc-001" }
+```
+
+### `process_write`
+
+向运行中进程的 stdin 写入数据。如果末尾没有换行符会自动添加。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `process_id` | string | 是 | `process_start` 返回的进程 ID |
+| `data` | string | 是 | 要写入 stdin 的数据 |
+
+**返回值：** 确认。
+
+```json
+{ "process_id": "proc-001", "data": "print('hello world')" }
+```
+
+### `process_kill`
+
+终止运行中的进程并清理其资源。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `process_id` | string | 是 | `process_start` 返回的进程 ID |
+
+**返回值：** 终止确认。
+
+```json
+{ "process_id": "proc-001" }
+```
+
+### `process_list`
+
+列出当前 Agent 的所有运行中进程，包括 ID、命令、运行时间和存活状态。
+
+*无参数。*
+
+**返回值：** 运行中进程的数组。
+
+---
+
+## 沙箱
+
+### `docker_exec`
+
+在 Docker 容器沙箱内执行命令。提供操作系统级别的隔离，包括资源限制、网络隔离和能力丢弃。需要安装 Docker 并在配置中设置 `docker.enabled = true`。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `command` | string | 是 | 在容器内执行的命令 |
+
+**返回值：** 容器内的命令输出。
+
+```json
+{ "command": "python3 -c \"print('沙箱执行')\"" }
+```
+
+---
+
+## 系统
+
+### `system_time`
+
+获取当前日期、时间和时区。
+
+*无参数。*
+
+**返回值：** ISO 8601 时间戳、Unix 纪元秒数和时区信息。
+
+---
+
+## 画布
+
+### `canvas_present`
+
+向用户展示交互式 HTML 画布。HTML 会被清理（无脚本、无事件处理程序），并在仪表板面板中渲染。用于丰富的数据可视化、格式化报告或交互式 UI。
+
+| 参数 | 类型 | 必需 | 描述 |
+|------|------|------|------|
+| `html` | string | 是 | 要展示的 HTML 内容。不得包含 `<script>` 标签、事件处理程序或 `javascript:` URL。 |
+| `title` | string | 否 | 画布面板的可选标题 |
+
+**返回值：** 确认及保存的文件路径。
+
+```json
+{
+  "html": "<div style=\"padding:20px\"><h2>销售报告</h2><table><tr><th>Q1</th><td>¥120万</td></tr></table></div>",
+  "title": "Q1 销售报告"
+}
+```
+
+---
+
+## 能力映射
+
+工具通过能力系统授予 Agent。以下是能力名称到其解锁工具的映射：
+
+| 能力 | 工具 |
+|------|------|
+| `file_read` | `file_read`、`file_list` |
+| `file_write` | `file_write`、`apply_patch` |
+| `web` | `web_fetch`、`web_search` |
+| `shell` | `shell_exec` |
+| `agent` | `agent_send`、`agent_spawn`、`agent_list`、`agent_kill`、`agent_find` |
+| `memory` | `memory_store`、`memory_recall` |
+| `task` | `task_post`、`task_claim`、`task_complete`、`task_list` |
+| `event` | `event_publish` |
+| `schedule` | `schedule_create`、`schedule_list`、`schedule_delete` |
+| `knowledge` | `knowledge_add_entity`、`knowledge_add_relation`、`knowledge_query` |
+| `image` | `image_analyze`、`image_generate` |
+| `media` | `media_describe`、`media_transcribe` |
+| `browser` | `browser_navigate`、`browser_click`、`browser_type`、`browser_screenshot`、`browser_read_page`、`browser_close`、`browser_scroll`、`browser_wait`、`browser_run_js`、`browser_back` |
+| `cron` | `cron_create`、`cron_list`、`cron_cancel` |
+| `channel` | `channel_send` |
+| `hand` | `hand_list`、`hand_activate`、`hand_status`、`hand_deactivate` |
+| `a2a` | `a2a_discover`、`a2a_send` |
+| `speech` | `text_to_speech`、`speech_to_text` |
+| `process` | `process_start`、`process_poll`、`process_write`、`process_kill`、`process_list` |
+| `docker` | `docker_exec` |
+| `system` | `system_time`、`location_get` |
+| `canvas` | `canvas_present` |
+
+Agent 清单中的能力示例：
+
+```toml
+[capabilities]
+tools = [
+  "file_read", "file_write", "web", "shell",
+  "browser", "knowledge", "memory"
+]
+```
+
+export const sections = [];
