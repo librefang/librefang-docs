@@ -1,0 +1,368 @@
+# 快速开始
+
+本指南将引导你完成 LibreFang 的安装、配置 LLM 提供商、创建 Agent 并与之对话。
+
+项目网站：[https://librefang.ai/](https://librefang.ai/)
+
+## 目录
+
+- [安装](#安装)
+- [配置](#配置)
+- [创建你的第一个 Agent](#创建你的第一个-agent)
+- [与 Agent 对话](#与-agent-对话)
+- [启动守护进程](#启动守护进程)
+- [使用 WebChat 界面](#使用-webchat-界面)
+- [下一步](#下一步)
+
+---
+
+## 安装
+
+### 方式一：Cargo Install（任意平台）
+
+LibreFang 目前尚未发布 GitHub Releases，推荐通过以下方式安装：
+
+```bash
+cargo install --git https://github.com/librefang/librefang librefang-cli
+```
+
+或从源码构建：
+
+```bash
+git clone https://github.com/librefang/librefang.git
+cd librefang
+cargo install --path crates/librefang-cli
+```
+
+### 方式二：Shell 安装脚本（Linux / macOS，未来版本）
+
+```bash
+curl -fsSL https://librefang.ai/install.sh | sh
+```
+
+待 LibreFang 发布 GitHub Releases 后可使用。脚本会将 CLI 二进制文件安装到 `~/.librefang/bin/`。
+
+### 方式三：PowerShell 安装脚本（Windows，未来版本）
+
+```powershell
+irm https://librefang.ai/install.ps1 | iex
+```
+
+待 LibreFang 发布 GitHub Releases 后可使用。脚本会验证 SHA256 校验和并将 CLI 添加到用户 PATH。
+
+### 方式四：Docker
+
+```bash
+docker pull ghcr.io/librefang/librefang:latest
+
+docker run -d \
+  --name librefang \
+  -p 4545:4545 \
+  -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+  -v librefang-data:/data \
+  ghcr.io/librefang/librefang:latest
+```
+
+或使用 Docker Compose：
+
+```bash
+git clone https://github.com/librefang/librefang.git
+cd librefang
+# 在环境变量或 .env 文件中设置 API 密钥
+docker compose up -d
+```
+
+### 验证安装
+
+```bash
+librefang --version
+```
+
+---
+
+## 配置
+
+### 初始化
+
+运行 init 命令创建 `~/.librefang/` 目录和默认配置文件：
+
+```bash
+librefang init
+```
+
+这将创建以下结构：
+
+```
+~/.librefang/
+  config.toml    # 主配置文件
+  data/          # 数据库和运行时数据
+  agents/        # Agent 清单（可选）
+```
+
+### 设置 API 密钥
+
+LibreFang 至少需要一个 LLM 提供商的 API 密钥。将其设置为环境变量：
+
+```bash
+# Anthropic (Claude)
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# 或 OpenAI
+export OPENAI_API_KEY=sk-...
+
+# 或 Groq（有免费额度）
+export GROQ_API_KEY=gsk_...
+```
+
+将 export 语句添加到你的 shell 配置文件（`~/.bashrc`、`~/.zshrc` 等）以持久化设置。
+
+### 编辑配置
+
+默认配置使用 Anthropic。要更改提供商，编辑 `~/.librefang/config.toml`：
+
+```toml
+[default_model]
+provider = "groq"                      # anthropic, openai, groq, ollama 等
+model = "llama-3.3-70b-versatile"      # 提供商的模型标识符
+api_key_env = "GROQ_API_KEY"           # 存放 API 密钥的环境变量
+
+[memory]
+decay_rate = 0.05                      # 记忆置信度衰减率
+
+[network]
+listen_addr = "127.0.0.1:4545"        # OFP 监听地址
+```
+
+### 验证设置
+
+```bash
+librefang doctor
+```
+
+此命令检查配置文件是否存在、API 密钥是否已设置以及工具链是否可用。
+
+---
+
+## 创建你的第一个 Agent
+
+### 使用内置模板
+
+LibreFang 内置 30 个 Agent 模板。创建 hello-world Agent：
+
+```bash
+librefang agent spawn agents/hello-world/agent.toml
+```
+
+输出：
+
+```
+Agent spawned successfully!
+  ID:   a1b2c3d4-e5f6-...
+  Name: hello-world
+```
+
+### 使用自定义清单
+
+创建你自己的 `my-agent.toml`：
+
+```toml
+name = "my-assistant"
+version = "0.1.0"
+description = "A helpful assistant"
+author = "you"
+module = "builtin:chat"
+
+[model]
+provider = "groq"
+model = "llama-3.3-70b-versatile"
+
+[capabilities]
+tools = ["file_read", "file_list", "web_fetch"]
+memory_read = ["*"]
+memory_write = ["self.*"]
+```
+
+然后创建它：
+
+```bash
+librefang agent spawn my-agent.toml
+```
+
+### 列出运行中的 Agent
+
+```bash
+librefang agent list
+```
+
+输出：
+
+```
+ID                                     NAME             STATE      PROVIDER     MODEL
+-----------------------------------------------------------------------------------------------
+a1b2c3d4-e5f6-...                     hello-world      Running    groq         llama-3.3-70b-versatile
+```
+
+---
+
+## 与 Agent 对话
+
+使用 Agent ID 启动交互式对话：
+
+```bash
+librefang agent chat a1b2c3d4-e5f6-...
+```
+
+或使用快捷对话命令（自动选择第一个可用 Agent）：
+
+```bash
+librefang chat
+```
+
+或通过名称指定 Agent：
+
+```bash
+librefang chat hello-world
+```
+
+对话示例：
+
+```
+Chat session started (daemon mode). Type 'exit' or Ctrl+C to quit.
+
+you> Hello! What can you do?
+
+agent> I'm the hello-world agent running on LibreFang. I can:
+- Read files from the filesystem
+- List directory contents
+- Fetch web pages
+
+Try asking me to read a file or look up something on the web!
+
+  [tokens: 142 in / 87 out | iterations: 1]
+
+you> List the files in the current directory
+
+agent> Here are the files in the current directory:
+- Cargo.toml
+- Cargo.lock
+- README.md
+- agents/
+- crates/
+- docs/
+...
+
+you> exit
+Chat session ended.
+```
+
+---
+
+## 启动守护进程
+
+如需持久化 Agent、多用户访问和 WebChat 界面，请启动守护进程：
+
+```bash
+librefang start
+```
+
+输出：
+
+```
+Starting LibreFang daemon...
+LibreFang daemon running on http://127.0.0.1:4545
+Press Ctrl+C to stop.
+```
+
+守护进程提供：
+- **REST API**：`http://127.0.0.1:4545/api/`
+- **WebSocket** 端点：`ws://127.0.0.1:4545/api/agents/{id}/ws`
+- **WebChat 界面**：`http://127.0.0.1:4545/`
+- **OFP 网络**：端口 4545
+
+### 检查状态
+
+```bash
+librefang status
+```
+
+### 停止守护进程
+
+在运行守护进程的终端按 `Ctrl+C`，或：
+
+```bash
+curl -X POST http://127.0.0.1:4545/api/shutdown
+```
+
+---
+
+## 使用 WebChat 界面
+
+守护进程运行后，在浏览器中打开：
+
+```
+http://127.0.0.1:4545/
+```
+
+内嵌的 WebChat 界面支持：
+- 查看所有运行中的 Agent
+- 通过 WebSocket 与任意 Agent 实时对话
+- 查看流式生成的响应
+- 查看每条消息的 token 使用量
+
+---
+
+## 下一步
+
+LibreFang 已经运行起来了，你可以：
+
+- **探索 Agent 模板**：浏览 `agents/` 目录中的 30 个预置 Agent（编码、研究、写作、运维、分析、安全审计等）。
+- **创建自定义 Agent**：编写自己的 `agent.toml` 清单文件。
+- **设置频道**：连接 40 种消息平台（Telegram、Discord、Slack、WhatsApp、LINE、Mastodon 等）。
+- **使用内置技能**：60 个专业知识技能已预装（GitHub、Docker、Kubernetes、安全审计、提示工程等）。
+- **构建自定义技能**：使用 Python、WASM 或纯提示词扩展 Agent。
+- **使用 API**：76 个 REST/WS/SSE 端点，包含 OpenAI 兼容的 `/v1/chat/completions`。
+- **切换 LLM 提供商**：支持 20 个提供商（Anthropic、OpenAI、Gemini、Groq、DeepSeek、xAI、Ollama 等），支持按 Agent 覆盖模型。
+- **设置工作流**：将多个 Agent 串联。使用 `librefang workflow create` 配合 TOML 工作流定义。
+- **使用 MCP**：通过 Model Context Protocol 连接外部工具。在 `config.toml` 的 `[[mcp_servers]]` 中配置。
+- **从 OpenClaw 迁移**：运行 `librefang migrate --from openclaw`。
+- **桌面应用**：运行 `cargo tauri dev` 获得原生桌面体验。
+- **运行诊断**：`librefang doctor` 检查完整设置。
+
+### 常用命令参考
+
+```bash
+librefang init                          # 初始化 ~/.librefang/
+librefang start                         # 启动守护进程
+librefang status                        # 检查守护进程状态
+librefang doctor                        # 运行诊断检查
+
+librefang agent spawn <manifest.toml>   # 创建 Agent
+librefang agent list                    # 列出所有 Agent
+librefang agent chat <id>               # 与 Agent 对话
+librefang agent kill <id>               # 终止 Agent
+
+librefang workflow list                 # 列出工作流
+librefang workflow create <file.json>   # 创建工作流
+librefang workflow run <id> <input>     # 运行工作流
+
+librefang trigger list                  # 列出事件触发器
+librefang trigger create <args>         # 创建触发器
+librefang trigger delete <id>           # 删除触发器
+
+librefang skill install <source>        # 安装技能
+librefang skill list                    # 列出已安装技能
+librefang skill search <query>          # 搜索 FangHub
+librefang skill create                  # 创建新技能脚手架
+
+librefang channel list                  # 列出频道状态
+librefang channel setup <channel>       # 交互式设置向导
+
+librefang config show                   # 显示当前配置
+librefang config edit                   # 在编辑器中打开配置
+
+librefang chat [agent]                  # 快捷对话（别名）
+librefang migrate --from openclaw       # 从 OpenClaw 迁移
+librefang mcp                           # 启动 MCP 服务器 (stdio)
+```
+
+export const sections = [];
