@@ -200,3 +200,115 @@ librefang channel disable telegram
 2. **设置速率限制** - 防止滥用
 3. **使用覆盖** - 为不同通道定制行为
 4. **监控使用** - 定期检查通道统计
+
+---
+
+## 添加 Feature Flag
+
+所有通道适配器都通过 Cargo feature flag 进行条件编译。默认构建包含 12 个常用通道，您可以按需启用其他通道以减小二进制体积。
+
+### Feature Flag 层级
+
+Feature flag 需要在三层 `Cargo.toml` 中逐级转发：
+
+**1. `crates/librefang-channels/Cargo.toml`** — 定义 feature 并绑定可选依赖：
+
+```toml
+[features]
+default = [
+    "channel-telegram",
+    "channel-discord",
+    "channel-slack",
+    # ... 共 12 个默认通道
+]
+
+all-channels = [
+    "channel-telegram",
+    "channel-discord",
+    # ... 全部 42 个通道
+]
+
+# 各通道的 feature 定义
+channel-telegram = []
+channel-email = ["dep:lettre", "dep:imap", "dep:native-tls", "dep:mailparse"]
+channel-qq = ["dep:rustls"]
+channel-wecom = ["dep:roxmltree", "dep:aes", "dep:cbc"]
+```
+
+**2. `crates/librefang-api/Cargo.toml`** — 转发到 channels crate：
+
+```toml
+[features]
+channel-telegram = ["librefang-channels/channel-telegram"]
+channel-qq = ["librefang-channels/channel-qq"]
+all-channels = ["librefang-channels/all-channels"]
+```
+
+**3. `crates/librefang-cli/Cargo.toml`** — 转发到 api crate：
+
+```toml
+[features]
+all-channels = ["librefang-api/all-channels"]
+```
+
+### 可选依赖绑定
+
+部分通道需要额外依赖，通过 `dep:` 语法绑定到 feature flag：
+
+| 通道 | 可选依赖 | 用途 |
+|------|---------|------|
+| Email | `lettre`, `imap`, `native-tls`, `mailparse` | IMAP/SMTP 邮件收发 |
+| QQ | `rustls` | TLS 加密连接 |
+| WeCom (企业微信) | `roxmltree`, `aes`, `cbc` | XML 解析与消息加解密 |
+
+在源代码中使用 `#[cfg(feature = "channel-xxx")]` 条件编译：
+
+```rust
+#[cfg(feature = "channel-telegram")]
+pub mod telegram;
+
+#[cfg(feature = "channel-qq")]
+pub mod qq;
+```
+
+### 构建选项
+
+```bash
+# 默认构建（12 个通道）
+cargo build --workspace
+
+# 启用全部通道
+cargo build --workspace --features all-channels
+
+# 仅启用特定通道
+cargo build --workspace --no-default-features --features channel-telegram,channel-slack
+
+# 最小构建（无通道适配器）
+cargo build --workspace --no-default-features
+```
+
+---
+
+## 贡献新 Channel Adapter
+
+添加新通道适配器的完整步骤：
+
+1. **创建适配器模块** — 在 `crates/librefang-channels/src/` 下新建 `myplatform.rs`，实现 `ChannelAdapter` trait（包含 `name()`、`channel_type()`、`start()`、`send()`、`stop()` 方法）
+
+2. **添加 Feature Flag** — 在 `crates/librefang-channels/Cargo.toml` 中添加 `channel-myplatform = []`（如有特殊依赖则绑定 `dep:`），并将其加入 `all-channels` 列表
+
+3. **转发 Feature Flag** — 在 `crates/librefang-api/Cargo.toml` 中添加 `channel-myplatform = ["librefang-channels/channel-myplatform"]`，并加入其 `all-channels` 列表
+
+4. **注册模块** — 在 `crates/librefang-channels/src/lib.rs` 中添加条件编译模块声明：
+   ```rust
+   #[cfg(feature = "channel-myplatform")]
+   pub mod myplatform;
+   ```
+
+5. **接入 Bridge** — 在 `crates/librefang-api/src/channel_bridge.rs` 中添加适配器初始化逻辑
+
+6. **添加配置支持** — 在 `librefang-types` 中添加配置结构体（包含 `token_env`、`default_agent`、`overrides` 字段），并加入 `ChannelsConfig`
+
+7. **添加 CLI 向导** — 在 `crates/librefang-cli/src/main.rs` 的 `cmd_channel_setup` 中添加交互式设置流程
+
+8. **编写测试** — 使用 `ChannelMessage` 类型编写集成测试，无需连接真实平台即可验证适配器逻辑
