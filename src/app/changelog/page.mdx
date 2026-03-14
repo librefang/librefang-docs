@@ -6,8 +6,21 @@ All notable changes to LibreFang are documented here. For the full changelog, se
 
 ## v0.4.1 (2026-03-14)
 
+### Added
+- **Model Catalog Sync**: `catalog_sync.rs` module with `POST /api/catalog/sync` and `GET /api/catalog` endpoints, dashboard sync card, and three-level model loading (built-in → catalog → runtime) ([#227](https://github.com/librefang/librefang/pull/227))
+- **Channel Sidecar Protocol**: External adapter sidecar protocol for out-of-process channel adapters ([#228](https://github.com/librefang/librefang/pull/228))
+- **Cargo Feature Flags**: 42 channel feature flags with 12 default channels, optional dependencies for granular builds ([#223](https://github.com/librefang/librefang/pull/223))
+- **Community Organization**: DevContainer support, good-first-issue template, PR template, and version sync scripts ([#212](https://github.com/librefang/librefang/pull/212))
+
+### Changed
+- **Static Provider Registry**: Replace 400-line provider match block with declarative `PROVIDER_REGISTRY` array and new `ApiFormat` enum ([#224](https://github.com/librefang/librefang/pull/224))
+
 ### Fixed
 - Inherit environment variables when spawning daemon process — API keys (e.g., `MINIMAX_API_KEY`) are now correctly passed to the daemon subprocess ([#210](https://github.com/librefang/librefang/pull/210))
+- Fix daemon env vars, MCP probe, and SSE parsing issues ([#211](https://github.com/librefang/librefang/pull/211))
+
+### CI
+- Upgrade GitHub Actions for Node.js 24 compatibility ([#229](https://github.com/librefang/librefang/pull/229))
 
 ---
 
@@ -40,7 +53,23 @@ All notable changes to LibreFang are documented here. For the full changelog, se
 
 ## v0.3.58 (2026-03-13)
 
-Maintenance release with dependency updates and bug fixes.
+### Changed
+- Extract channel bridge retry helpers and improve error matching ([#198](https://github.com/librefang/librefang/pull/198))
+
+### Docs
+- Add dual-license distinction and org membership policy ([#197](https://github.com/librefang/librefang/pull/197))
+- Establish LibreFang libre identity and contributor policy ([#196](https://github.com/librefang/librefang/pull/196))
+
+---
+
+## v0.3.57 and earlier
+
+### Added
+- Generic `http_compat` MCP transport ([#77](https://github.com/librefang/librefang/pull/77))
+- Expanded CLI command coverage and skill publishing ([#34](https://github.com/librefang/librefang/pull/34))
+- Native builtin router ([#33](https://github.com/librefang/librefang/pull/33))
+- Default daemon start/restart to background with `--tail` ([#31](https://github.com/librefang/librefang/pull/31))
+- Port i18n foundation from OpenFang ([#29](https://github.com/librefang/librefang/pull/29))
 
 ---
 
