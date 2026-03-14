@@ -1,21 +1,19 @@
-# CLI 参考
+# CLI 命令参考
 
-完整的 `librefang` 命令行参考。
-
----
+`librefang` 命令行工具的完整参考文档，用于管理 LibreFang Agent OS。
 
 ## 概述
 
-`librefang` 二进制是管理 LibreFang Agent OS 的主要接口。支持两种操作模式：
+`librefang` 是管理 LibreFang Agent OS 的主要接口。它支持两种运行模式：
 
-- **守护进程模式** - 当守护进程运行时 (`librefang start`)，CLI 通过 HTTP 与其通信
-- **进程内模式** - 未检测到守护进程时，支持此模式的命令将启动临时内核
+- **守护进程模式** -- 当守护进程运行时（`librefang start`），CLI 命令通过 HTTP 与其通信。这是生产环境推荐的模式。
+- **进程内模式** -- 当未检测到守护进程时，支持此模式的命令会启动一个临时的进程内内核。在此模式下生成的 Agent 不会被持久化，进程退出后将丢失。
 
----
+不带子命令运行 `librefang` 将启动基于 ratatui 的交互式 TUI（终端用户界面），提供完整的终端仪表板体验。
 
 ## 安装
 
-### 从源码 (cargo)
+### 从源码安装 (cargo)
 
 ```bash
 cargo install --path crates/librefang-cli
@@ -25,7 +23,7 @@ cargo install --path crates/librefang-cli
 
 ```bash
 cargo build --release -p librefang-cli
-# 二进制: target/release/librefang (或 Windows 上的 librefang.exe)
+# 二进制文件: target/release/librefang (Windows 上为 librefang.exe)
 ```
 
 ### Docker
@@ -34,89 +32,332 @@ cargo build --release -p librefang-cli
 docker run -it librefang/librefang:latest
 ```
 
----
+### Shell 安装脚本
+
+```bash
+curl -fsSL https://get.librefang.ai | sh
+```
 
 ## 全局选项
 
-| 选项 | 说明 |
-|------|------|
-| `--config <PATH>` | 自定义配置文件路径 |
-| `--help` | 打印帮助信息 |
-| `--version` | 打印版本 |
+以下选项适用于所有命令。
 
-**环境变量:**
+| 选项 | 说明 |
+|---|---|
+| `--config <PATH>` | 自定义配置文件路径。覆盖默认的 `~/.librefang/config.toml`。 |
+| `--help` | 打印任何命令或子命令的帮助信息。 |
+| `--version` | 打印 `librefang` 二进制文件的版本号。 |
+
+**环境变量：**
 
 | 变量 | 说明 |
-|------|------|
-| `RUST_LOG` | 日志级别 (info/debug/trace) |
-| `LIBREFANG_AGENTS_DIR` | 覆盖 agent 模板目录 |
-| `EDITOR` / `VISUAL` | `librefang config edit` 使用的编辑器 |
+|---|---|
+| `RUST_LOG` | 控制日志详细级别（如 `info`、`debug`、`librefang_kernel=trace`）。 |
+| `LIBREFANG_AGENTS_DIR` | 覆盖 Agent 模板目录。 |
+| `EDITOR` / `VISUAL` | `librefang config edit` 使用的编辑器。在 Windows 上回退到 `notepad`，在 Unix 上回退到 `vi`。 |
 
 ---
 
 ## 命令速查
 
-### 常用命令
-
-| 命令 | 说明 |
-|------|------|
-| `librefang` | 启动交互式 TUI 仪表板 |
-| `librefang init` | 初始化工作空间 |
-| `librefang start` | 启动守护进程 |
-| `librefang stop` | 停止守护进程 |
-| `librefang status` | 查看状态 |
-| `librefang doctor` | 运行诊断 |
+| 分类 | 命令 |
+|---|---|
+| **核心** | `init`, `start`, `stop`, `restart`, `status`, `health`, `doctor`, `dashboard`, `tui`, `chat`, `message`, `logs`, `sessions`, `completion`, `mcp` |
+| **Agent 管理** | `agent new\|spawn\|list\|chat\|kill\|set`, `spawn`, `agents`, `kill` |
+| **工作流与自动化** | `workflow list\|create\|run`, `trigger list\|create\|delete`, `cron list\|create\|delete\|enable\|disable`, `approvals list\|approve\|reject` |
+| **技能与工具** | `skill install\|list\|remove\|search\|test\|publish\|create`, `hand list\|active\|status\|install\|activate\|deactivate\|info\|check-deps\|install-deps\|pause\|resume` |
+| **模型** | `models list\|aliases\|providers\|set` |
+| **通道** | `channel list\|setup\|test\|enable\|disable` |
+| **集成** | `integrations`, `add`, `remove` |
+| **配置** | `config show\|edit\|get\|set\|unset\|set-key\|delete-key\|test-key` |
+| **安全** | `security status\|audit\|verify`, `vault init\|set\|list\|remove`, `auth chatgpt` |
+| **内存与设备** | `memory list\|get\|set\|delete`, `devices list\|pair\|remove`, `qr`, `webhooks list\|create\|delete\|test` |
+| **系统** | `system info\|version`, `update`, `migrate`, `onboard`, `setup`, `configure`, `new`, `reset`, `uninstall`, `gateway start\|restart\|stop\|status` |
 
 ---
 
 ## 核心命令
 
-### librefang (无子命令)
+### librefang（无子命令）
 
 启动交互式 TUI 仪表板。
 
 ```
-librefang
+librefang [--config <PATH>]
 ```
 
-TUI 提供全屏终端界面，包含 agent、聊天、工作流、通道、技能、设置等面板。
+TUI 提供全屏终端界面，包含 Agent、聊天、工作流、通道、技能、设置等面板。追踪日志输出将重定向到 `~/.librefang/tui.log`，以避免破坏终端显示。
+
+按 `Ctrl+C` 退出。再次按 `Ctrl+C` 强制退出进程。
+
+---
 
 ### librefang init
 
-初始化 LibreFang 工作空间。创建 `~/.librefang/` 包含子目录和默认 `config.toml`。
+初始化 LibreFang 工作空间。创建 `~/.librefang/` 目录及子目录（`data/`、`agents/`）和默认的 `config.toml`。
 
 ```
 librefang init [--quick]
 ```
 
+**选项：**
+
 | 选项 | 说明 |
-|------|------|
-| `--quick` | 跳过交互式提示，自动检测最佳 LLM 提供商 |
+|---|---|
+| `--quick` | 跳过交互式提示。自动检测最佳可用 LLM 提供商并立即写入配置。适用于 CI/脚本。 |
 
-### librefang start / stop
+**行为：**
 
-启动或停止 LibreFang 守护进程。
+- 不带 `--quick`：启动一个交互式 5 步引导向导（ratatui TUI），引导完成提供商选择、API 密钥配置，并可选择启动守护进程。
+- 带 `--quick`：按优先顺序检查环境变量自动检测提供商：Groq、Gemini、DeepSeek、Anthropic、OpenAI、OpenRouter。如果未找到则回退到 Groq。
+- 在 Unix 上，文件权限限制为仅所有者可访问（文件 `0600`，目录 `0700`）。
+
+**示例：**
+
+```bash
+# 交互式设置
+librefang init
+
+# 非交互式（CI/脚本）
+export GROQ_API_KEY="gsk_..."
+librefang init --quick
+```
+
+---
+
+### librefang start
+
+启动 LibreFang 守护进程（内核 + API 服务器）。
 
 ```
-librefang start [--config <PATH>]
+librefang start [--config <PATH>] [--tail | --foreground]
+```
+
+**行为：**
+
+- 检查是否已有守护进程运行；如果有则报错退出。
+- 启动 LibreFang 内核（加载配置、初始化 SQLite 数据库、加载 Agent、连接 MCP 服务器、启动后台任务）。
+- 在 `config.toml` 中指定的地址上启动 HTTP API 服务器（默认：`127.0.0.1:4545`）。
+- 将 `daemon.json` 写入配置的 LibreFang 主目录，以便其他 CLI 命令可以发现运行中的守护进程。
+- 默认在后台启动守护进程，并在健康检查端点响应后返回。
+- 将守护进程启动输出写入 `~/.librefang/logs/daemon.log`。
+- 如果传入 `--tail`，启动后跟踪 `~/.librefang/logs/daemon.log`。`Ctrl+C` 仅停止跟踪；守护进程继续运行。
+- 如果传入 `--foreground`，守护进程保持附加到当前终端并将日志输出到 stdout/stderr。适用于 Docker、systemd 或其他进程管理器。
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--tail` | 守护进程启动后跟踪 `~/.librefang/logs/daemon.log`。 |
+| `--foreground` | 将守护进程保持附加到当前终端而不分离。 |
+
+**输出：**
+
+```
+  [ok] Daemon started in background
+
+  PID:        42431
+  API:        http://127.0.0.1:4545
+  Dashboard:  http://127.0.0.1:4545/
+  Log:        /Users/alice/.librefang/logs/daemon.log
+
+  hint: Use `librefang stop` to stop the daemon
+```
+
+**示例：**
+
+```bash
+# 使用默认配置启动
+librefang start
+
+# 使用自定义配置启动
+librefang start --config /path/to/config.toml
+
+# 启动并跟踪守护进程日志
+librefang start --tail
+
+# 前台启动，适用于 Docker/systemd
+librefang start --foreground
+```
+
+---
+
+### librefang stop
+
+停止运行中的守护进程。
+
+```
 librefang stop
 ```
 
+**行为：**
+
+- 向运行中的守护进程发送关闭请求。
+- 如果没有守护进程在运行则报错退出。
+
+**示例：**
+
+```bash
+librefang stop
+```
+
+---
+
+### librefang restart
+
+重启 LibreFang 守护进程。
+
+```
+librefang restart [--config <PATH>] [--tail | --foreground]
+```
+
+**行为：**
+
+- 如果守护进程正在运行，发送关闭请求并等待其停止。
+- 使用与 `librefang start` 相同的启动流程重新启动守护进程。
+- 如果没有守护进程在运行，则行为与 `librefang start` 相同并打印提示。
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--tail` | 守护进程重新启动后跟踪 `~/.librefang/logs/daemon.log`。 |
+| `--foreground` | 将重新启动的守护进程保持附加到当前终端而不分离。 |
+
+**示例：**
+
+```bash
+librefang restart
+
+librefang restart --tail
+
+librefang restart --foreground
+```
+
+---
+
 ### librefang status
 
-检查守护进程状态。
+显示当前内核/守护进程状态。
 
 ```
-librefang status
+librefang status [--json]
 ```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出机器可读的 JSON 格式，便于脚本处理。 |
+
+**行为：**
+
+- 如果守护进程正在运行：查询 `GET /api/status` 并显示 Agent 数量、提供商、模型、运行时间、API URL、数据目录以及活跃 Agent 列表。
+- 如果没有守护进程运行：启动进程内内核并显示持久化状态。显示守护进程未运行的警告。
+
+**示例：**
+
+```bash
+librefang status
+
+librefang status --json | jq '.agent_count'
+```
+
+---
+
+### librefang health
+
+快速守护进程健康检查。
+
+```
+librefang health [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+**行为：**
+
+- 检查守护进程是否正在运行并可响应。
+- 返回健康状态信息。
+
+**示例：**
+
+```bash
+librefang health
+
+librefang health --json
+```
+
+---
 
 ### librefang doctor
 
-运行诊断检查。
+对 LibreFang 安装进行诊断检查。
 
 ```
-librefang doctor
+librefang doctor [--json] [--repair]
 ```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 以 JSON 格式输出结果，便于脚本处理。 |
+| `--repair` | 尝试自动修复问题（创建缺失的目录、配置，移除过期文件）。每次修复前会提示确认。 |
+
+**执行的检查：**
+
+1. **LibreFang 目录** -- `~/.librefang/` 是否存在
+2. **.env 文件** -- 是否存在且权限正确（Unix 上为 0600）
+3. **配置 TOML 语法** -- `config.toml` 是否能正确解析
+4. **守护进程状态** -- 守护进程是否正在运行
+5. **端口 4545 可用性** -- 如果守护进程未运行，检查端口是否空闲
+6. **过期的 daemon.json** -- 崩溃守护进程遗留的 `daemon.json`
+7. **数据库文件** -- SQLite 魔术字节验证
+8. **磁盘空间** -- 如果可用空间不足 100MB 则发出警告（仅 Unix）
+9. **Agent 清单** -- 验证 `~/.librefang/agents/` 中的所有 `.toml` 文件
+10. **LLM 提供商密钥** -- 检查 10 个提供商的环境变量（Groq、OpenRouter、Anthropic、OpenAI、DeepSeek、Gemini、Google、Together、Mistral、Fireworks），执行实时验证（401/403 检测）
+11. **通道令牌** -- Telegram、Discord、Slack 令牌的格式验证
+12. **配置一致性** -- 检查配置中的 `api_key_env` 引用是否与实际环境变量匹配
+13. **Rust 工具链** -- `rustc --version`
+
+**示例：**
+
+```bash
+librefang doctor
+
+librefang doctor --repair
+
+librefang doctor --json
+```
+
+---
+
+### librefang dashboard
+
+在默认浏览器中打开 Web 仪表板。
+
+```
+librefang dashboard
+```
+
+**行为：**
+
+- 需要运行中的守护进程。
+- 在系统浏览器中打开守护进程 URL（如 `http://127.0.0.1:4545/`）。
+- 将 URL 复制到系统剪贴板（Windows 上使用 PowerShell，macOS 上使用 `pbcopy`，Linux 上使用 `xclip`/`xsel`）。
+
+**示例：**
+
+```bash
+librefang dashboard
+```
+
+---
 
 ### librefang tui
 
@@ -126,444 +367,2419 @@ librefang doctor
 librefang tui
 ```
 
-### librefang dashboard
+**行为：**
 
-在浏览器中打开 Web 仪表板。
+- 打开与不带子命令运行 `librefang` 相同的基于 ratatui 的 TUI。
+- 提供全屏终端界面，包含 Agent、聊天、工作流、通道、技能和设置等面板。
 
+**示例：**
+
+```bash
+librefang tui
 ```
-librefang dashboard
-```
+
+---
 
 ### librefang chat
 
-快速聊天。
+快速聊天别名。
 
 ```
-librefang chat [agent-name]
+librefang chat [<AGENT>]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT>` | 可选的 Agent 名称或 UUID。 |
+
+**行为：**
+
+- **守护进程模式：** 在运行中的 Agent 中按名称或 ID 查找 Agent。如果未指定 Agent 名称，使用第一个可用的 Agent。如果没有 Agent，则建议使用 `librefang agent new`。
+- **独立模式（无守护进程）：** 启动进程内内核并从模板自动生成 Agent。搜索与给定名称匹配的 Agent，然后回退到 `assistant`，再回退到第一个可用模板。
+
+这是开始聊天的最简方式 -- 无论有无守护进程都可使用。
+
+**示例：**
+
+```bash
+# 与默认 Agent 聊天
+librefang chat
+
+# 与指定名称的 Agent 聊天
+librefang chat coder
+
+# 与指定 UUID 的 Agent 聊天
+librefang chat a1b2c3d4-e5f6-7890-abcd-ef1234567890
+```
+
+---
+
+### librefang message
+
+向 Agent 发送单次消息并打印响应。
+
+```
+librefang message <AGENT> <TEXT> [--json]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT>` | Agent 名称或 ID。 |
+| `<TEXT>` | 要发送的消息文本。 |
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+**示例：**
+
+```bash
+librefang message coder "Explain this error: cannot borrow as mutable"
+
+librefang message assistant "Summarize today's news" --json
+```
+
+---
+
+### librefang logs
+
+查看 LibreFang 守护进程日志文件。
+
+```
+librefang logs [--lines <N>] [--follow]
+```
+
+**选项：**
+
+| 选项 | 默认值 | 说明 |
+|---|---|---|
+| `--lines <N>` | `50` | 显示的行数。 |
+| `--follow`, `-f` | -- | 实时跟踪日志输出。 |
+
+**示例：**
+
+```bash
+# 显示最后 50 行
+librefang logs
+
+# 显示最后 200 行并跟踪
+librefang logs --lines 200 --follow
+```
+
+---
+
+### librefang sessions
+
+列出对话会话。
+
+```
+librefang sessions [<AGENT>] [--json]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT>` | 可选的 Agent 名称或 ID，用于过滤。 |
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+**示例：**
+
+```bash
+librefang sessions
+
+librefang sessions coder --json
+```
+
+---
+
+### librefang completion
+
+生成 Shell 补全脚本。
+
+```
+librefang completion <SHELL>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<SHELL>` | 目标 Shell。可选：`bash`、`zsh`、`fish`、`elvish`、`powershell`。 |
+
+**示例：**
+
+```bash
+# Bash
+librefang completion bash > ~/.bash_completion.d/librefang
+
+# Zsh
+librefang completion zsh > ~/.zfunc/_librefang
+
+# Fish
+librefang completion fish > ~/.config/fish/completions/librefang.fish
+
+# PowerShell
+librefang completion powershell > librefang.ps1
+```
+
+---
+
+### librefang mcp
+
+启动 MCP（Model Context Protocol）服务器，通过 stdio 通信。
+
+```
+librefang mcp
+```
+
+**行为：**
+
+- 通过 stdin/stdout 上的 JSON-RPC 2.0（Content-Length 分帧）将运行中的 LibreFang Agent 暴露为 MCP 工具。
+- 每个 Agent 成为一个名为 `librefang_agent_<name>` 的可调用工具（连字符替换为下划线）。
+- 如果可用，通过 HTTP 连接到运行中的守护进程；否则启动进程内内核。
+- 协议版本：`2024-11-05`。
+- 最大消息大小：10MB（安全限制）。
+
+**支持的 MCP 方法：**
+
+| 方法 | 说明 |
+|---|---|
+| `initialize` | 返回服务器能力和信息。 |
+| `tools/list` | 列出所有可用的 Agent 工具。 |
+| `tools/call` | 向 Agent 发送消息并返回响应。 |
+
+**工具输入模式：**
+
+每个 Agent 工具接受一个 `message`（字符串）参数。
+
+**与 Claude Desktop / 其他 MCP 客户端集成：**
+
+添加到你的 MCP 客户端配置：
+
+```json
+{
+  "mcpServers": {
+    "librefang": {
+      "command": "librefang",
+      "args": ["mcp"]
+    }
+  }
+}
 ```
 
 ---
 
 ## Agent 管理
 
-### 完整命令列表
+### librefang agent new
 
-| 命令 | 说明 |
-|------|------|
-| `librefang agent spawn <file>` | 从清单文件生成 Agent |
-| `librefang agent new` | 交互式创建新 Agent |
-| `librefang agent list` | 列出所有 Agent |
-| `librefang agent chat <id>` | 与 Agent 交互式聊天 |
-| `librefang agent kill <id>` | 终止 Agent |
-| `librefang agent set <id> <key> <value>` | 设置 Agent 属性 |
+从内置模板生成 Agent。
 
-### 示例
+```
+librefang agent new [<TEMPLATE>]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<TEMPLATE>` | 模板名称（如 `coder`、`assistant`、`researcher`）。省略则显示列出所有可用模板的交互式选择器。 |
+
+**行为：**
+
+- 模板从以下位置发现：代码仓库的 `agents/` 目录（开发构建）、`~/.librefang/agents/`（已安装）和 `LIBREFANG_AGENTS_DIR`（环境变量覆盖）。
+- 每个模板是一个包含 `agent.toml` 清单的目录。
+- 守护进程模式：发送 `POST /api/agents` 附带清单。Agent 是持久化的。
+- 独立模式：启动进程内内核。Agent 是临时的。
+
+**示例：**
 
 ```bash
-# 从模板生成 Agent
-librefang agent spawn agents/hello-world/agent.toml
-
-# 交互式创建
+# 交互式选择器
 librefang agent new
 
-# 列出所有 Agent
+# 按名称生成
+librefang agent new coder
+
+# 生成 assistant 模板
+librefang agent new assistant
+```
+
+---
+
+### librefang agent spawn
+
+从自定义清单文件生成 Agent。
+
+```
+librefang agent spawn <MANIFEST> [--name <NAME>] [--dry-run]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<MANIFEST>` | Agent 清单 TOML 文件的路径。 |
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--name <NAME>` | 生成前覆盖 Agent 名称。 |
+| `--dry-run` | 解析并预览清单而不生成 Agent。 |
+
+**示例：**
+
+```bash
+librefang agent spawn ./my-agent/agent.toml
+
+librefang agent spawn ./my-agent/agent.toml --name my-custom-agent --dry-run
+```
+
+---
+
+### librefang agent list
+
+列出所有运行中的 Agent。
+
+```
+librefang agent list [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 数组格式，便于脚本处理。 |
+
+**输出列：** ID、NAME、STATE、PROVIDER、MODEL（守护进程模式）或 ID、NAME、STATE、CREATED（进程内模式）。
+
+**示例：**
+
+```bash
 librefang agent list
 
-# 与 Agent 聊天
-librefang agent chat a1b2c3d4
-
-# 终止 Agent
-librefang agent kill a1b2c3d4
-
-# 设置默认模型
-librefang agent set a1b2c3d4 model.provider groq
+librefang agent list --json | jq '.[].name'
 ```
 
 ---
 
-## Hand 管理
+### librefang agent chat
 
-### 完整命令列表
+与指定 Agent 开始交互式聊天会话。
 
-| 命令 | 说明 |
-|------|------|
-| `librefang hand list` | 列出所有可用 Hands |
-| `librefang hand active` | 显示当前活跃的 Hand 实例 |
-| `librefang hand install <path>` | 从本地目录安装 Hand |
-| `librefang hand activate <id>` | 激活 Hand |
-| `librefang hand deactivate <id>` | 停用 Hand |
-| `librefang hand info <id>` | 显示 Hand 详细信息 |
-| `librefang hand check-deps` | 检查依赖状态 |
-| `librefang hand install-deps` | 安装缺失的依赖 |
-| `librefang hand pause <id>` | 暂停运行中的 Hand |
-| `librefang hand resume <id>` | 恢复暂停的 Hand |
+```
+librefang agent chat <AGENT_ID>
+```
 
-### 示例
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT_ID>` | Agent UUID。可通过 `librefang agent list` 获取。 |
+
+**行为：**
+
+- 打开 REPL 风格的聊天循环。
+- 在 `you>` 提示符下输入消息。
+- Agent 响应显示在 `agent>` 提示符下，后跟 token 使用量和迭代次数。
+- 输入 `exit`、`quit` 或按 `Ctrl+C` 结束会话。
+
+**示例：**
 
 ```bash
-# 列出 Hands
-librefang hand list
-
-# 查看活跃 Hands
-librefang hand active
-
-# 激活 Hand
-librefang hand activate researcher
-
-# 暂停 Hand
-librefang hand pause researcher
-
-# 查看信息
-librefang hand info clip
+librefang agent chat a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 ---
 
-## 工作流与调度
+### librefang agent kill
 
-### 工作流命令
+终止运行中的 Agent。
 
-| 命令 | 说明 |
-|------|------|
-| `librefang workflow list` | 列出所有工作流 |
-| `librefang workflow create <file>` | 从 JSON 文件创建工作流 |
-| `librefang workflow run <id> <input>` | 运行工作流 |
+```
+librefang agent kill <AGENT_ID>
+```
 
-### Cron 命令
+**参数：**
 
-| 命令 | 说明 |
-|------|------|
-| `librefang cron list` | 列出定时任务 |
-| `librefang cron create <args>` | 创建定时任务 |
-| `librefang cron delete <id>` | 删除定时任务 |
-| `librefang cron enable <id>` | 启用定时任务 |
-| `librefang cron disable <id>` | 禁用定时任务 |
+| 参数 | 说明 |
+|---|---|
+| `<AGENT_ID>` | 要终止的 Agent UUID。 |
 
-### 触发器命令
-
-| 命令 | 说明 |
-|------|------|
-| `librefang trigger list` | 列出触发器 |
-| `librefang trigger create <args>` | 创建触发器 |
-| `librefang trigger delete <id>` | 删除触发器 |
-
-### Webhook 命令
-
-| 命令 | 说明 |
-|------|------|
-| `librefang webhooks list` | 列出 Webhook |
-| `librefang webhooks create <args>` | 创建 Webhook |
-| `librefang webhooks delete <id>` | 删除 Webhook |
-| `librefang webhooks test <id>` | 测试 Webhook |
-
-### 示例
+**示例：**
 
 ```bash
-# 列出工作流
+librefang agent kill a1b2c3d4-e5f6-7890-abcd-ef1234567890
+```
+
+---
+
+### librefang agent set
+
+设置 Agent 属性（如模型）。
+
+```
+librefang agent set <AGENT_ID> <FIELD> <VALUE>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT_ID>` | Agent UUID。 |
+| `<FIELD>` | 要设置的字段（如 `model`）。 |
+| `<VALUE>` | 新值。 |
+
+**示例：**
+
+```bash
+librefang agent set a1b2c3d4 model gpt-4o
+```
+
+---
+
+### 顶级 Agent 别名
+
+这些是常用 Agent 命令的便捷别名：
+
+```bash
+# 生成 Agent（`agent new` 的别名）
+librefang spawn [<TARGET>] [--template <PATH>] [--name <NAME>] [--dry-run]
+
+# 列出运行中的 Agent（`agent list` 的别名）
+librefang agents [--json]
+
+# 终止 Agent（`agent kill` 的别名）
+librefang kill <AGENT_ID>
+```
+
+---
+
+## 工作流与自动化
+
+### librefang workflow list
+
+列出所有已注册的工作流。需要运行中的守护进程。
+
+```
 librefang workflow list
+```
 
-# 运行工作流
-librefang workflow run daily-lead-generation '{"icp": "AI companies"}'
+**输出列：** ID、NAME、STEPS、CREATED。
 
-# 创建定时任务
-librefang cron create --agent researcher --cron "0 9 * * *"
+---
+
+### librefang workflow create
+
+从 JSON 定义文件创建工作流。需要运行中的守护进程。
+
+```
+librefang workflow create <FILE>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<FILE>` | 描述工作流步骤的 JSON 文件路径。 |
+
+**示例：**
+
+```bash
+librefang workflow create ./my-workflow.json
 ```
 
 ---
 
-## 技能管理
+### librefang workflow run
 
-| 命令 | 说明 |
-|------|------|
-| `librefang skill install <source>` | 安装技能 |
-| `librefang skill list` | 列出已安装技能 |
-| `librefang skill remove <name>` | 移除技能 |
-| `librefang skill search <query>` | 搜索 FangHub |
-| `librefang skill create` | 创建技能脚手架 |
-| `librefang skill verify <name>` | 验证技能 |
+按 ID 执行工作流。需要运行中的守护进程。
 
-### 示例
+```
+librefang workflow run <WORKFLOW_ID> <INPUT>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<WORKFLOW_ID>` | 工作流 UUID。可通过 `librefang workflow list` 获取。 |
+| `<INPUT>` | 传递给工作流的输入文本。 |
+
+**示例：**
 
 ```bash
+librefang workflow run abc123 "Analyze this code for security issues"
+```
+
+---
+
+### librefang trigger list
+
+列出所有事件触发器。需要运行中的守护进程。
+
+```
+librefang trigger list [--agent-id <ID>]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--agent-id <ID>` | 按所属 Agent 的 UUID 过滤触发器。 |
+
+**输出列：** TRIGGER ID、AGENT ID、ENABLED、FIRES、PATTERN。
+
+---
+
+### librefang trigger create
+
+为 Agent 创建事件触发器。需要运行中的守护进程。
+
+```
+librefang trigger create <AGENT_ID> <PATTERN_JSON> [--prompt <TEMPLATE>] [--max-fires <N>]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT_ID>` | 拥有该触发器的 Agent 的 UUID。 |
+| `<PATTERN_JSON>` | 触发器模式，JSON 字符串格式。 |
+
+**选项：**
+
+| 选项 | 默认值 | 说明 |
+|---|---|---|
+| `--prompt <TEMPLATE>` | `"Event: {{event}}"` | 提示词模板。使用 `{{event}}` 作为事件数据的占位符。 |
+| `--max-fires <N>` | `0`（无限制） | 触发器触发的最大次数。 |
+
+**模式示例：**
+
+```bash
+# 在任何生命周期事件时触发
+librefang trigger create <AGENT_ID> '{"lifecycle":{}}'
+
+# 在特定 Agent 生成时触发
+librefang trigger create <AGENT_ID> '{"agent_spawned":{"name_pattern":"*"}}'
+
+# 在 Agent 终止时触发
+librefang trigger create <AGENT_ID> '{"agent_terminated":{}}'
+
+# 在所有事件时触发（限制 10 次）
+librefang trigger create <AGENT_ID> '{"all":{}}' --max-fires 10
+```
+
+---
+
+### librefang trigger delete
+
+按 ID 删除触发器。需要运行中的守护进程。
+
+```
+librefang trigger delete <TRIGGER_ID>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<TRIGGER_ID>` | 要删除的触发器 UUID。 |
+
+---
+
+### librefang cron list
+
+列出定时任务。
+
+```
+librefang cron list [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+---
+
+### librefang cron create
+
+创建新的定时任务。
+
+```
+librefang cron create <AGENT> <SPEC> <PROMPT> [--name <NAME>]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT>` | 要运行的 Agent 名称或 ID。 |
+| `<SPEC>` | Cron 表达式（如 `"0 */6 * * *"`）。 |
+| `<PROMPT>` | 任务触发时发送的提示词。 |
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--name <NAME>` | 可选的任务名称（省略则自动生成）。 |
+
+**示例：**
+
+```bash
+librefang cron create researcher "0 9 * * *" "Summarize today's AI news" --name daily-news
+```
+
+---
+
+### librefang cron delete
+
+删除定时任务。
+
+```
+librefang cron delete <ID>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<ID>` | 任务 ID。 |
+
+---
+
+### librefang cron enable
+
+启用已禁用的任务。
+
+```
+librefang cron enable <ID>
+```
+
+---
+
+### librefang cron disable
+
+禁用任务而不删除它。
+
+```
+librefang cron disable <ID>
+```
+
+---
+
+### librefang approvals list
+
+列出待审批的执行请求。
+
+```
+librefang approvals list [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+---
+
+### librefang approvals approve
+
+批准待处理的执行请求。
+
+```
+librefang approvals approve <ID>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<ID>` | 审批 ID。 |
+
+---
+
+### librefang approvals reject
+
+拒绝待处理的执行请求。
+
+```
+librefang approvals reject <ID>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<ID>` | 审批 ID。 |
+
+---
+
+## 技能与工具
+
+### librefang skill list
+
+列出所有已安装的技能。
+
+```
+librefang skill list
+```
+
+**输出列：** NAME、VERSION、TOOLS、DESCRIPTION。
+
+从 `~/.librefang/skills/` 加载技能，以及编译到二进制文件中的内置技能。
+
+---
+
+### librefang skill install
+
+从本地目录、Git URL 或 FangHub 市场安装技能。
+
+```
+librefang skill install <SOURCE>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<SOURCE>` | 技能名称（FangHub）、本地目录路径或 Git URL。 |
+
+**行为：**
+
+- **本地目录：** 在目录中查找 `skill.toml`。如果未找到，检查 OpenClaw 格式的技能（带 YAML frontmatter 的 SKILL.md）并自动转换。
+- **远程（FangHub）：** 从 FangHub 市场获取并安装。技能需通过 SHA256 验证和提示注入扫描。
+
+**示例：**
+
+```bash
+# 从本地目录安装
+librefang skill install ./my-skill/
+
 # 从 FangHub 安装
-librefang skill install fanghub:data-analysis
+librefang skill install web-search
 
-# 从本地安装
-librefang skill install ./my-skill
+# 安装 OpenClaw 格式的技能
+librefang skill install ./openclaw-skill/
+```
 
-# 搜索技能
-librefang skill search "python"
+---
 
-# 创建新技能
+### librefang skill remove
+
+移除已安装的技能。
+
+```
+librefang skill remove <NAME>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<NAME>` | 要移除的技能名称。 |
+
+**示例：**
+
+```bash
+librefang skill remove web-search
+```
+
+---
+
+### librefang skill search
+
+在 FangHub 市场搜索技能。
+
+```
+librefang skill search <QUERY>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<QUERY>` | 搜索查询字符串。 |
+
+**示例：**
+
+```bash
+librefang skill search "docker kubernetes"
+```
+
+---
+
+### librefang skill test
+
+验证本地技能并可选执行一个工具。
+
+```
+librefang skill test [<PATH>] [--tool <NAME>] [--input <JSON>]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<PATH>` | 技能目录、`skill.toml`、`SKILL.md` 或 `package.json`。默认为当前目录。 |
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--tool <NAME>` | 验证后要执行的工具。默认为第一个声明的工具。 |
+| `--input <JSON>` | 传递给所选工具的 JSON 载荷。默认为 `{}`。 |
+
+**行为：**
+
+- 验证清单和运行时入口点。
+- 运行安全和提示注入扫描。
+- 对 Python、Node.js 和纯提示技能，在可能时执行所选工具。
+
+**示例：**
+
+```bash
+librefang skill test ./my-skill --tool summarize_url --input '{"url":"https://example.com"}'
+```
+
+---
+
+### librefang skill publish
+
+打包本地技能并发布到 FangHub GitHub 发布。
+
+```
+librefang skill publish [<PATH>] [--repo <OWNER/NAME>] [--tag <TAG>] [--output <DIR>] [--dry-run]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<PATH>` | 技能目录、`skill.toml`、`SKILL.md` 或 `package.json`。默认为当前目录。 |
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--repo <OWNER/NAME>` | 目标 GitHub 仓库。默认为 `librefang-skills/<skill-name>`。 |
+| `--tag <TAG>` | 要创建或更新的发布标签。默认为 `v<skill-version>`。 |
+| `--output <DIR>` | 生成的 zip 包的输出目录。默认为 `<skill-dir>/dist`。 |
+| `--dry-run` | 仅在本地验证和打包，不上传到 GitHub。 |
+
+**行为：**
+
+- 打包前先在本地验证技能。
+- 构建适合 FangHub 分发的 zip 包。
+- 当配置了 `GITHUB_TOKEN` 或 `GH_TOKEN` 时，将包上传到选定的 GitHub 发布。
+
+**示例：**
+
+```bash
+librefang skill publish ./my-skill --dry-run
+librefang skill publish ./my-skill --repo librefang-skills/my-skill
+```
+
+---
+
+### librefang skill create
+
+交互式创建新的技能项目脚手架。
+
+```
 librefang skill create
 ```
 
----
+**行为：**
 
-## 通道管理
+提示输入：
+- 技能名称
+- 描述
+- 运行时（`python`、`node` 或 `wasm`；默认为 `python`）
 
-| 命令 | 说明 |
-|------|------|
-| `librefang channel list` | 列出通道状态 |
-| `librefang channel setup <channel>` | 交互式设置通道 |
-| `librefang channel test <channel>` | 测试通道连接 |
-| `librefang channel enable <channel>` | 启用通道 |
-| `librefang channel disable <channel>` | 禁用通道 |
+在 `~/.librefang/skills/<name>/` 下创建目录，包含：
+- `skill.toml` -- 清单文件
+- `src/main.py`（或 `src/index.js`）-- 带有样板代码的入口点
 
-### 示例
+**示例：**
 
 ```bash
-# 列出通道
-librefang channel list
-
-# 设置 Telegram
-librefang channel setup telegram
-
-# 测试通道
-librefang channel test telegram
+librefang skill create
+# Skill name: my-tool
+# Description: A custom analysis tool
+# Runtime (python/node/wasm) [python]: python
 ```
 
 ---
 
-## 模型与提供商
+### librefang hand list
 
-### 模型命令
+列出所有可用的 Hand。
 
-| 命令 | 说明 |
-|------|------|
-| `librefang models list` | 列出可用模型 |
-| `librefang models list --provider anthropic` | 按提供商筛选 |
-| `librefang models aliases` | 显示模型别名 |
-| `librefang models providers` | 列出提供商及认证状态 |
-| `librefang models set <model>` | 设置默认模型 |
+```
+librefang hand list
+```
 
-### 示例
+---
+
+### librefang hand active
+
+显示当前活跃的 Hand 实例。
+
+```
+librefang hand active
+```
+
+---
+
+### librefang hand status
+
+显示 Hand 或 Hand 实例的活跃状态。
+
+```
+librefang hand status [<ID>]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<ID>` | 可选的 Hand ID 或实例 ID。省略则显示所有活跃的 Hand。 |
+
+---
+
+### librefang hand install
+
+从包含 `HAND.toml` 的本地目录安装 Hand。
+
+```
+librefang hand install <PATH>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<PATH>` | Hand 目录路径（必须包含 `HAND.toml`）。 |
+
+---
+
+### librefang hand activate
+
+按 ID 激活 Hand。
+
+```
+librefang hand activate <ID>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<ID>` | Hand ID（如 `clip`、`lead`、`researcher`）。 |
+
+---
+
+### librefang hand deactivate
+
+按 Hand ID 停用活跃的 Hand。
+
+```
+librefang hand deactivate <ID>
+```
+
+---
+
+### librefang hand info
+
+显示 Hand 的详细信息。
+
+```
+librefang hand info <ID>
+```
+
+---
+
+### librefang hand check-deps
+
+检查 Hand 的依赖状态。
+
+```
+librefang hand check-deps <ID>
+```
+
+---
+
+### librefang hand install-deps
+
+安装 Hand 的缺失依赖。
+
+```
+librefang hand install-deps <ID>
+```
+
+---
+
+### librefang hand pause
+
+按 Hand ID 或实例 ID 暂停运行中的 Hand。
+
+```
+librefang hand pause <ID>
+```
+
+---
+
+### librefang hand resume
+
+按 Hand ID 或实例 ID 恢复暂停的 Hand。
+
+```
+librefang hand resume <ID>
+```
+
+---
+
+## 模型
+
+### librefang models list
+
+列出可用模型，可按提供商过滤。
+
+```
+librefang models list [--provider <NAME>] [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--provider <NAME>` | 按提供商名称过滤。 |
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+**示例：**
 
 ```bash
-# 列出所有模型
 librefang models list
 
-# 按提供商筛选
 librefang models list --provider groq
 
-# 列出提供商
+librefang models list --json
+```
+
+---
+
+### librefang models aliases
+
+显示模型别名（简写名称）。
+
+```
+librefang models aliases [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+**示例：**
+
+```bash
+librefang models aliases
+```
+
+---
+
+### librefang models providers
+
+列出已知的 LLM 提供商及其认证状态。
+
+```
+librefang models providers [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+**示例：**
+
+```bash
 librefang models providers
 ```
 
 ---
 
-## 配置管理
+### librefang models set
 
-| 命令 | 说明 |
-|------|------|
-| `librefang config show` | 显示当前配置 |
-| `librefang config edit` | 在编辑器中打开配置 |
-| `librefang config get <key>` | 获取配置值 |
-| `librefang config set <key> <value>` | 设置配置值 |
-| `librefang config set-key <provider>` | 保存 API 密钥 |
-| `librefang config delete-key <provider>` | 删除 API 密钥 |
-| `librefang config test-key <provider>` | 测试提供商连接 |
+设置守护进程的默认模型。
 
-### 示例
+```
+librefang models set [<MODEL>]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<MODEL>` | 模型 ID 或别名（如 `gpt-4o`、`claude-sonnet`）。省略则显示交互式选择器。 |
+
+**示例：**
 
 ```bash
-# 显示配置
+librefang models set gpt-4o
+
+# 交互式选择器
+librefang models set
+```
+
+---
+
+## 通道
+
+### librefang channel list
+
+列出已配置的通道及其状态。
+
+```
+librefang channel list
+```
+
+**输出列：** CHANNEL、ENV VAR、STATUS。
+
+检查 `config.toml` 中的通道配置部分和所需令牌的环境变量。状态为以下之一：`Ready`、`Missing env`、`Not configured`。
+
+**检查的通道：** webchat、telegram、discord、slack、whatsapp、signal、matrix、email。
+
+---
+
+### librefang channel setup
+
+通道集成的交互式设置向导。
+
+```
+librefang channel setup [<CHANNEL>]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<CHANNEL>` | 通道名称。省略则显示交互式选择器。 |
+
+**支持的通道：** `telegram`、`discord`、`slack`、`whatsapp`、`email`、`signal`、`matrix`。
+
+每个向导：
+1. 显示获取凭证的分步说明。
+2. 提示输入令牌/凭证。
+3. 将令牌保存到 `~/.librefang/.env`，设置仅所有者权限。
+4. 将通道配置块追加到 `config.toml`（提示确认）。
+5. 如果有守护进程在运行，警告需要重启。
+
+**示例：**
+
+```bash
+# 交互式选择器
+librefang channel setup
+
+# 直接设置
+librefang channel setup telegram
+librefang channel setup discord
+librefang channel setup slack
+```
+
+---
+
+### librefang channel test
+
+通过已配置的通道发送测试消息。需要运行中的守护进程。
+
+```
+librefang channel test <CHANNEL>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<CHANNEL>` | 要测试的通道名称。 |
+
+**示例：**
+
+```bash
+librefang channel test telegram
+```
+
+---
+
+### librefang channel enable
+
+启用通道集成。
+
+```
+librefang channel enable <CHANNEL>
+```
+
+守护进程模式下：发送 `POST /api/channels/<channel>/enable`。无守护进程时：打印更改将在下次启动时生效的提示。
+
+---
+
+### librefang channel disable
+
+禁用通道而不移除其配置。
+
+```
+librefang channel disable <CHANNEL>
+```
+
+守护进程模式下：发送 `POST /api/channels/<channel>/disable`。无守护进程时：打印编辑 `config.toml` 的提示。
+
+---
+
+## 集成
+
+### librefang integrations
+
+列出或搜索可用的集成。
+
+```
+librefang integrations [<QUERY>]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<QUERY>` | 可选的搜索查询。省略则列出所有集成。 |
+
+**示例：**
+
+```bash
+librefang integrations
+
+librefang integrations github
+```
+
+---
+
+### librefang add
+
+添加集成（一键 MCP 服务器设置）。
+
+```
+librefang add <NAME> [--key <TOKEN>]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<NAME>` | 集成名称（如 `github`、`slack`、`notion`）。 |
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--key <TOKEN>` | 存储到保险库的 API 密钥或令牌。 |
+
+**示例：**
+
+```bash
+librefang add github
+
+librefang add slack --key xoxb-...
+```
+
+---
+
+### librefang remove
+
+移除已安装的集成。
+
+```
+librefang remove <NAME>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<NAME>` | 集成名称。 |
+
+**示例：**
+
+```bash
+librefang remove github
+```
+
+---
+
+## 配置
+
+### librefang config show
+
+显示当前配置文件。
+
+```
 librefang config show
+```
 
-# 编辑配置
+以文件路径作为头部注释打印 `~/.librefang/config.toml` 的内容。
+
+---
+
+### librefang config edit
+
+在编辑器中打开配置文件。
+
+```
 librefang config edit
+```
 
-# 设置默认模型
-librefang config set default_model.provider groq
+使用 `$EDITOR`，然后 `$VISUAL`，最后回退到 `notepad`（Windows）或 `vi`（Unix）。
 
-# 保存 API 密钥
-librefang config set-key anthropic
+---
 
-# 测试连接
-librefang config test-key anthropic
+### librefang config get
+
+通过点号分隔的键路径获取单个配置值。
+
+```
+librefang config get <KEY>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<KEY>` | 进入 TOML 结构的点号分隔键路径。 |
+
+**示例：**
+
+```bash
+librefang config get default_model.provider
+# groq
+
+librefang config get api_listen
+# 127.0.0.1:4545
+
+librefang config get memory.decay_rate
+# 0.05
 ```
 
 ---
 
-## 安全与审计
+### librefang config set
 
-### 安全命令
+通过点号分隔的键路径设置配置值。
 
-| 命令 | 说明 |
-|------|------|
-| `librefang security status` | 显示安全状态 |
-| `librefang security audit` | 显示审计日志 |
-| `librefang security verify` | 验证 Merkle 链完整性 |
+```
+librefang config set <KEY> <VALUE>
+```
 
-### 审批命令
+**参数：**
 
-| 命令 | 说明 |
-|------|------|
-| `librefang approvals list` | 列出待审批请求 |
-| `librefang approvals approve <id>` | 批准请求 |
-| `librefang approvals reject <id>` | 拒绝请求 |
+| 参数 | 说明 |
+|---|---|
+| `<KEY>` | 点号分隔键路径。 |
+| `<VALUE>` | 新值。类型从现有值推断（整数、浮点数、布尔值或字符串）。 |
 
-### 示例
+**警告：** 此命令会重新序列化 TOML 文件，这会去除所有注释。
+
+**示例：**
 
 ```bash
-# 查看安全状态
-librefang security status
+librefang config set default_model.provider anthropic
+librefang config set default_model.model claude-sonnet-4-20250514
+librefang config set api_listen "0.0.0.0:4545"
+```
 
-# 查看审计日志
-librefang security audit
+---
 
-# 验证审计链
+### librefang config unset
+
+从配置文件中移除配置键。
+
+```
+librefang config unset <KEY>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<KEY>` | 要移除的点号分隔键路径（如 `api.cors_origin`）。 |
+
+**警告：** 此命令会重新序列化 TOML 文件，这会去除所有注释。
+
+**示例：**
+
+```bash
+librefang config unset api.cors_origin
+```
+
+---
+
+### librefang config set-key
+
+将 LLM 提供商 API 密钥保存到 `~/.librefang/.env`。
+
+```
+librefang config set-key <PROVIDER>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<PROVIDER>` | 提供商名称（如 `groq`、`anthropic`、`openai`、`gemini`、`deepseek`、`openrouter`、`together`、`mistral`、`fireworks`、`perplexity`、`cohere`、`xai`、`brave`、`tavily`）。 |
+
+**行为：**
+
+- 交互式提示输入 API 密钥。
+- 保存到 `~/.librefang/.env`，格式为 `<PROVIDER_NAME>_API_KEY=<value>`。
+- 对提供商 API 运行实时验证测试。
+- 在 Unix 上，文件权限限制为仅所有者可访问。
+
+**示例：**
+
+```bash
+librefang config set-key groq
+# Paste your groq API key: gsk_...
+# [ok] Saved GROQ_API_KEY to ~/.librefang/.env
+# Testing key... OK
+```
+
+---
+
+### librefang config delete-key
+
+从 `~/.librefang/.env` 中移除 API 密钥。
+
+```
+librefang config delete-key <PROVIDER>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<PROVIDER>` | 提供商名称。 |
+
+**示例：**
+
+```bash
+librefang config delete-key openai
+```
+
+---
+
+### librefang config test-key
+
+使用存储的 API 密钥测试提供商连接性。
+
+```
+librefang config test-key <PROVIDER>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<PROVIDER>` | 提供商名称。 |
+
+**行为：**
+
+- 从环境中读取 API 密钥（从 `~/.librefang/.env` 加载）。
+- 访问提供商的模型/健康端点。
+- 报告 `OK`（密钥已接受）或 `FAILED (401/403)`（密钥被拒绝）。
+- 失败时以退出码 1 退出。
+
+**示例：**
+
+```bash
+librefang config test-key groq
+# Testing groq (GROQ_API_KEY)... OK
+```
+
+---
+
+## 安全
+
+### librefang security status
+
+显示安全状态摘要。
+
+```
+librefang security status [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+---
+
+### librefang security audit
+
+显示最近的审计跟踪条目。
+
+```
+librefang security audit [--limit <N>] [--json]
+```
+
+**选项：**
+
+| 选项 | 默认值 | 说明 |
+|---|---|---|
+| `--limit <N>` | `20` | 显示的最大条目数。 |
+| `--json` | -- | 输出 JSON 格式，便于脚本处理。 |
+
+---
+
+### librefang security verify
+
+验证审计跟踪完整性（Merkle 链）。
+
+```
 librefang security verify
-
-# 列出待审批
-librefang approvals list
 ```
 
 ---
 
-## 内存与会话
+### librefang vault init
 
-### 内存命令
+初始化凭证保险库。
 
-| 命令 | 说明 |
-|------|------|
-| `librefang memory list` | 列出 Agent 的 KV 对 |
-| `librefang memory get <key>` | 获取值 |
-| `librefang memory set <key> <value>` | 设置值 |
-| `librefang memory delete <key>` | 删除值 |
-
-### 会话命令
-
-| 命令 | 说明 |
-|------|------|
-| `librefang sessions` | 列出对话会话 |
-
-### 示例
-
-```bash
-# 列出记忆
-librefang memory list --agent a1b2c3d4
-
-# 设置记忆
-librefang memory set --agent a1b2c3d4 --key "pref:theme" --value "dark"
-
-# 列出会话
-librefang sessions
 ```
-
----
-
-## 凭证与保险库
-
-### Vault 命令
-
-| 命令 | 说明 |
-|------|------|
-| `librefang vault init` | 初始化凭证保险库 |
-| `librefang vault set <key> <value>` | 存储凭证 |
-| `librefang vault list` | 列出凭证 |
-| `librefang vault remove <key>` | 删除凭证 |
-
-### 示例
-
-```bash
-# 初始化保险库
 librefang vault init
+```
 
-# 存储凭证
-librefang vault set api_key "your-secret-key"
+---
 
-# 列出凭证
+### librefang vault set
+
+在保险库中存储凭证。
+
+```
+librefang vault set <KEY>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<KEY>` | 凭证键（环境变量名称）。交互式提示输入值。 |
+
+---
+
+### librefang vault list
+
+列出保险库中的所有键（值被隐藏）。
+
+```
 librefang vault list
 ```
 
 ---
 
-## 系统维护
+### librefang vault remove
 
-| 命令 | 说明 |
-|------|------|
-| `librefang system info` | 显示系统信息 |
-| `librefang system version` | 显示版本信息 |
-| `librefang logs` | 实时查看日志 |
-| `librefang reset` | 重置本地配置 |
-| `librefang uninstall` | 卸载 LibreFang |
-| `librefang completion` | 生成 Shell 补全脚本 |
+从保险库中移除凭证。
 
-### 示例
+```
+librefang vault remove <KEY>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<KEY>` | 要移除的凭证键。 |
+
+---
+
+### librefang auth chatgpt
+
+通过 ChatGPT 进行身份验证（基于浏览器的会话令牌流程）。
+
+```
+librefang auth chatgpt
+```
+
+---
+
+## 内存与设备
+
+### librefang memory list
+
+列出 Agent 的 KV 键值对。
+
+```
+librefang memory list <AGENT> [--json]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT>` | Agent 名称或 ID。 |
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+---
+
+### librefang memory get
+
+获取指定的 KV 值。
+
+```
+librefang memory get <AGENT> <KEY> [--json]
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT>` | Agent 名称或 ID。 |
+| `<KEY>` | 键名。 |
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+---
+
+### librefang memory set
+
+设置 KV 值。
+
+```
+librefang memory set <AGENT> <KEY> <VALUE>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT>` | Agent 名称或 ID。 |
+| `<KEY>` | 键名。 |
+| `<VALUE>` | 要存储的值。 |
+
+---
+
+### librefang memory delete
+
+删除 KV 键值对。
+
+```
+librefang memory delete <AGENT> <KEY>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT>` | Agent 名称或 ID。 |
+| `<KEY>` | 键名。 |
+
+---
+
+### librefang devices list
+
+列出已配对的设备。
+
+```
+librefang devices list [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+---
+
+### librefang devices pair
+
+启动新的设备配对流程。
+
+```
+librefang devices pair
+```
+
+---
+
+### librefang devices remove
+
+移除已配对的设备。
+
+```
+librefang devices remove <ID>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<ID>` | 设备 ID。 |
+
+---
+
+### librefang qr
+
+生成设备配对二维码。
+
+```
+librefang qr
+```
+
+---
+
+### librefang webhooks list
+
+列出已配置的 Webhook。
+
+```
+librefang webhooks list [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+---
+
+### librefang webhooks create
+
+创建新的 Webhook 触发器。
+
+```
+librefang webhooks create <AGENT> <URL>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<AGENT>` | Agent 名称或 ID。 |
+| `<URL>` | Webhook 回调 URL。 |
+
+---
+
+### librefang webhooks delete
+
+删除 Webhook。
+
+```
+librefang webhooks delete <ID>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<ID>` | Webhook ID。 |
+
+---
+
+### librefang webhooks test
+
+向 Webhook 发送测试载荷。
+
+```
+librefang webhooks test <ID>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<ID>` | Webhook ID。 |
+
+---
+
+## 高级功能
+
+### librefang update
+
+将 CLI 更新到最新发布版本。
+
+```
+librefang update [--check] [--version <TAG>]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--check` | 检查是否存在更新版本而不安装。 |
+| `--version <TAG>` | 安装指定的 GitHub 发布标签而非最新版本。 |
+
+**示例：**
 
 ```bash
+# 更新到最新版
+librefang update
+
+# 检查更新
+librefang update --check
+
+# 安装指定版本
+librefang update --version v0.5.0
+```
+
+---
+
+### librefang migrate
+
+从其他 Agent 框架迁移配置和 Agent。
+
+```
+librefang migrate --from <FRAMEWORK> [--source-dir <PATH>] [--dry-run]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--from <FRAMEWORK>` | 源框架。可选：`openclaw`、`langchain`、`autogpt`。 |
+| `--source-dir <PATH>` | 源工作空间路径。未设置时自动检测（如 `~/.openclaw`、`~/.langchain`、`~/Auto-GPT`）。 |
+| `--dry-run` | 显示将导入的内容而不做实际更改。 |
+
+**行为：**
+
+- 将源框架的 Agent 配置、YAML 清单和设置转换为 LibreFang 格式。
+- 将导入的数据保存到 `~/.librefang/`。
+- 编写 `migration_report.md` 总结导入的内容。
+
+**示例：**
+
+```bash
+# 从 OpenClaw 预览迁移
+librefang migrate --from openclaw --dry-run
+
+# 从 OpenClaw 迁移（自动检测源目录）
+librefang migrate --from openclaw
+
+# 从 LangChain 迁移并指定源目录
+librefang migrate --from langchain --source-dir /home/user/.langchain
+
+# 从 AutoGPT 迁移
+librefang migrate --from autogpt
+```
+
+---
+
+### librefang onboard
+
+交互式引导向导。
+
+```
+librefang onboard [--quick]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--quick` | 快速非交互式模式。 |
+
+---
+
+### librefang setup
+
+快速非交互式初始化。
+
+```
+librefang setup [--quick]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--quick` | 快速模式（与 `init --quick` 相同）。 |
+
+---
+
+### librefang configure
+
+凭证和通道的交互式设置向导。
+
+```
+librefang configure
+```
+
+---
+
+### librefang new
+
+创建新的技能或集成模板脚手架。
+
+```
+librefang new <KIND>
+```
+
+**参数：**
+
+| 参数 | 说明 |
+|---|---|
+| `<KIND>` | 要创建的内容类型。可选：`skill`、`integration`。 |
+
+**示例：**
+
+```bash
+librefang new skill
+
+librefang new integration
+```
+
+---
+
+### librefang system info
+
+显示详细系统信息。
+
+```
+librefang system info [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+---
+
+### librefang system version
+
+显示版本信息。
+
+```
+librefang system version [--json]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--json` | 输出 JSON 格式，便于脚本处理。 |
+
+---
+
+### librefang gateway
+
+守护进程控制（start/stop/restart/status 的别名）。
+
+```
+librefang gateway start [--tail] [--foreground]
+librefang gateway restart [--tail] [--foreground]
+librefang gateway stop
+librefang gateway status [--json]
+```
+
+`gateway` 子命令提供守护进程生命周期管理的替代接口，等同于顶级的 `start`、`stop`、`restart` 和 `status` 命令。
+
+---
+
+### librefang reset
+
+重置本地配置和状态。
+
+```
+librefang reset [--confirm]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--confirm` | 跳过确认提示。 |
+
+---
+
+### librefang uninstall
+
+从系统中完全移除 LibreFang。
+
+```
+librefang uninstall [--confirm] [--keep-config]
+```
+
+**选项：**
+
+| 选项 | 说明 |
+|---|---|
+| `--confirm`（或 `--yes`） | 跳过确认提示。 |
+| `--keep-config` | 保留配置文件（`config.toml`、`.env`、`secrets.env`）。 |
+
+**示例：**
+
+```bash
+librefang uninstall
+
+librefang uninstall --confirm --keep-config
+```
+
+---
+
+## 守护进程自动检测
+
+CLI 使用两步机制检测运行中的守护进程：
+
+1. **读取 `daemon.json`：** 启动时，守护进程将 `~/.librefang/daemon.json` 写入包含监听地址（如 `127.0.0.1:4545`）的文件。CLI 读取此文件以获取守护进程位置。
+
+2. **健康检查：** CLI 向 `GET http://<listen_addr>/api/health` 发送请求，超时时间为 2 秒。如果健康检查成功，则认为守护进程正在运行，CLI 使用 HTTP 与其通信。
+
+如果任一步骤失败（无 `daemon.json`、过期文件、健康检查超时），CLI 将对支持的命令回退到进程内模式。需要守护进程的命令（工作流、触发器、通道测试/启用/禁用、仪表板）将报错退出并给出有用的提示信息。
+
+**守护进程生命周期：**
+
+```
+librefang start          # 启动守护进程，写入 daemon.json
+                        # 其他 CLI 实例检测到 daemon.json
+librefang status         # 通过 HTTP 连接到守护进程
+Ctrl+C                  # 守护进程关闭，daemon.json 被移除
+
+librefang doctor --repair  # 清理崩溃后遗留的 daemon.json
+```
+
+---
+
+## 环境文件
+
+LibreFang 在每次 CLI 调用时将 `~/.librefang/.env` 加载到进程环境中。系统环境变量优先于 `.env` 中的值。
+
+`.env` 文件存储 API 密钥和密钥：
+
+```bash
+GROQ_API_KEY=gsk_...
+ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=AIza...
+TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
+```
+
+建议使用 `config set-key` / `config delete-key` 命令管理密钥而非直接编辑文件，因为这些命令会强制设置正确的权限。
+
+---
+
+## 退出码
+
+| 退出码 | 含义 |
+|---|---|
+| `0` | 成功。 |
+| `1` | 一般错误（无效参数、操作失败、缺少守护进程、解析错误、生成失败）。 |
+| `130` | 被第二次 `Ctrl+C` 中断（强制退出）。 |
+
+---
+
+## 使用示例
+
+### 首次设置
+
+```bash
+# 1. 设置 API 密钥
+export GROQ_API_KEY="gsk_your_key_here"
+
+# 2. 初始化 LibreFang
+librefang init --quick
+
+# 3. 启动守护进程
+librefang start
+```
+
+### 日常使用
+
+```bash
+# 快速聊天（需要时自动生成 Agent）
+librefang chat
+
+# 与指定 Agent 聊天
+librefang chat coder
+
+# 发送单次消息
+librefang message assistant "Summarize this paragraph"
+
+# 检查运行状态
+librefang status
+
+# 打开 Web 仪表板
+librefang dashboard
+
+# 启动 TUI
+librefang tui
+```
+
+### Agent 管理
+
+```bash
+# 从模板生成
+librefang agent new assistant
+
+# 从自定义清单生成
+librefang agent spawn ./agents/custom-agent/agent.toml
+
+# 列出运行中的 Agent
+librefang agent list
+
+# 通过 UUID 与 Agent 聊天
+librefang agent chat <UUID>
+
+# 更改 Agent 的模型
+librefang agent set <UUID> model gpt-4o
+
+# 终止 Agent
+librefang agent kill <UUID>
+```
+
+### 模型管理
+
+```bash
+# 列出所有可用模型
+librefang models list
+
+# 列出特定提供商的模型
+librefang models list --provider anthropic
+
+# 显示模型别名
+librefang models aliases
+
+# 检查提供商状态
+librefang models providers
+
+# 设置默认模型
+librefang models set claude-sonnet
+```
+
+### 工作流自动化
+
+```bash
+# 创建工作流
+librefang workflow create ./review-pipeline.json
+
+# 列出工作流
+librefang workflow list
+
+# 运行工作流
+librefang workflow run <WORKFLOW_ID> "Review the latest PR"
+```
+
+### 定时任务
+
+```bash
+# 调度每日新闻摘要
+librefang cron create researcher "0 9 * * *" "Summarize AI news" --name daily-news
+
+# 列出任务
+librefang cron list
+
+# 禁用任务
+librefang cron disable <JOB_ID>
+
+# 重新启用任务
+librefang cron enable <JOB_ID>
+
+# 删除任务
+librefang cron delete <JOB_ID>
+```
+
+### 事件触发器
+
+```bash
+# 创建在 Agent 生成时触发的触发器
+librefang trigger create <AGENT_ID> '{"agent_spawned":{"name_pattern":"*"}}' \
+  --prompt "New agent spawned: {{event}}" \
+  --max-fires 100
+
+# 列出所有触发器
+librefang trigger list
+
+# 列出特定 Agent 的触发器
+librefang trigger list --agent-id <AGENT_ID>
+
+# 删除触发器
+librefang trigger delete <TRIGGER_ID>
+```
+
+### 技能管理
+
+```bash
+# 搜索 FangHub
+librefang skill search "code review"
+
+# 安装技能
+librefang skill install code-reviewer
+
+# 列出已安装技能
+librefang skill list
+
+# 创建新技能
+librefang skill create
+
+# 发布技能
+librefang skill publish ./my-skill --dry-run
+
+# 移除技能
+librefang skill remove code-reviewer
+```
+
+### Hand 管理
+
+```bash
+# 列出可用的 Hand
+librefang hand list
+
+# 显示活跃的 Hand
+librefang hand active
+
+# 激活 Hand
+librefang hand activate researcher
+
+# 检查 Hand 依赖
+librefang hand check-deps researcher
+
+# 安装缺失的依赖
+librefang hand install-deps researcher
+
+# 暂停/恢复 Hand
+librefang hand pause researcher
+librefang hand resume researcher
+
+# 停用 Hand
+librefang hand deactivate researcher
+```
+
+### 通道设置
+
+```bash
+# 交互式通道选择器
+librefang channel setup
+
+# 直接设置通道
+librefang channel setup telegram
+
+# 检查通道状态
+librefang channel list
+
+# 测试通道
+librefang channel test telegram
+
+# 启用/禁用通道
+librefang channel enable discord
+librefang channel disable slack
+```
+
+### 集成
+
+```bash
+# 浏览集成
+librefang integrations
+
+# 搜索集成
+librefang integrations github
+
+# 安装集成
+librefang add github --key ghp_...
+
+# 移除集成
+librefang remove github
+```
+
+### 配置
+
+```bash
+# 查看配置
+librefang config show
+
+# 获取指定值
+librefang config get default_model.provider
+
+# 更改提供商
+librefang config set default_model.provider anthropic
+librefang config set default_model.model claude-sonnet-4-20250514
+librefang config set default_model.api_key_env ANTHROPIC_API_KEY
+
+# 移除配置键
+librefang config unset api.cors_origin
+
+# 管理 API 密钥
+librefang config set-key anthropic
+librefang config test-key anthropic
+librefang config delete-key openai
+
+# 在编辑器中打开
+librefang config edit
+```
+
+### 安全与保险库
+
+```bash
+# 安全概览
+librefang security status
+
+# 查看审计跟踪
+librefang security audit --limit 50
+
+# 验证审计完整性
+librefang security verify
+
+# 初始化保险库
+librefang vault init
+
+# 存储凭证
+librefang vault set GITHUB_TOKEN
+
+# 列出保险库键
+librefang vault list
+
+# 移除凭证
+librefang vault remove GITHUB_TOKEN
+```
+
+### 内存
+
+```bash
+# 列出 Agent 内存
+librefang memory list coder
+
+# 获取指定值
+librefang memory get coder preferred_language
+
+# 设置值
+librefang memory set coder preferred_language rust
+
+# 删除值
+librefang memory delete coder preferred_language
+```
+
+### 设备与 Webhook
+
+```bash
+# 列出已配对设备
+librefang devices list
+
+# 配对新设备
+librefang devices pair
+
+# 生成配对二维码
+librefang qr
+
+# 创建 Webhook
+librefang webhooks create coder https://example.com/hook
+
+# 测试 Webhook
+librefang webhooks test <WEBHOOK_ID>
+
+# 删除 Webhook
+librefang webhooks delete <WEBHOOK_ID>
+```
+
+### 从其他框架迁移
+
+```bash
+# 预览迁移
+librefang migrate --from openclaw --dry-run
+
+# 执行迁移
+librefang migrate --from openclaw
+
+# 从 LangChain 迁移
+librefang migrate --from langchain --source-dir ~/.langchain
+```
+
+### 自更新与系统
+
+```bash
+# 检查更新
+librefang update --check
+
+# 更新到最新版
+librefang update
+
 # 系统信息
 librefang system info
 
 # 版本
 librefang system version
-
-# 实时日志
-librefang logs
-
-# 生成 bash 补全
-librefang completion bash
 ```
 
----
-
-## 迁移
+### 诊断
 
 ```bash
-# 从 OpenClaw 迁移
-librefang migrate --from openclaw
+# 运行所有诊断检查
+librefang doctor
 
-# 预览模式
-librefang migrate --from openclaw --dry-run
+# 自动修复问题
+librefang doctor --repair
 
-# 指定路径
-librefang migrate --from openclaw --path ~/.openclaw
+# 机器可读的诊断输出
+librefang doctor --json
 ```
 
----
-
-## MCP
+### Shell 补全
 
 ```bash
-# 启动 MCP 服务器
-librefang mcp
+# 生成并安装 Shell 补全脚本
+librefang completion bash >> ~/.bashrc
+librefang completion zsh > "${fpath[1]}/_librefang"
+librefang completion fish > ~/.config/fish/completions/librefang.fish
 ```
 
 ---
 
-## 守护进程交互
+## 支持的 LLM 提供商
 
-### 直接 API 调用
+以下提供商被 `librefang config set-key` 和 `librefang doctor` 识别：
 
-```bash
-# 健康检查
-curl http://127.0.0.1:4200/api/health
+| 提供商 | 环境变量 | 默认模型 |
+|---|---|---|
+| Groq | `GROQ_API_KEY` | `llama-3.3-70b-versatile` |
+| Gemini | `GEMINI_API_KEY` 或 `GOOGLE_API_KEY` | `gemini-2.5-flash` |
+| DeepSeek | `DEEPSEEK_API_KEY` | `deepseek-chat` |
+| Anthropic | `ANTHROPIC_API_KEY` | `claude-sonnet-4-20250514` |
+| OpenAI | `OPENAI_API_KEY` | `gpt-4o` |
+| OpenRouter | `OPENROUTER_API_KEY` | `openrouter/google/gemini-2.5-flash` |
+| Together | `TOGETHER_API_KEY` | -- |
+| Mistral | `MISTRAL_API_KEY` | -- |
+| Fireworks | `FIREWORKS_API_KEY` | -- |
+| Perplexity | `PERPLEXITY_API_KEY` | -- |
+| Cohere | `COHERE_API_KEY` | -- |
+| xAI | `XAI_API_KEY` | -- |
 
-# 列出 agent
-curl http://127.0.0.1:4200/api/agents
+额外的搜索/获取提供商密钥：`BRAVE_API_KEY`、`TAVILY_API_KEY`。
 
-# 发送消息
-curl -X POST http://127.0.0.1:4200/api/agents/<id>/message \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Hello!"}'
 
-# OpenAI 兼容 API
-curl -X POST http://127.0.0.1:4200/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{"model": "researcher", "messages": [{"role": "user", "content": "Hello"}]}'
-```
 
----
-
-## 环境变量参考
-
-| 变量 | 说明 |
-|------|------|
-| `ANTHROPIC_API_KEY` | Anthropic Claude API 密钥 |
-| `OPENAI_API_KEY` | OpenAI API 密钥 |
-| `GROQ_API_KEY` | Groq API 密钥 |
-| `GEMINI_API_KEY` | Google Gemini API 密钥 |
-| `DEEPSEEK_API_KEY` | DeepSeek API 密钥 |
-| `RUST_LOG` | 日志级别 (info/debug/trace) |
-| `LIBREFANG_AGENTS_DIR` | Agent 模板目录 |
+export const sections = [];
